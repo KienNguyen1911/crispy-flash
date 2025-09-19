@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { BrainCircuit, Upload, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
 import {
   Table,
   TableBody,
