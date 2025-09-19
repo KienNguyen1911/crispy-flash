@@ -11,6 +11,7 @@ import { ArrowLeft, ArrowRight, RotateCw, Check, X } from 'lucide-react';
 import { Progress } from '../ui/progress';
 import { Card, CardContent } from '../ui/card';
 import Link from 'next/link';
+import type { Vocabulary } from '@/lib/types';
 
 export function LearningSession() {
   const params = useParams();
@@ -25,29 +26,45 @@ export function LearningSession() {
   
   const filterNotRemembered = searchParams.get('filter') === 'not_remembered';
   
-  const sessionVocabulary = useMemo(() => {
+  const initialVocabulary = useMemo(() => {
     if (!topic) return [];
-    const vocab = filterNotRemembered 
+    return filterNotRemembered 
       ? topic.vocabulary.filter(v => v.status === 'not_remembered')
       : topic.vocabulary;
-    return [...vocab].sort(() => Math.random() - 0.5); // Shuffle cards
   }, [topic, filterNotRemembered]);
 
+  const [shuffledVocabulary, setShuffledVocabulary] = useState<Vocabulary[]>([]);
+  const [isClient, setIsClient] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sessionProgress, setSessionProgress] = useState<{ [key: string]: 'remembered' | 'not_remembered' }>({});
   const [isFinished, setIsFinished] = useState(false);
 
   useEffect(() => {
-    if (sessionVocabulary.length > 0 && currentIndex >= sessionVocabulary.length) {
+    setIsClient(true);
+    // Shuffle vocabulary only on the client side
+    setShuffledVocabulary([...initialVocabulary].sort(() => Math.random() - 0.5));
+    // Reset state for a new session (e.g., when filter changes)
+    setCurrentIndex(0);
+    setSessionProgress({});
+    setIsFinished(false);
+  }, [initialVocabulary]);
+
+  useEffect(() => {
+    if (shuffledVocabulary.length > 0 && currentIndex >= shuffledVocabulary.length) {
       setIsFinished(true);
     }
-  }, [currentIndex, sessionVocabulary.length]);
+  }, [currentIndex, shuffledVocabulary.length]);
 
   if (!topic) {
     return notFound();
   }
+
+  // Render a loading state or nothing until the client has mounted and shuffled the cards
+  if (!isClient) {
+    return null; 
+  }
   
-  if (sessionVocabulary.length === 0) {
+  if (shuffledVocabulary.length === 0) {
     return (
         <div className="container mx-auto max-w-2xl py-8 px-4 text-center">
             <h1 className="text-2xl font-bold font-headline mb-4">Session Complete!</h1>
@@ -61,7 +78,7 @@ export function LearningSession() {
     )
   }
 
-  const currentCard = sessionVocabulary[currentIndex];
+  const currentCard = shuffledVocabulary[currentIndex];
 
   const handleMark = (status: 'remembered' | 'not_remembered') => {
     if (!currentCard) return;
@@ -79,24 +96,24 @@ export function LearningSession() {
   };
   
   const restartSession = () => {
+    setShuffledVocabulary([...initialVocabulary].sort(() => Math.random() - 0.5));
     setCurrentIndex(0);
     setSessionProgress({});
     setIsFinished(false);
-    // Re-shuffle would be good here, but a simple restart is fine
   };
 
   if (isFinished) {
     return <ProgressSummary sessionProgress={sessionProgress} onRestart={restartSession} />;
   }
 
-  const progressPercentage = (currentIndex / sessionVocabulary.length) * 100;
+  const progressPercentage = (currentIndex / shuffledVocabulary.length) * 100;
 
   return (
     <div className="container mx-auto max-w-2xl py-8 px-4 flex flex-col items-center">
       <div className="w-full mb-8">
         <div className="flex justify-between items-center mb-2">
             <h2 className="font-headline text-xl">{topic.title}</h2>
-            <span className="text-sm text-muted-foreground">{currentIndex + 1} / {sessionVocabulary.length}</span>
+            <span className="text-sm text-muted-foreground">{currentIndex + 1} / {shuffledVocabulary.length}</span>
         </div>
         <Progress value={progressPercentage} />
       </div>
@@ -116,7 +133,7 @@ export function LearningSession() {
                 <Check className="mr-2 h-5 w-5" />
                 Remembered
             </Button>
-            <Button variant="outline" size="icon" onClick={goToNext} disabled={currentIndex >= sessionVocabulary.length -1}>
+            <Button variant="outline" size="icon" onClick={goToNext} disabled={currentIndex >= shuffledVocabulary.length -1}>
                 <ArrowRight className="h-5 w-5" />
             </Button>
         </CardContent>
