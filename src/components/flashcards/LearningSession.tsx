@@ -7,7 +7,7 @@ import { notFound } from 'next/navigation';
 import Flashcard from './Flashcard';
 import ProgressSummary from './ProgressSummary';
 import { Button } from '../ui/button';
-import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { Progress } from '../ui/progress';
 import { Card, CardContent } from '../ui/card';
 import Link from 'next/link';
@@ -109,7 +109,7 @@ export function LearningSession() {
     return <ProgressSummary sessionProgress={sessionProgress} onRestart={restartSession} />;
   }
 
-  const progressPercentage = (currentIndex / shuffledVocabulary.length) * 100;
+  const progressPercentage = ((currentIndex + 1) / shuffledVocabulary.length) * 100;
 
   return (
     <div className="container mx-auto max-w-2xl py-8 px-4 flex flex-col items-center">
