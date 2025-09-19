@@ -109,8 +109,9 @@ export function LearningSession() {
     return <ProgressSummary sessionProgress={sessionProgress} onRestart={restartSession} />;
   }
   
-  const completedCards = currentIndex;
+  // ✅ Fixed progress logic
   const totalCards = shuffledVocabulary.length;
+  const completedCards = isFinished ? totalCards : currentIndex + 1;
   const progressPercentage = totalCards > 0 ? (completedCards / totalCards) * 100 : 0;
   const currentCardNumber = Math.min(currentIndex + 1, totalCards);
 
