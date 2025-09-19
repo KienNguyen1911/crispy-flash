@@ -108,15 +108,18 @@ export function LearningSession() {
   if (isFinished) {
     return <ProgressSummary sessionProgress={sessionProgress} onRestart={restartSession} />;
   }
-
-  const progressPercentage = (currentIndex / shuffledVocabulary.length) * 100;
+  
+  const completedCards = currentIndex;
+  const totalCards = shuffledVocabulary.length;
+  const progressPercentage = totalCards > 0 ? (completedCards / totalCards) * 100 : 0;
+  const currentCardNumber = Math.min(currentIndex + 1, totalCards);
 
   return (
     <div className="container mx-auto max-w-2xl py-8 px-4 flex flex-col items-center">
       <div className="w-full mb-8">
         <div className="flex justify-between items-center mb-2">
             <h2 className="font-headline text-xl">{topic.title}</h2>
-            <span className="text-sm text-muted-foreground">{currentIndex + 1} / {shuffledVocabulary.length}</span>
+            <span className="text-sm text-muted-foreground">{currentCardNumber} / {totalCards}</span>
         </div>
         <Progress value={progressPercentage} />
       </div>
