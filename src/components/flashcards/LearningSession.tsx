@@ -82,19 +82,20 @@ export function LearningSession() {
   const handleMark = (status: 'remembered' | 'not_remembered') => {
     if (!currentCard) return;
 
-    const isNewProgress = !sessionProgress[currentCard.id];
-    if (isNewProgress) {
-      updateVocabularyStatus(projectId, topicId, currentCard.id, status);
-      setSessionProgress(prev => ({ ...prev, [currentCard.id]: status }));
-    }
+    // Record progress for the current card
+    setSessionProgress(prev => ({ ...prev, [currentCard.id]: status }));
+    updateVocabularyStatus(projectId, topicId, currentCard.id, status);
 
-    goToNext();
+    // Check if this is the last card
+    if (currentIndex === shuffledVocabulary.length - 1) {
+      setIsFinished(true);
+    } else {
+      goToNext();
+    }
   };
 
   const goToNext = () => {
-    if (currentIndex < shuffledVocabulary.length) {
-      setCurrentIndex(prev => prev + 1);
-    }
+    setCurrentIndex(prev => prev + 1);
   };
   
   const restartSession = () => {
