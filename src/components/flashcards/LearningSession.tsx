@@ -109,19 +109,19 @@ export function LearningSession() {
     return <ProgressSummary sessionProgress={sessionProgress} onRestart={restartSession} />;
   }
 
-  const progressPercentage = ((currentIndex + 1) / shuffledVocabulary.length) * 100;
+  const progressPercentage = (currentIndex / shuffledVocabulary.length) * 100;
 
   return (
     <div className="container mx-auto max-w-2xl py-8 px-4 flex flex-col items-center">
       <div className="w-full mb-8">
         <div className="flex justify-between items-center mb-2">
             <h2 className="font-headline text-xl">{topic.title}</h2>
-            <span className="text-sm text-muted-foreground">{Math.min(currentIndex + 1, shuffledVocabulary.length)} / {shuffledVocabulary.length}</span>
+            <span className="text-sm text-muted-foreground">{currentIndex + 1} / {shuffledVocabulary.length}</span>
         </div>
         <Progress value={progressPercentage} />
       </div>
       
-      <Flashcard vocabulary={currentCard} />
+      {currentCard && <Flashcard vocabulary={currentCard} />}
 
       <Card className="w-full mt-8">
         <CardContent className="p-4 flex justify-center items-center gap-4">
