@@ -48,23 +48,22 @@ export function LearningSession() {
     setSessionProgress({});
     setIsFinished(false);
   }, [initialVocabulary]);
-
+  
   useEffect(() => {
     if (isClient && shuffledVocabulary.length > 0 && currentIndex >= shuffledVocabulary.length) {
       setIsFinished(true);
     }
   }, [currentIndex, shuffledVocabulary.length, isClient]);
 
+  if (!isClient) {
+    return null; // Render nothing on the server to avoid hydration mismatch
+  }
+
   if (!topic) {
     return notFound();
   }
-
-  // Render a loading state or nothing until the client has mounted and shuffled the cards
-  if (!isClient) {
-    return null; 
-  }
   
-  if (shuffledVocabulary.length === 0) {
+  if (shuffledVocabulary.length === 0 && isClient) {
     return (
         <div className="container mx-auto max-w-2xl py-8 px-4 text-center">
             <h1 className="text-2xl font-bold font-headline mb-4">Session Complete!</h1>
@@ -93,11 +92,9 @@ export function LearningSession() {
   };
 
   const goToNext = () => {
-    setCurrentIndex(prev => prev + 1);
-  };
-  
-  const goToPrev = () => {
-    setCurrentIndex(prev => Math.max(0, prev - 1));
+    if (currentIndex < shuffledVocabulary.length) {
+      setCurrentIndex(prev => prev + 1);
+    }
   };
   
   const restartSession = () => {
@@ -127,9 +124,6 @@ export function LearningSession() {
 
       <Card className="w-full mt-8">
         <CardContent className="p-4 flex justify-center items-center gap-4">
-             <Button variant="outline" size="icon" onClick={goToPrev} disabled={currentIndex === 0}>
-                <ArrowLeft className="h-5 w-5" />
-            </Button>
             <Button className="flex-1 bg-red-500 hover:bg-red-600" size="lg" onClick={() => handleMark('not_remembered')}>
                 <X className="mr-2 h-5 w-5" />
                 Didn&apos;t Remember
@@ -137,9 +131,6 @@ export function LearningSession() {
             <Button className="flex-1 bg-green-500 hover:bg-green-600" size="lg" onClick={() => handleMark('remembered')}>
                 <Check className="mr-2 h-5 w-5" />
                 Remembered
-            </Button>
-            <Button variant="outline" size="icon" onClick={goToNext} disabled={currentIndex >= shuffledVocabulary.length - 1}>
-                <ArrowRight className="h-5 w-5" />
             </Button>
         </CardContent>
       </Card>
