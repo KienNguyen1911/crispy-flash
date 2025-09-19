@@ -7,7 +7,7 @@ import { notFound } from 'next/navigation';
 import Flashcard from './Flashcard';
 import ProgressSummary from './ProgressSummary';
 import { Button } from '../ui/button';
-import { ArrowLeft, ArrowRight, RotateCw, Check, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
 import { Progress } from '../ui/progress';
 import { Card, CardContent } from '../ui/card';
 import Link from 'next/link';
@@ -50,10 +50,10 @@ export function LearningSession() {
   }, [initialVocabulary]);
 
   useEffect(() => {
-    if (shuffledVocabulary.length > 0 && currentIndex >= shuffledVocabulary.length) {
+    if (isClient && shuffledVocabulary.length > 0 && currentIndex >= shuffledVocabulary.length) {
       setIsFinished(true);
     }
-  }, [currentIndex, shuffledVocabulary.length]);
+  }, [currentIndex, shuffledVocabulary.length, isClient]);
 
   if (!topic) {
     return notFound();
@@ -82,8 +82,13 @@ export function LearningSession() {
 
   const handleMark = (status: 'remembered' | 'not_remembered') => {
     if (!currentCard) return;
-    updateVocabularyStatus(projectId, topicId, currentCard.id, status);
-    setSessionProgress(prev => ({ ...prev, [currentCard.id]: status }));
+
+    const isNewProgress = !sessionProgress[currentCard.id];
+    if (isNewProgress) {
+      updateVocabularyStatus(projectId, topicId, currentCard.id, status);
+      setSessionProgress(prev => ({ ...prev, [currentCard.id]: status }));
+    }
+
     goToNext();
   };
 
@@ -113,7 +118,7 @@ export function LearningSession() {
       <div className="w-full mb-8">
         <div className="flex justify-between items-center mb-2">
             <h2 className="font-headline text-xl">{topic.title}</h2>
-            <span className="text-sm text-muted-foreground">{currentIndex + 1} / {shuffledVocabulary.length}</span>
+            <span className="text-sm text-muted-foreground">{Math.min(currentIndex + 1, shuffledVocabulary.length)} / {shuffledVocabulary.length}</span>
         </div>
         <Progress value={progressPercentage} />
       </div>
@@ -133,7 +138,7 @@ export function LearningSession() {
                 <Check className="mr-2 h-5 w-5" />
                 Remembered
             </Button>
-            <Button variant="outline" size="icon" onClick={goToNext} disabled={currentIndex >= shuffledVocabulary.length -1}>
+            <Button variant="outline" size="icon" onClick={goToNext} disabled={currentIndex >= shuffledVocabulary.length - 1}>
                 <ArrowRight className="h-5 w-5" />
             </Button>
         </CardContent>
