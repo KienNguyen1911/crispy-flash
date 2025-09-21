@@ -7,7 +7,7 @@ import { notFound } from 'next/navigation';
 import Flashcard from './Flashcard';
 import ProgressSummary from './ProgressSummary';
 import { Button } from '../ui/button';
-import { ArrowLeft, ArrowRight, RotateCw, Check, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCw } from 'lucide-react';
 import { Progress } from '../ui/progress';
 import { Card, CardContent } from '../ui/card';
 import Link from 'next/link';
@@ -17,7 +17,7 @@ export function LearningSession() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { getTopicById, updateVocabularyStatus } = useContext(AppDataContext);
+  const { getTopicById } = useContext(AppDataContext);
 
   const projectId = params.projectId as string;
   const topicId = params.topicId as string;
@@ -75,11 +75,21 @@ export function LearningSession() {
 
   const currentCard = shuffledVocabulary[currentIndex];
 
-  const handleMark = (status: 'remembered' | 'not_remembered') => {
+  // Previously we had handleMark to update vocabulary status when marking remembered/not-remembered.
+  // That logic has been removed per request; navigation and review bookmarking remain UI-only.
+
+  // UI-only handlers for navigation and review bookmarking
+  const goToPrevious = () => {
+    setCurrentIndex(prev => Math.max(0, prev - 1));
+  };
+
+  const requestReview = () => {
     if (!currentCard) return;
-    updateVocabularyStatus(projectId, topicId, currentCard.id, status);
-    setSessionProgress(prev => ({ ...prev, [currentCard.id]: status }));
-    goToNext();
+    // UI-only: add to local sessionProgress as 'not_remembered' for now
+    setSessionProgress(prev => ({ ...prev, [currentCard.id]: 'not_remembered' }));
+    // The user said they'll handle persistence; this is a placeholder hook.
+
+    setCurrentIndex(prev => prev + 1);
   };
 
   const goToNext = () => {
@@ -117,17 +127,18 @@ export function LearningSession() {
 
       <Card className="w-full mt-8">
         <CardContent className="p-4 flex justify-center items-center gap-4">
-            <Button className="flex-1 bg-red-500 hover:bg-red-600" size="lg" onClick={() => handleMark('not_remembered')}>
-                <X className="mr-2 h-5 w-5" />
-                Didn&apos;t Remember
-            </Button>
-            <Button className="flex-1 bg-green-500 hover:bg-green-600" size="lg" onClick={() => handleMark('remembered')}>
-                <Check className="mr-2 h-5 w-5" />
-                Remembered
-            </Button>
-            <Button variant="outline" size="icon" onClick={goToNext} disabled={currentIndex >= shuffledVocabulary.length -1}>
-                <ArrowRight className="h-5 w-5" />
-            </Button>
+      <Button variant="outline" size="icon" onClick={goToPrevious} disabled={currentIndex === 0}>
+        <ArrowLeft className="h-5 w-5" />
+      </Button>
+
+      <Button className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black" size="lg" onClick={requestReview}>
+        <RotateCw className="mr-2 h-5 w-5" />
+        Not Remember
+      </Button>
+
+      <Button variant="outline" size="icon" onClick={goToNext}>
+        <ArrowRight className="h-5 w-5" />
+      </Button>
         </CardContent>
       </Card>
       

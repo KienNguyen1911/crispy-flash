@@ -27,7 +27,7 @@ type ProjectFormValues = z.infer<typeof formSchema>;
 
 interface ProjectFormProps {
   project?: Project;
-  onSubmit: (data: Omit<Project, 'id' | 'topics'> | (Partial<Project> & { id: string })) => void;
+  onSubmit: (data: Omit<Project, 'id' | 'topics'> | (Partial<Project> & { id: string })) => boolean | Promise<boolean> | void;
   submitButtonText?: string;
 }
 
@@ -42,16 +42,35 @@ export function ProjectForm({ project, onSubmit, submitButtonText = 'Save' }: Pr
     },
   });
   
-  const handleSubmit = (data: ProjectFormValues) => {
+  const handleSubmit = async (data: ProjectFormValues) => {
     setIsSubmitting(true);
-    if (project) {
-        onSubmit({ ...data, id: project.id });
-    } else {
-        onSubmit(data);
+    try {
+      let success = true;
+      const run = (payload: any) => {
+        try {
+          return onSubmit(payload);
+        } catch (e) {
+          return undefined;
+        }
+      };
+
+      const ret = project ? run({ ...data, id: project.id }) : run(data);
+
+      // if ret is a thenable, await it
+      if (ret && typeof (ret as any).then === 'function') {
+        const awaited = await (ret as Promise<any>);
+        if (typeof awaited === 'boolean') success = awaited;
+      } else if (typeof ret === 'boolean') {
+        success = ret;
+      }
+
+      if (success) {
+        // This allows the dialog to close on submit
+        document.getElementById('closeDialog')?.click();
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
-    // This allows the dialog to close on submit
-    document.getElementById('closeDialog')?.click();
   };
 
   return (

@@ -27,7 +27,8 @@ type TopicFormValues = z.infer<typeof formSchema>;
 
 interface TopicFormProps {
   topic?: Topic;
-  onSubmit: (data: Omit<Topic, 'id' | 'projectId' | 'vocabulary'> | (Partial<Topic> & { id: string })) => void;
+  // Use the validated form shape for onSubmit so title/description are always present.
+  onSubmit: (data: TopicFormValues | (TopicFormValues & { id: string })) => void;
   submitButtonText?: string;
 }
 

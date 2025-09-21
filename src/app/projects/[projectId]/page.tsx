@@ -1,9 +1,7 @@
-'use client';
-
-import { useContext } from 'react';
-import { notFound, useParams } from 'next/navigation';
+import { notFound } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import { AppDataContext } from '@/context/AppDataContext';
+import TopicCreate from '@/components/projects/TopicCreate';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -30,18 +28,24 @@ import {
 } from '@/components/ui/dialog';
 import { TopicForm } from '@/components/topics/TopicForm';
 
-export default function ProjectPage() {
-  const params = useParams();
-  const projectId = params.projectId as string;
-  const { getProjectById, addTopic } = useContext(AppDataContext);
-  
-  const project = getProjectById(projectId);
+export default async function ProjectPage({ params }: { params: { projectId: string } }) {
+  const projectId = params.projectId;
 
-  if (!project) {
-    return notFound();
-  }
+  const projectRaw = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: { topics: { include: { vocabulary: true } } },
+  });
 
-  const totalWords = project.topics.reduce((acc, topic) => acc + topic.vocabulary.length, 0);
+  if (!projectRaw) return notFound();
+
+  const project = {
+    id: projectRaw.id,
+    name: projectRaw.title ?? projectRaw.name ?? '',
+    description: projectRaw.description ?? '',
+    topics: (projectRaw.topics ?? []).map((t: any) => ({ ...t })),
+  };
+
+  const totalWords = project.topics.reduce((acc, topic) => acc + (topic.vocabulary?.length ?? 0), 0);
 
   return (
     <div className="container mx-auto max-w-5xl py-8 px-4">
@@ -64,28 +68,13 @@ export default function ProjectPage() {
       
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-semibold font-headline">Topics</h2>
-        <div className="flex gap-2">
+          <div className="flex gap-2">
           <Button variant="outline" disabled={totalWords === 0}>
             <BrainCircuit className="mr-2 h-4 w-4" />
             Learn All
           </Button>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                New Topic
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create a New Topic</DialogTitle>
-              </DialogHeader>
-              <TopicForm
-                onSubmit={(data) => addTopic(projectId, data)}
-                submitButtonText="Create Topic"
-              />
-            </DialogContent>
-          </Dialog>
+          {/* TopicCreate is a client component that uses AppDataContext to add topics */}
+          <TopicCreate projectId={projectId} />
         </div>
       </div>
 
