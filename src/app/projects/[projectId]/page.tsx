@@ -2,6 +2,9 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import TopicCreate from '@/components/projects/TopicCreate';
+import ProjectHeaderEditor from '@/components/projects/ProjectHeaderEditor';
+import dynamic from 'next/dynamic';
+import TopicCardClient from '@/components/projects/TopicCardClient';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,40 +15,28 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, BrainCircuit } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { TopicForm } from '@/components/topics/TopicForm';
+
 
 export default async function ProjectPage({ params }: { params: { projectId: string } }) {
-  const projectId = params.projectId;
+  const { projectId } = (await params) as { projectId: string };
 
   const projectRaw = await prisma.project.findUnique({
     where: { id: projectId },
-    include: { topics: { include: { vocabulary: true } } },
+    include: {},
   });
 
   if (!projectRaw) return notFound();
 
   const project = {
     id: projectRaw.id,
-    name: projectRaw.title ?? projectRaw.name ?? '',
+    name: projectRaw.title ?? '',
     description: projectRaw.description ?? '',
-    topics: (projectRaw.topics ?? []).map((t: any) => ({ ...t })),
   };
 
-  const totalWords = project.topics.reduce((acc, topic) => acc + (topic.vocabulary?.length ?? 0), 0);
+  // fetch topics for this project with per-topic vocabulary counts
+  const topicsRaw = await prisma.topic.findMany({ where: { projectId }, select: { id: true, title: true, createdAt: true, _count: { select: { vocabulary: true } } } });
+  const topics = topicsRaw.map((t: any) => ({ id: t.id, title: t.title, description: '', vocabularyCount: (t as any)._count?.vocabulary ?? 0 }));
+  const totalWords = topics.reduce((acc, t) => acc + (t.vocabularyCount ?? 0), 0);
 
   return (
     <div className="container mx-auto max-w-5xl py-8 px-4">
@@ -62,8 +53,7 @@ export default async function ProjectPage({ params }: { params: { projectId: str
       </Breadcrumb>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold font-headline">{project.name}</h1>
-        <p className="text-lg text-muted-foreground mt-1">{project.description}</p>
+        <ProjectHeaderEditor project={project} />
       </div>
       
       <div className="flex items-center justify-between mb-8">
@@ -78,21 +68,13 @@ export default async function ProjectPage({ params }: { params: { projectId: str
         </div>
       </div>
 
-      {project.topics.length > 0 ? (
+      {topics.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {project.topics.map((topic) => (
-            <Link href={`/projects/${projectId}/topics/${topic.id}`} key={topic.id} passHref>
-              <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300 cursor-pointer">
-                <CardHeader>
-                  <CardTitle className="font-headline">{topic.title}</CardTitle>
-                  <CardDescription>{topic.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">{topic.vocabulary.length} word(s)</p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+              {topics.map((topic) => (
+                <div key={topic.id}>
+                  <TopicCardClient projectId={projectId} topic={topic} />
+                </div>
+              ))}
         </div>
       ) : (
         <div className="text-center py-20 border-2 border-dashed rounded-lg">

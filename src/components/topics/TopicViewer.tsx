@@ -1,10 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Search, BrainCircuit, Upload } from 'lucide-react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
+import { Search, BrainCircuit, Upload, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import {
   Table,
@@ -16,6 +25,8 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { Vocabulary } from '@/lib/types';
+import { TopicContext } from '@/context/TopicContext';
+import TopicHeaderEditor from './TopicHeaderEditor';
 import {
   Select,
   SelectContent,
@@ -25,7 +36,43 @@ import {
 } from '@/components/ui/select';
 
 export default function TopicViewer({ projectId, topic, projectName }: { projectId: string; topic: any; projectName: string }) {
+  const { updateTopic } = useContext(TopicContext) as any;
   const [searchTerm, setSearchTerm] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(topic.title);
+  const [description, setDescription] = useState(topic.description ?? '');
+  const [saving, setSaving] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const isDirty = title !== topic.title || description !== (topic.description ?? '');
+
+  const save = async () => {
+    if (!isDirty) { setEditing(false); return; }
+    try {
+      setSaving(true);
+      await updateTopic(projectId, topic.id, { title, description });
+      setEditing(false);
+    } catch (e) {
+      // TopicContext will show toasts
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!editing) return;
+    const handlePointerDown = (e: PointerEvent) => {
+      if (!containerRef.current) return;
+      const target = e.target as Node;
+      if (!containerRef.current.contains(target)) {
+        setTitle(topic.title);
+        setDescription(topic.description ?? '');
+        setEditing(false);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [editing, topic.title, topic.description]);
   const [statusFilter, setStatusFilter] = useState('all');
 
   const filteredVocabulary = (topic.vocabulary || [])
@@ -45,13 +92,12 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
   return (
     <div className="container mx-auto max-w-5xl py-8 px-4">
       {/* Breadcrumb */}
-      <div className="mb-8">
+      <div className="mb-8" ref={containerRef}>
         <nav className="mb-4 text-sm text-muted-foreground">
           <Link href="/">Projects</Link> / <Link href={`/projects/${projectId}`}>{projectName}</Link> / <span className="font-semibold">{topic.title}</span>
         </nav>
 
-        <h1 className="text-3xl font-bold font-headline">{topic.title}</h1>
-        <p className="text-lg text-muted-foreground mt-1">{topic.description}</p>
+        <TopicHeaderEditor projectId={projectId} topic={topic} />
       </div>
 
       <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
@@ -81,11 +127,28 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
               <Upload className="mr-2 h-4 w-4" /> Import
             </Link>
           </Button>
-          <Button asChild>
-            <Link href={`/projects/${projectId}/topics/${topic.id}/learn`}>
+          {/* Learn chooser dialog: pick All or Not Remembered */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
                 <BrainCircuit className="mr-2 h-4 w-4" /> Learn
-            </Link>
-          </Button>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Choose vocabulary set</DialogTitle>
+                <DialogDescription>Select which set to study with flashcards.</DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-2 mt-4">
+                <Button asChild>
+                  <Link href={`/projects/${projectId}/topics/${topic.id}/learn`}>All vocabularies</Link>
+                </Button>
+                <Button asChild>
+                  <Link href={`/projects/${projectId}/topics/${topic.id}/learn?filter=not_remembered`}>Not remembered</Link>
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       

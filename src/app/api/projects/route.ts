@@ -4,8 +4,22 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 
 export async function GET() {
-  const projects = await prisma.project.findMany({ include: { topics: { include: { vocabulary: true } } } });
-  return NextResponse.json(projects);
+  // Return lightweight project list: id/title/description with counts only
+  const projects = await prisma.project.findMany({ select: { id: true, title: true, description: true, _count: { select: { topics: true } } } });
+
+  // compute wordsCount per project by counting vocabulary where topic.projectId = project.id
+  const results = await Promise.all(projects.map(async (p) => {
+    const wordsCount = await prisma.vocabulary.count({ where: { topic: { projectId: p.id } as any } });
+    return {
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      topicsCount: p._count?.topics ?? 0,
+      wordsCount,
+    };
+  }));
+
+  return NextResponse.json(results);
 }
 
 export async function POST(req: Request) {

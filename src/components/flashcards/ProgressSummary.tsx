@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { RotateCw } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProgressSummaryProps {
   sessionProgress: { [key: string]: 'remembered' | 'not_remembered' };
@@ -21,6 +23,29 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
     const remembered = Object.values(sessionProgress).filter(s => s === 'remembered').length;
     const notRemembered = total - remembered;
     const percentage = total > 0 ? Math.round((remembered / total) * 100) : 0;
+        const { toast } = useToast();
+
+        useEffect(() => {
+            // persist sessionProgress to DB via batch PATCH endpoint
+            async function persist() {
+                try {
+                    const updates = Object.entries(sessionProgress).map(([id, status]) => ({ id, status }));
+                    if (updates.length === 0) return;
+                    const res = await fetch(`/api/projects/${projectId}/topics/${topicId}/vocabulary`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ updates }),
+                    });
+                    if (!res.ok) throw new Error('persist failed');
+                    const data = await res.json();
+                    toast({ title: 'Session saved', description: `${data.updated} words updated.` });
+                } catch (err: any) {
+                    console.error(err);
+                    toast({ title: 'Save failed', description: 'Could not save session results', variant: 'destructive' });
+                }
+            }
+            persist();
+        }, []);
 
   return (
     <div className="container mx-auto max-w-2xl py-8 px-4">

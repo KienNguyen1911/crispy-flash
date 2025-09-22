@@ -20,3 +20,23 @@ export async function POST(req: Request, { params }: { params: { topicId: string
   } });
   return NextResponse.json(item, { status: 201 });
 }
+
+export async function PATCH(req: Request, { params }: { params: { topicId: string, projectId: string } }) {
+  const { topicId } = params;
+  const body = await req.json();
+  const updates: Array<{ id: string; status: string }> = body.updates || [];
+
+  if (!Array.isArray(updates) || updates.length === 0) {
+    return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
+  }
+
+  // Apply updates in a transaction
+  const ops = updates.map(u => prisma.vocabulary.update({ where: { id: u.id }, data: { status: u.status } }));
+  try {
+    const results = await prisma.$transaction(ops);
+    return NextResponse.json({ updated: results.length });
+  } catch (err: any) {
+    console.error('Batch update error', err);
+    return NextResponse.json({ error: 'Failed to update vocabulary statuses' }, { status: 500 });
+  }
+}

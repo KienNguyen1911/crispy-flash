@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AppDataContext } from '@/context/AppDataContext';
+import { VocabularyContext } from '@/context/VocabularyContext';
 import { useToast } from '@/hooks/use-toast';
 import { enhanceVocabularyEntry } from '@/ai/flows/ai-powered-vocabulary-enhancement';
 import { Loader2 } from 'lucide-react';
@@ -49,7 +49,7 @@ export default function VocabularyImportClient() {
   const projectId = params.projectId as string;
   const topicId = params.topicId as string;
   
-  const { addVocabulary } = useContext(AppDataContext);
+  const { addVocabulary } = useContext(VocabularyContext);
   const { toast } = useToast();
 
   const handlePreview = () => {

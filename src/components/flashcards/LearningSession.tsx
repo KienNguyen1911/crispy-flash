@@ -2,7 +2,7 @@
 
 import { useState, useContext, useEffect, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { AppDataContext } from '@/context/AppDataContext';
+import { TopicContext } from '@/context/TopicContext';
 import { notFound } from 'next/navigation';
 import Flashcard from './Flashcard';
 import ProgressSummary from './ProgressSummary';
@@ -13,16 +13,21 @@ import { Card, CardContent } from '../ui/card';
 import Link from 'next/link';
 import type { Vocabulary } from '@/lib/types';
 
-export function LearningSession() {
+export function LearningSession({ initialTopic }: { initialTopic?: any } = {}) {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { getTopicById } = useContext(AppDataContext);
+  const { getTopicById } = useContext(TopicContext);
 
   const projectId = params.projectId as string;
   const topicId = params.topicId as string;
   
-  const topic = getTopicById(projectId, topicId);
+  let topic = getTopicById(projectId, topicId);
+  // If TopicContext doesn't have the topic (because we navigated directly to learn),
+  // fall back to the server-provided initialTopic prop.
+  if (!topic && initialTopic && initialTopic.id === topicId) {
+    topic = initialTopic;
+  }
   
   const filterNotRemembered = searchParams.get('filter') === 'not_remembered';
   
@@ -127,18 +132,32 @@ export function LearningSession() {
 
       <Card className="w-full mt-8">
         <CardContent className="p-4 flex justify-center items-center gap-4">
-      <Button variant="outline" size="icon" onClick={goToPrevious} disabled={currentIndex === 0}>
-        <ArrowLeft className="h-5 w-5" />
-      </Button>
+          <Button variant="outline" size="icon" onClick={goToPrevious} disabled={currentIndex === 0} aria-label="Back">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
 
-      <Button className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black" size="lg" onClick={requestReview}>
-        <RotateCw className="mr-2 h-5 w-5" />
-        Not Remember
-      </Button>
+          <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" size="lg" onClick={() => {
+            // forget: mark as not remembered and advance
+            const card = shuffledVocabulary[currentIndex];
+            if (card) {
+              setSessionProgress(prev => ({ ...prev, [card.id]: 'not_remembered' }));
+              setCurrentIndex(prev => prev + 1);
+            }
+          }} aria-label="Forget and Next">
+            <RotateCw className="mr-2 h-5 w-5" />
+            Forget
+          </Button>
 
-      <Button variant="outline" size="icon" onClick={goToNext}>
-        <ArrowRight className="h-5 w-5" />
-      </Button>
+          <Button variant="outline" size="icon" onClick={() => {
+            // remember: mark as remembered and advance
+            const card = shuffledVocabulary[currentIndex];
+            if (card) {
+              setSessionProgress(prev => ({ ...prev, [card.id]: 'remembered' }));
+              setCurrentIndex(prev => prev + 1);
+            }
+          }} aria-label="Remember and Next">
+            <ArrowRight className="h-5 w-5" />
+          </Button>
         </CardContent>
       </Card>
       

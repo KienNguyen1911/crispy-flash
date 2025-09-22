@@ -1,8 +1,18 @@
 'use client';
 
-import { AppDataProvider } from '@/context/AppDataContext';
+import { ProjectProvider } from '@/context/ProjectContext';
+import { TopicProvider } from '@/context/TopicContext';
+import { VocabularyProvider } from '@/context/VocabularyContext';
 import { type ReactNode } from 'react';
 
 export function AppProviders({ children }: { children: ReactNode }) {
-  return <AppDataProvider>{children}</AppDataProvider>;
+  return (
+    <ProjectProvider>
+      <TopicProvider>
+        <VocabularyProvider>
+          {children}
+        </VocabularyProvider>
+      </TopicProvider>
+    </ProjectProvider>
+  );
 }

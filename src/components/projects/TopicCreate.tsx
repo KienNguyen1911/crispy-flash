@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { TopicForm } from '@/components/topics/TopicForm';
 import { useContext } from 'react';
-import { AppDataContext } from '@/context/AppDataContext';
+import { TopicContext } from '@/context/TopicContext';
+import { useRouter } from 'next/navigation';
 
 export default function TopicCreate({ projectId }: { projectId: string }) {
-  const { addTopic } = useContext(AppDataContext);
+  const { addTopic } = useContext(TopicContext);
+  const router = useRouter();
 
   return (
     <Dialog>
@@ -23,7 +25,14 @@ export default function TopicCreate({ projectId }: { projectId: string }) {
         <DialogHeader>
           <DialogTitle>Create a New Topic</DialogTitle>
         </DialogHeader>
-        <TopicForm onSubmit={(data) => addTopic(projectId, data)} submitButtonText="Create Topic" />
+        <TopicForm
+          onSubmit={async (data) => {
+            await addTopic(projectId, data);
+            // refresh server-rendered data so the new topic appears immediately
+            try { router.refresh(); } catch (e) { /* noop */ }
+          }}
+          submitButtonText="Create Topic"
+        />
       </DialogContent>
     </Dialog>
   );

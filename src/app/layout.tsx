@@ -3,6 +3,7 @@ import './globals.css';
 import { AppProviders } from './providers';
 import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/layout/Header';
+import PageLoader from '@/components/ui/PageLoader';
 
 export const metadata: Metadata = {
   title: 'LinguaFlash',
@@ -32,6 +33,7 @@ export default function RootLayout({
         <AppProviders>
           <div className="relative flex min-h-screen flex-col">
             <Header />
+            <PageLoader />
             <main className="flex-1">{children}</main>
           </div>
           <Toaster />
