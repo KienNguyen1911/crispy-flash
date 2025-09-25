@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, ReactNode, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import type { Project } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -43,7 +44,16 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  useEffect(() => { reloadProjects(); }, []);
+  const pathname = usePathname();
+
+  // Only auto-load the projects list on the root or the projects-list page.
+  // This prevents the provider from fetching `/api/projects` on every route
+  // (for example on project detail pages like `/projects/:projectId`).
+  useEffect(() => {
+    if (pathname === '/' || pathname === '/projects') {
+      reloadProjects();
+    }
+  }, [pathname]);
 
   const getProjectById = (projectId: string) => projects.find(p => p.id === projectId);
 

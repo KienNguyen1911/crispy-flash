@@ -32,6 +32,16 @@ import { useToast } from '@/hooks/use-toast';
 import { enhanceVocabularyEntry } from '@/ai/flows/ai-powered-vocabulary-enhancement';
 import { Loader2 } from 'lucide-react';
 import type { Vocabulary } from '@/lib/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 type ParsedRow = string[];
 type ColumnMapping = {
@@ -53,8 +63,7 @@ export default function VocabularyImportClient() {
   const { toast } = useToast();
 
   const handlePreview = () => {
-    const rows = text.trim().split('\n').filter(row => row);
-    const data = rows.map(row => row.split(/[\t/]/).map(cell => cell.trim()));
+    const data = parseInputToRows(text);
     setParsedData(data);
 
     // Auto-map based on common patterns
@@ -69,6 +78,79 @@ export default function VocabularyImportClient() {
         });
         setColumnMapping(newMapping);
     }
+    setPreviewOpen(true);
+  };
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  /**
+   * Parse the raw input text into rows of cells.
+   * Supports:
+   * - Tab or slash separated (format 1 & 2)
+   * - Markdown table (format 3)
+   */
+  const parseInputToRows = (raw: string): ParsedRow[] => {
+    const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+    // Detect markdown table (lines starting and ending with | or containing | separators)
+    const isMarkdownTable = lines.every(line => line.startsWith('|') && line.includes('|'));
+    if (isMarkdownTable) {
+      // remove separator lines like | --- | --- |
+      const filtered = lines.filter(l => !/^\|?\s*-{1,}\s*(\|\s*-{1,}\s*)+$/i.test(l));
+      return filtered.map(line => {
+        return line
+          .split('|')
+          .map(c => c.trim())
+          .filter((c, i) => c !== '' || i !== 0 && i !== line.split('|').length - 1); // drop empty leading/trailing
+      }).map(cells => cells.filter(cell => cell !== ''));
+    }
+
+    // Otherwise, try splitting by tab first, then slashes, then multiple spaces
+    const rows: ParsedRow[] = [];
+    for (const line of lines) {
+      // If line contains tabs, split by tab
+      if (line.includes('\t')) {
+        rows.push(line.split('\t').map(s => s.trim()).filter(s => s !== ''));
+        continue;
+      }
+
+      // If line contains pipe-separated but not starting with | (some authors omit outer pipes)
+      if (line.includes('|')) {
+        const cells = line.split('|').map(s => s.trim()).filter(s => s !== '');
+        if (cells.length > 1) {
+          rows.push(cells);
+          continue;
+        }
+      }
+
+      // If line contains slash separators like 'にち / ひ' or uses tabs and slashes, split on slash or multiple spaces
+      if (line.includes('/')) {
+        const parts = line.split('/').map(s => s.trim()).filter(s => s !== '');
+        // Also split the first segment by tab or spaces to separate kanji and kana if needed
+        if (parts.length >= 2) {
+          // Try breaking first part by whitespace to get kanji and kana when line like "夕\tゆう / せき\tBuổi chiều"
+          const preParts = parts[0].split(/\s+/).map(s => s.trim()).filter(s => s !== '');
+          if (preParts.length > 1) {
+            rows.push([preParts[0], preParts.slice(1).join(' '), ...parts.slice(1)]);
+          } else {
+            rows.push(parts);
+          }
+          continue;
+        }
+      }
+
+      // Fallback: split by two-or-more spaces or single tab or single space
+      const byTwoSpaces = line.split(/\s{2,}/).map(s => s.trim()).filter(s => s !== '');
+      if (byTwoSpaces.length > 1) {
+        rows.push(byTwoSpaces);
+        continue;
+      }
+
+      const bySpace = line.split(/\s+/).map(s => s.trim()).filter(s => s !== '');
+      rows.push(bySpace);
+    }
+
+    return rows;
   };
 
   const handleColumnMapChange = (columnIndex: number, value: 'kanji' | 'kana' | 'meaning' | 'skip') => {
@@ -147,46 +229,69 @@ export default function VocabularyImportClient() {
             rows={10}
             placeholder="日	にち / ひ	Ngày, mặt trời&#10;月	つき / がつ	Mặt trăng, tháng"
           />
-          <Button onClick={handlePreview}>Preview Data</Button>
+          <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+            <Button onClick={handlePreview}>Preview Data</Button>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Preview and Map Columns</DialogTitle>
+                <DialogDescription>Check the parsed rows and map columns before saving.</DialogDescription>
+              </DialogHeader>
 
-          {parsedData.length > 0 && (
-            <div className="space-y-4 pt-4">
-                <h3 className="text-lg font-semibold">Preview and Map Columns</h3>
-                <Table>
-                    <TableHeader>
+              <div className="space-y-4 pt-4">
+                {parsedData.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No data to preview.</p>
+                ) : (
+                  <>
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                            {Array.from({ length: maxColumns }).map((_, index) => (
-                                <TableHead key={index}>
-                                     <Select 
-                                        value={columnMapping[index]} 
-                                        onValueChange={(value: any) => handleColumnMapChange(index, value)}
-                                     >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Map Column" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {columnOptions.map(opt => (
-                                                <SelectItem key={opt} value={opt} className="capitalize">{opt}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </TableHead>
-                            ))}
+                          {Array.from({ length: maxColumns }).map((_, index) => (
+                            <TableHead key={index}>
+                              <Select
+                                value={columnMapping[index]}
+                                onValueChange={(value: any) => handleColumnMapChange(index, value)}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Map Column" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {columnOptions.map(opt => (
+                                    <SelectItem key={opt} value={opt} className="capitalize">
+                                      {opt}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableHead>
+                          ))}
                         </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                      </TableHeader>
+                      <TableBody>
                         {parsedData.slice(0, 5).map((row, rowIndex) => (
-                            <TableRow key={rowIndex}>
-                                {Array.from({ length: maxColumns }).map((_, cellIndex) => (
-                                    <TableCell key={cellIndex}>{row[cellIndex] || ''}</TableCell>
-                                ))}
-                            </TableRow>
+                          <TableRow key={rowIndex}>
+                            {Array.from({ length: maxColumns }).map((_, cellIndex) => (
+                              <TableCell key={cellIndex}>{row[cellIndex] || ''}</TableCell>
+                            ))}
+                          </TableRow>
                         ))}
-                    </TableBody>
-                </Table>
-                {parsedData.length > 5 && <p className="text-sm text-muted-foreground text-center">... and {parsedData.length - 5} more rows.</p>}
-            </div>
-          )}
+                      </TableBody>
+                    </Table>
+
+                    {parsedData.length > 5 && (
+                      <p className="text-sm text-muted-foreground text-center">... and {parsedData.length - 5} more rows.</p>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button onClick={() => setPreviewOpen(false)}>Close</Button>
+                <DialogClose asChild>
+                  <Button variant="secondary">Done</Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardContent>
         <CardFooter>
           <Button 
