@@ -10,15 +10,45 @@ export async function GET(_req: Request, { params }: { params: { topicId: string
 export async function POST(req: Request, { params }: { params: { topicId: string } }) {
   const { topicId } = params;
   const body = await req.json();
-  const item = await prisma.vocabulary.create({ data: {
-    kanji: body.kanji || null,
-    kana: body.kana || null,
-    meaning: body.meaning || '',
-    image: body.image || null,
-    type: body.type || 1,
-    topicId,
-  } });
-  return NextResponse.json(item, { status: 201 });
+  console.log('Received body:', typeof body, Array.isArray(body), body.length || 'N/A');
+
+  // Check if body is an array for bulk insert
+  if (Array.isArray(body)) {
+    console.log(`Bulk inserting ${body.length} vocabulary items for topic ${topicId}`);
+    try {
+      const items = await prisma.vocabulary.createMany({
+        data: body.map(item => ({
+          kanji: item.kanji || null,
+          kana: item.kana || null,
+          meaning: item.meaning || '',
+          image: item.image || null,
+          type: item.type || 1,
+          topicId,
+        }))
+      });
+      console.log(`Successfully created ${items.count} vocabulary items`);
+      return NextResponse.json({ created: items.count }, { status: 201 });
+    } catch (error) {
+      console.error('Bulk insert error:', error);
+      return NextResponse.json({ error: 'Failed to create vocabulary items' }, { status: 500 });
+    }
+  } else {
+    // Single item
+    try {
+      const item = await prisma.vocabulary.create({ data: {
+        kanji: body.kanji || null,
+        kana: body.kana || null,
+        meaning: body.meaning || '',
+        image: body.image || null,
+        type: body.type || 1,
+        topicId,
+      } });
+      return NextResponse.json(item, { status: 201 });
+    } catch (error) {
+      console.error('Single insert error:', error);
+      return NextResponse.json({ error: 'Failed to create vocabulary item' }, { status: 500 });
+    }
+  }
 }
 
 export async function PATCH(req: Request, { params }: { params: { topicId: string, projectId: string } }) {

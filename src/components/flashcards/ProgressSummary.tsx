@@ -7,6 +7,7 @@ import { RotateCw } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { apiUrl } from '@/lib/api';
 
 interface ProgressSummaryProps {
   sessionProgress: { [key: string]: 'remembered' | 'not_remembered' };
@@ -31,7 +32,7 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
                 try {
                     const updates = Object.entries(sessionProgress).map(([id, status]) => ({ id, status }));
                     if (updates.length === 0) return;
-                    const res = await fetch(`/api/projects/${projectId}/topics/${topicId}/vocabulary`, {
+                    const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary`), {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ updates }),

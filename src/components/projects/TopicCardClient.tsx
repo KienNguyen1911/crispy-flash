@@ -9,7 +9,7 @@ import { Trash2 } from 'lucide-react';
 import { Check, X } from 'lucide-react';
 import { TopicContext } from '@/context/TopicContext';
 
-export default function TopicCardClient({ projectId, topic }: { projectId: string; topic: any }) {
+export default function TopicCardClient({ projectId, topic, onTopicUpdated, onTopicDeleted }: { projectId: string; topic: any; onTopicUpdated?: () => void; onTopicDeleted?: () => void }) {
   const { deleteTopic } = useContext(TopicContext);
   const { updateTopic } = useContext(TopicContext) as any;
   const [editing, setEditing] = useState(false);
@@ -25,6 +25,7 @@ export default function TopicCardClient({ projectId, topic }: { projectId: strin
     try {
       setSaving(true);
       await updateTopic(projectId, topic.id, { title, description });
+      onTopicUpdated?.();
       setEditing(false);
     } catch (e) {
       // context handles toasts
@@ -88,7 +89,7 @@ export default function TopicCardClient({ projectId, topic }: { projectId: strin
                 <Button variant="outline">Cancel</Button>
               </AlertDialogCancel>
               <AlertDialogAction asChild>
-                <Button variant="destructive" onClick={async () => { try { await deleteTopic(projectId, topic.id); } catch (e) { /* ignore */ } }}>Delete</Button>
+                <Button variant="destructive" onClick={async () => { try { await deleteTopic(projectId, topic.id); onTopicDeleted?.(); } catch (e) { /* ignore */ } }}>Delete</Button>
               </AlertDialogAction>
             </div>
           </AlertDialogContent>

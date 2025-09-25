@@ -4,6 +4,7 @@ import React, { createContext, ReactNode, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import type { Project } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { apiUrl } from '@/lib/api';
 
 interface ProjectContextType {
   projects: Project[];
@@ -33,7 +34,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   const reloadProjects = async () => {
     try {
-      const res = await fetch('/api/projects');
+      const res = await fetch(apiUrl('/projects'));
       if (!res.ok) throw new Error('Failed to load projects');
       const data = await res.json();
       // data is expected to be lightweight project items with counts
@@ -70,7 +71,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         return true;
       }
       const body = { title: (projectData as any).name, description: (projectData as any).description };
-      const res = await fetch('/api/projects', { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
+      const res = await fetch(apiUrl('/projects'), { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}));
         toast({ title: 'Create failed', description: errBody?.error || 'Failed to create project', variant: 'destructive' });
@@ -90,7 +91,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   const updateProject = async (projectId: string, projectData: Partial<Project>) => {
     const body = { title: projectData.name, description: projectData.description };
-    const res = await fetch(`/api/projects/${projectId}`, { method: 'PATCH', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
+    const res = await fetch(apiUrl(`/projects/${projectId}`), { method: 'PATCH', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
     if (!res.ok) {
       const errBody = await res.json().catch(() => ({}));
       throw new Error(errBody?.error || 'Failed to update project');
@@ -102,7 +103,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteProject = async (projectId: string) => {
-    const res = await fetch(`/api/projects/${projectId}`, { method: 'DELETE' });
+    const res = await fetch(apiUrl(`/projects/${projectId}`), { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to delete project');
     setProjects(prev => prev.filter(p => p.id !== projectId));
     toast({ title: 'Project Deleted', variant: 'destructive' });

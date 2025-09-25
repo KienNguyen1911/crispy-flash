@@ -8,7 +8,7 @@ export async function GET(
   const { projectId } = params;
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    include: { topics: { include: { vocabulary: true } } }
+    include: { topics: { include: { vocabulary: false } } }
   });
 
   if (!project)

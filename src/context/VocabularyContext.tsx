@@ -4,6 +4,7 @@ import React, { createContext, ReactNode, useContext } from 'react';
 import type { Vocabulary } from '@/lib/types';
 import { ProjectContext } from '@/context/ProjectContext';
 import { useToast } from '@/hooks/use-toast';
+import { apiUrl } from '@/lib/api';
 
 interface VocabularyContextType {
   addVocabulary: (projectId: string, topicId: string, vocabularyItems: Omit<Vocabulary, 'id' | 'topicId' | 'status'>[]) => Promise<void>;
@@ -25,22 +26,26 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
 
   const addVocabulary = async (projectId: string, topicId: string, vocabularyItems: Omit<Vocabulary, 'id' | 'topicId' | 'status'>[]) => {
     try {
-      // create multiple vocabulary items sequentially (keeps existing behavior)
-      for (const v of vocabularyItems) {
-        const res = await fetch(`/api/projects/${projectId}/topics/${topicId}/vocabulary`, { method: 'POST', body: JSON.stringify(v), headers: { 'Content-Type': 'application/json' } });
-        if (!res.ok) throw new Error('Failed to create vocabulary');
+      console.log(`Sending ${vocabularyItems.length} vocabulary items to API`);
+      const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary`), { method: 'POST', body: JSON.stringify(vocabularyItems), headers: { 'Content-Type': 'application/json' } });
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('API response error:', res.status, errorText);
+        throw new Error('Failed to create vocabulary');
       }
+      const result = await res.json();
+      console.log('API response:', result);
       await reloadProjects();
       toast({ title: 'Vocabulary Saved', description: `${vocabularyItems.length} new word(s) added.` });
     } catch (err) {
-      console.error(err);
+      console.error('addVocabulary error:', err);
       toast({ title: 'Save failed', description: 'Could not save vocabulary', variant: 'destructive' });
     }
   };
 
   const updateVocabulary = async (projectId: string, topicId: string, vocabId: string, vocabData: Partial<Vocabulary>) => {
     try {
-      const res = await fetch(`/api/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`, { method: 'PATCH', body: JSON.stringify(vocabData), headers: { 'Content-Type': 'application/json' } });
+      const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`), { method: 'PATCH', body: JSON.stringify(vocabData), headers: { 'Content-Type': 'application/json' } });
       if (!res.ok) throw new Error('Failed to update vocabulary');
       await reloadProjects();
       toast({ title: 'Vocabulary Updated' });
@@ -52,7 +57,7 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
 
   const deleteVocabulary = async (projectId: string, topicId: string, vocabId: string) => {
     try {
-      const res = await fetch(`/api/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`, { method: 'DELETE' });
+      const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`), { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete vocabulary');
       await reloadProjects();
       toast({ title: 'Vocabulary Deleted', variant: 'destructive' });
@@ -64,7 +69,7 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
 
   const updateVocabularyStatus = async (projectId: string, topicId: string, vocabId: string, status: Vocabulary['status']) => {
     try {
-      const res = await fetch(`/api/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`, { method: 'PATCH', body: JSON.stringify({ status }), headers: { 'Content-Type': 'application/json' } });
+      const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`), { method: 'PATCH', body: JSON.stringify({ status }), headers: { 'Content-Type': 'application/json' } });
       if (!res.ok) throw new Error('Failed to update vocabulary status');
       await reloadProjects();
     } catch (err) {

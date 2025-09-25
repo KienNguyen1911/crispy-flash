@@ -29,7 +29,6 @@ import {
 } from '@/components/ui/select';
 import { VocabularyContext } from '@/context/VocabularyContext';
 import { useToast } from '@/hooks/use-toast';
-import { enhanceVocabularyEntry } from '@/ai/flows/ai-powered-vocabulary-enhancement';
 import { Loader2 } from 'lucide-react';
 import type { Vocabulary } from '@/lib/types';
 import {
@@ -172,39 +171,17 @@ export default function VocabularyImportClient() {
       setIsSaving(false);
       return;
     }
-    
-    const vocabToSave: Omit<Vocabulary, 'id' | 'topicId' | 'status'>[] = [];
 
-    for (const row of parsedData) {
-        const kanji = row[Number(kanjiIndex)];
-        const kana = row[Number(kanaIndex)];
-        const meaning = row[Number(meaningIndex)];
-        
-        if (kanji && kana && meaning) {
-            try {
-                const enhancedData = await enhanceVocabularyEntry({
-                    kanji,
-                    hiraganaKatakana: kana,
-                    meaning,
-                    type: 'simple word',
-                });
+    // Prepare basic vocab data
+    const vocabToSave: Omit<Vocabulary, 'id' | 'topicId' | 'status'>[] = parsedData
+      .map(row => ({
+        kanji: row[Number(kanjiIndex)],
+        kana: row[Number(kanaIndex)],
+        meaning: row[Number(meaningIndex)],
+      }))
+      .filter(item => item.kanji && item.kana && item.meaning);
 
-                vocabToSave.push({
-                    kanji,
-                    kana,
-                    meaning,
-                    usageExample: enhancedData.enhancedUsageExample,
-                    // image handling would be more complex with data URIs, skipping for now
-                });
-
-            } catch (error) {
-                console.error("AI enhancement failed for:", kanji, error);
-                // Save without enhancement if AI fails
-                 vocabToSave.push({ kanji, kana, meaning });
-            }
-        }
-    }
-    
+    console.log(`Prepared ${vocabToSave.length} vocabulary items for saving`);
     addVocabulary(projectId, topicId, vocabToSave);
     setIsSaving(false);
     router.push(`/projects/${projectId}/topics/${topicId}`);
@@ -299,7 +276,7 @@ export default function VocabularyImportClient() {
             disabled={parsedData.length === 0 || isSaving}
           >
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSaving ? 'Saving with AI...' : 'Save Vocabulary'}
+            {isSaving ? 'Saving...' : 'Save Vocabulary'}
           </Button>
         </CardFooter>
       </Card>

@@ -9,7 +9,7 @@ import { useContext } from 'react';
 import { TopicContext } from '@/context/TopicContext';
 import { useRouter } from 'next/navigation';
 
-export default function TopicCreate({ projectId }: { projectId: string }) {
+export default function TopicCreate({ projectId, onTopicCreated }: { projectId: string; onTopicCreated?: () => void }) {
   const { addTopic } = useContext(TopicContext);
   const router = useRouter();
 
@@ -28,6 +28,7 @@ export default function TopicCreate({ projectId }: { projectId: string }) {
         <TopicForm
           onSubmit={async (data) => {
             await addTopic(projectId, data);
+            onTopicCreated?.();
             // refresh server-rendered data so the new topic appears immediately
             try { router.refresh(); } catch (e) { /* noop */ }
           }}

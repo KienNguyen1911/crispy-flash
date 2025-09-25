@@ -4,6 +4,7 @@ import React, { createContext, ReactNode, useContext } from 'react';
 import type { Topic } from '@/lib/types';
 import { ProjectContext } from '@/context/ProjectContext';
 import { useToast } from '@/hooks/use-toast';
+import { apiUrl } from '@/lib/api';
 
 interface TopicContextType {
   getTopicById: (projectId: string, topicId: string) => Topic | undefined;
@@ -31,11 +32,11 @@ export function TopicProvider({ children }: { children: ReactNode }) {
 
   const addTopic = async (projectId: string, topicData: Omit<Topic, 'id' | 'projectId' | 'vocabulary'>) => {
     try {
-      const res = await fetch(`/api/projects/${projectId}/topics`, { method: 'POST', body: JSON.stringify(topicData), headers: { 'Content-Type': 'application/json' } });
+      const res = await fetch(apiUrl(`/projects/${projectId}/topics`), { method: 'POST', body: JSON.stringify(topicData), headers: { 'Content-Type': 'application/json' } });
       if (!res.ok) throw new Error('Failed to create topic');
       const created = await res.json();
       // fetch updated topic list for this project and update ProjectContext only
-      const topicsRes = await fetch(`/api/projects/${projectId}/topics`);
+      const topicsRes = await fetch(apiUrl(`/projects/${projectId}/topics`));
       if (topicsRes.ok) {
         const topicsList = await topicsRes.json();
         setProjectTopics(projectId, topicsList.map((t: any) => ({ id: t.id, title: t.title, description: t.description ?? '', vocabulary: [] })));
@@ -49,10 +50,10 @@ export function TopicProvider({ children }: { children: ReactNode }) {
 
   const updateTopic = async (projectId: string, topicId: string, topicData: Partial<Topic>) => {
     try {
-      const res = await fetch(`/api/projects/${projectId}/topics/${topicId}`, { method: 'PATCH', body: JSON.stringify(topicData), headers: { 'Content-Type': 'application/json' } });
+      const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}`), { method: 'PATCH', body: JSON.stringify(topicData), headers: { 'Content-Type': 'application/json' } });
       if (!res.ok) throw new Error('Failed to update topic');
       // refresh topics for the project
-      const topicsRes = await fetch(`/api/projects/${projectId}/topics`);
+      const topicsRes = await fetch(apiUrl(`/projects/${projectId}/topics`));
       if (topicsRes.ok) {
         const topicsList = await topicsRes.json();
         setProjectTopics(projectId, topicsList.map((t: any) => ({ id: t.id, title: t.title, description: t.description ?? '', vocabulary: [] })));
@@ -66,9 +67,9 @@ export function TopicProvider({ children }: { children: ReactNode }) {
 
   const deleteTopic = async (projectId: string, topicId: string) => {
     try {
-      const res = await fetch(`/api/projects/${projectId}/topics/${topicId}`, { method: 'DELETE' });
+      const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}`), { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete topic');
-      const topicsRes = await fetch(`/api/projects/${projectId}/topics`);
+      const topicsRes = await fetch(apiUrl(`/projects/${projectId}/topics`));
       if (topicsRes.ok) {
         const topicsList = await topicsRes.json();
         setProjectTopics(projectId, topicsList.map((t: any) => ({ id: t.id, title: t.title, description: t.description ?? '', vocabulary: [] })));

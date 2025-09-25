@@ -1,5 +1,9 @@
+"use client";
+
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { useParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { apiUrl } from "@/lib/api";
 import TopicCreate from "@/components/projects/TopicCreate";
 import ProjectHeaderEditor from "@/components/projects/ProjectHeaderEditor";
 import TopicCardClient from "@/components/projects/TopicCardClient";
@@ -14,50 +18,80 @@ import {
 import { Button } from "@/components/ui/button";
 import { BrainCircuit } from "lucide-react";
 
-export default async function ProjectPage({
-  params
-}: {
-  params: { projectId: string };
-}) {
-  const { projectId } = (await params) as { projectId: string };
+export default function ProjectPage() {
+  const params = useParams();
+  const projectId = params.projectId as string;
+  const [project, setProject] = useState<any>(null);
+  const [topics, setTopics] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const hasFetched = useRef(false);
 
-  const projectRaw = await prisma.project.findUnique({
-    where: { id: projectId },
-    include: {}
-  });
-
-  if (!projectRaw) return notFound();
-
-  const project = {
-    id: projectRaw.id,
-    name: projectRaw.title ?? "",
-    description: projectRaw.description ?? ""
+  const refetchTopics = async () => {
+    try {
+      const reqTopicList = await fetch(apiUrl(`/projects/${projectId}/topics`));
+      const topicsRaw = await reqTopicList.json();
+      const topicsData = topicsRaw.map((t: any) => ({
+        id: t.id,
+        title: t.title,
+        description: "",
+        vocabularyCount: t.wordsCount ?? 0
+      }));
+      setTopics(topicsData);
+    } catch (error) {
+      console.error("Error refetching topics:", error);
+    }
   };
 
-  // fetch topics for this project with per-topic vocabulary counts
-  const topicsRaw = await prisma.topic.findMany({
-    where: { projectId },
-    select: {
-      id: true,
-      title: true,
-      createdAt: true,
-      _count: {
-        select: {
-          vocabulary: true
-        }
-      }
-    }
-  });
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
 
-  const topics = topicsRaw.map((t: any) => ({
-    id: t.id,
-    title: t.title,
-    description: "",
-    vocabularyCount: (t as any)._count?.vocabulary ?? 0
-  }));
+    const fetchData = async () => {
+      try {
+        const projectRes = await fetch(apiUrl(`/projects/${projectId}`));
+        if (!projectRes.ok) {
+          notFound();
+          return;
+        }
+        const projectRaw = await projectRes.json();
+        const projectData = {
+          id: projectRaw.id,
+          name: projectRaw.title ?? "",
+          description: projectRaw.description ?? ""
+        };
+        setProject(projectData);
+
+        const reqTopicList = await fetch(apiUrl(`/projects/${projectId}/topics`));
+        const topicsRaw = await reqTopicList.json();
+        const topicsData = topicsRaw.map((t: any) => ({
+          id: t.id,
+          title: t.title,
+          description: "",
+          vocabularyCount: t.wordsCount ?? 0
+        }));
+        setTopics(topicsData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (projectId) {
+      fetchData();
+    }
+  }, [projectId]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!project) {
+    return notFound();
+  }
 
   const totalWords = topics.reduce(
-    (acc, t) => acc + (t.vocabularyCount ?? 0),
+    (acc: number, t: any) => acc + (t.vocabularyCount ?? 0),
     0
   );
 
@@ -87,15 +121,15 @@ export default async function ProjectPage({
             Learn All
           </Button>
           {/* TopicCreate is a client component that uses AppDataContext to add topics */}
-          <TopicCreate projectId={projectId} />
+          <TopicCreate projectId={projectId} onTopicCreated={refetchTopics} />
         </div>
       </div>
 
       {topics.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {topics.map((topic) => (
+          {topics.map((topic: any) => (
             <div key={topic.id}>
-              <TopicCardClient projectId={projectId} topic={topic} />
+              <TopicCardClient projectId={projectId} topic={topic} onTopicUpdated={refetchTopics} onTopicDeleted={refetchTopics} />
             </div>
           ))}
         </div>
