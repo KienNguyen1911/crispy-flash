@@ -18,9 +18,14 @@ export async function GET(
 
   // Check cache first (if Redis is available)
   if (redis) {
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return NextResponse.json(JSON.parse(cached as string));
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached && typeof cached === 'string') {
+        return NextResponse.json(JSON.parse(cached));
+      }
+    } catch (cacheError) {
+      console.warn('Cache read error:', cacheError);
+      // Continue to database query
     }
   }
 

@@ -12,45 +12,55 @@ const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_RE
   : null;
 
 export async function GET() {
-  const cacheKey = 'projects:list';
+  try {
+    const cacheKey = 'projects:list';
 
-  // Check cache first (if Redis is available)
-  if (redis) {
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return NextResponse.json(JSON.parse(cached as string));
+    // Check cache first (if Redis is available)
+    if (redis) {
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached && typeof cached === 'string') {
+          return NextResponse.json(JSON.parse(cached));
+        }
+      } catch (cacheError) {
+        console.warn('Cache read error:', cacheError);
+        // Continue to database query
+      }
     }
-  }
 
-  // Return lightweight project list: id/title/description with counts only
-  const projects = await prisma.project.findMany({
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      _count: { select: { topics: true } },
-      topics: { select: { _count: { select: { vocabulary: true } } } }
+    // Return lightweight project list: id/title/description with counts only
+    const projects = await prisma.project.findMany({
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        _count: { select: { topics: true } },
+        topics: { select: { _count: { select: { vocabulary: true } } } }
+      }
+    });
+
+    // compute wordsCount per project by summing vocabulary counts from topics
+    const results = projects.map((p) => {
+      const wordsCount = p.topics.reduce((sum, t) => sum + (t._count?.vocabulary ?? 0), 0);
+      return {
+        id: p.id,
+        title: p.title,
+        description: p.description,
+        topicsCount: p._count?.topics ?? 0,
+        wordsCount,
+      };
+    });
+
+    // Cache the result (if Redis is available)
+    if (redis) {
+      await redis.setex(cacheKey, 300, JSON.stringify(results)); // 5 minutes TTL
     }
-  });
 
-  // compute wordsCount per project by summing vocabulary counts from topics
-  const results = projects.map((p) => {
-    const wordsCount = p.topics.reduce((sum, t) => sum + (t._count?.vocabulary ?? 0), 0);
-    return {
-      id: p.id,
-      title: p.title,
-      description: p.description,
-      topicsCount: p._count?.topics ?? 0,
-      wordsCount,
-    };
-  });
-
-  // Cache the result (if Redis is available)
-  if (redis) {
-    await redis.setex(cacheKey, 300, JSON.stringify(results)); // 5 minutes TTL
+    return NextResponse.json(results);
+  } catch (error) {
+    console.error('Error in GET /api/projects:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  return NextResponse.json(results);
 }
 
 export async function POST(req: Request) {
