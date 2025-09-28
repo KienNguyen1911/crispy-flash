@@ -4,18 +4,22 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { Redis } from '@upstash/redis';
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+  : null;
 
 export async function GET() {
   const cacheKey = 'projects:list';
 
-  // Check cache first
-  const cached = await redis.get(cacheKey);
-  if (cached) {
-    return NextResponse.json(JSON.parse(cached as string));
+  // Check cache first (if Redis is available)
+  if (redis) {
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return NextResponse.json(JSON.parse(cached as string));
+    }
   }
 
   // Return lightweight project list: id/title/description with counts only
@@ -41,8 +45,10 @@ export async function GET() {
     };
   });
 
-  // Cache the result
-  await redis.setex(cacheKey, 300, JSON.stringify(results)); // 5 minutes TTL
+  // Cache the result (if Redis is available)
+  if (redis) {
+    await redis.setex(cacheKey, 300, JSON.stringify(results)); // 5 minutes TTL
+  }
 
   return NextResponse.json(results);
 }
@@ -67,8 +73,10 @@ export async function POST(req: Request) {
     }
     const project = await prisma.project.create({ data });
 
-    // Invalidate projects list cache
-    await redis.del('projects:list');
+    // Invalidate projects list cache (if Redis is available)
+    if (redis) {
+      await redis.del('projects:list');
+    }
 
     return NextResponse.json(project, { status: 201 });
   } catch (err: any) {

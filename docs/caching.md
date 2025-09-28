@@ -88,7 +88,7 @@ mutate(newData, false); // false = don't revalidate
 ## Backend Caching with Redis
 Added Redis-based caching for Prisma queries to reduce database load:
 - **Implementation**: Custom caching in API routes using Upstash Redis
-- **Cached Routes**:
+- **Cached Routes** (when Redis is configured):
   - `GET /api/projects` - Projects list with counts
   - `GET /api/projects/[projectId]` - Individual project details
   - `GET /api/projects/[projectId]/topics` - Topics list for project
@@ -97,6 +97,7 @@ Added Redis-based caching for Prisma queries to reduce database load:
   - Creating/updating projects invalidates projects list
   - Creating topics invalidates projects list, project details, and topics list
 - **Environment**: Uses Vercel's integrated Upstash Redis (free tier)
+- **Graceful Degradation**: App works without Redis - caching is optional
 
 ### Setup Requirements
 1. Enable Upstash Redis in Vercel dashboard
