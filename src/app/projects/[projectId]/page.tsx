@@ -2,8 +2,9 @@
 
 import { notFound } from "next/navigation";
 import { useParams } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { apiUrl } from "@/lib/api";
+import useSWR from 'swr';
 import TopicCreate from "@/components/projects/TopicCreate";
 import ProjectHeaderEditor from "@/components/projects/ProjectHeaderEditor";
 import TopicCardClient from "@/components/projects/TopicCardClient";
@@ -21,71 +22,39 @@ import { BrainCircuit } from "lucide-react";
 export default function ProjectPage() {
   const params = useParams();
   const projectId = params.projectId as string;
-  const [project, setProject] = useState<any>(null);
-  const [topics, setTopics] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const hasFetched = useRef(false);
 
-  const refetchTopics = async () => {
-    try {
-      const reqTopicList = await fetch(apiUrl(`/projects/${projectId}/topics`));
-      const topicsRaw = await reqTopicList.json();
-      const topicsData = topicsRaw.map((t: any) => ({
-        id: t.id,
-        title: t.title,
-        description: "",
-        vocabularyCount: t.wordsCount ?? 0
-      }));
-      setTopics(topicsData);
-    } catch (error) {
-      console.error("Error refetching topics:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
-
-    const fetchData = async () => {
-      try {
-        // Fetch project and topics in parallel
-        const [projectRes, reqTopicList] = await Promise.all([
-          fetch(apiUrl(`/projects/${projectId}`)),
-          fetch(apiUrl(`/projects/${projectId}/topics`))
-        ]);
-
-        if (!projectRes.ok) {
-          notFound();
-          return;
-        }
-
-        const projectRaw = await projectRes.json();
-        const projectData = {
-          id: projectRaw.id,
-          name: projectRaw.title ?? "",
-          description: projectRaw.description ?? ""
-        };
-        setProject(projectData);
-
-        const topicsRaw = await reqTopicList.json();
-        const topicsData = topicsRaw.map((t: any) => ({
-          id: t.id,
-          title: t.title,
-          description: "",
-          vocabularyCount: t.wordsCount ?? 0
-        }));
-        setTopics(topicsData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
+  const { data: projectRaw, error: projectError } = useSWR(
+    projectId ? apiUrl(`/projects/${projectId}`) : null,
+    {
+      onError: (err) => {
+        if (err.status === 404) notFound();
       }
-    };
-
-    if (projectId) {
-      fetchData();
     }
-  }, [projectId]);
+  );
+
+  const { data: topicsRaw, error: topicsError, mutate: mutateTopics } = useSWR(
+    projectId ? apiUrl(`/projects/${projectId}/topics`) : null
+  );
+
+  const project = projectRaw ? {
+    id: projectRaw.id,
+    name: projectRaw.title ?? "",
+    description: projectRaw.description ?? ""
+  } : null;
+
+  const topics = topicsRaw ? topicsRaw.map((t: any) => ({
+    id: t.id,
+    title: t.title,
+    description: "",
+    vocabularyCount: t.wordsCount ?? 0
+  })) : [];
+
+  const loading = !project || !topicsRaw;
+  const error = projectError || topicsError;
+
+  const refetchTopics = () => {
+    mutateTopics();
+  };
 
   if (loading) {
     return <div>Loading...</div>;

@@ -2,57 +2,41 @@
 
 import { notFound } from "next/navigation";
 import { useParams } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
 import { apiUrl } from "@/lib/api";
 import TopicViewer from '@/components/topics/TopicViewer';
+import useSWR from 'swr';
 
 export default function TopicPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const topicId = params.topicId as string;
-  const [project, setProject] = useState<any>(null);
-  const [topic, setTopic] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const hasFetched = useRef(false);
 
-  useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
-
-    const fetchData = async () => {
-      try {
-        // Fetch project and topic in parallel
-        const [projectRes, topicRes] = await Promise.all([
-          fetch(apiUrl(`/projects/${projectId}`)),
-          fetch(apiUrl(`/projects/${projectId}/topics/${topicId}`))
-        ]);
-
-        if (!projectRes.ok || !topicRes.ok) {
-          notFound();
-          return;
-        }
-
-        const projectRaw = await projectRes.json();
-        const projectData = {
-          id: projectRaw.id,
-          name: projectRaw.title ?? "",
-          description: projectRaw.description ?? ""
-        };
-        setProject(projectData);
-
-        const topicRaw = await topicRes.json();
-        setTopic(topicRaw);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
+  const { data: projectRaw, error: projectError } = useSWR(
+    projectId ? apiUrl(`/projects/${projectId}`) : null,
+    {
+      onError: (err) => {
+        if (err.status === 404) notFound();
       }
-    };
-
-    if (projectId && topicId) {
-      fetchData();
     }
-  }, [projectId, topicId]);
+  );
+
+  const { data: topic, error: topicError } = useSWR(
+    projectId && topicId ? apiUrl(`/projects/${projectId}/topics/${topicId}`) : null,
+    {
+      onError: (err) => {
+        if (err.status === 404) notFound();
+      }
+    }
+  );
+
+  const project = projectRaw ? {
+    id: projectRaw.id,
+    name: projectRaw.title ?? "",
+    description: projectRaw.description ?? ""
+  } : null;
+
+  const loading = !project || !topic;
+  const error = projectError || topicError;
 
   if (loading) {
     return <div>Loading...</div>;
