@@ -1,17 +1,34 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Redis } from "@upstash/redis";
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   const { projectId } = await params;
+  const cacheKey = `project:${projectId}`;
+
+  // Check cache first
+  const cached = await redis.get(cacheKey);
+  if (cached) {
+    return NextResponse.json(JSON.parse(cached as string));
+  }
+
   const project = await prisma.project.findUnique({
     where: { id: projectId }
   });
 
   if (!project)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Cache the result
+  await redis.setex(cacheKey, 300, JSON.stringify(project)); // 5 minutes TTL
 
   return NextResponse.json(project);
 }
@@ -27,6 +44,9 @@ export async function PATCH(
     data: { title: body.title, description: body.description }
   });
 
+  // Invalidate cache
+  await redis.del(`project:${projectId}`);
+
   return NextResponse.json(project);
 }
 
@@ -41,6 +61,9 @@ export async function DELETE(
   });
   await prisma.topic.deleteMany({ where: { projectId } });
   await prisma.project.delete({ where: { id: projectId } });
+
+  // Invalidate cache
+  await redis.del(`project:${projectId}`);
 
   return NextResponse.json({ ok: true });
 }

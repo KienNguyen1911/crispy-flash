@@ -74,18 +74,39 @@ mutate(newData, false); // false = don't revalidate
 5. **Optimistic Updates**: UI updates immediately, syncs in background
 
 ## Cache Management
-- Data is cached per URL key
-- Cache persists during session
+- **Frontend**: Data is cached per URL key with SWR
+- **Backend**: Redis-based caching for database queries (5-minute TTL)
+- Cache persists across sessions with Redis
 - Automatic cleanup of stale data
-- Manual invalidation with `mutate()`
+- Manual invalidation on data mutations
 
 ## Error Handling
 - 404 errors redirect to `notFound()`
 - Network errors show error states
 - Automatic retry on reconnect
 
+## Backend Caching with Redis
+Added Redis-based caching for Prisma queries to reduce database load:
+- **Implementation**: Custom caching in API routes using Upstash Redis
+- **Cached Routes**:
+  - `GET /api/projects` - Projects list with counts
+  - `GET /api/projects/[projectId]` - Individual project details
+  - `GET /api/projects/[projectId]/topics` - Topics list for project
+- **Cache Strategy**: Check Redis first, fallback to database, cache results with 5-minute TTL
+- **Invalidation**: Automatic cache clearing on data mutations (POST/PATCH/DELETE)
+  - Creating/updating projects invalidates projects list
+  - Creating topics invalidates projects list, project details, and topics list
+- **Environment**: Uses Vercel's integrated Upstash Redis (free tier)
+
+### Setup Requirements
+1. Enable Upstash Redis in Vercel dashboard
+2. Add environment variables:
+   - `UPSTASH_REDIS_REST_URL`
+   - `UPSTASH_REDIS_REST_TOKEN`
+
 ## Performance Improvements
 - Page loads reduced from ~2s to near-instant for cached data
 - Parallel API calls instead of sequential
 - Reduced server load through request deduplication
 - Background revalidation keeps cache fresh without blocking UI
+- Database query caching minimizes Supabase hits

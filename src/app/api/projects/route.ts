@@ -2,8 +2,22 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 export async function GET() {
+  const cacheKey = 'projects:list';
+
+  // Check cache first
+  const cached = await redis.get(cacheKey);
+  if (cached) {
+    return NextResponse.json(JSON.parse(cached as string));
+  }
+
   // Return lightweight project list: id/title/description with counts only
   const projects = await prisma.project.findMany({
     select: {
@@ -27,6 +41,9 @@ export async function GET() {
     };
   });
 
+  // Cache the result
+  await redis.setex(cacheKey, 300, JSON.stringify(results)); // 5 minutes TTL
+
   return NextResponse.json(results);
 }
 
@@ -49,6 +66,10 @@ export async function POST(req: Request) {
       if (body.ownerId) data.ownerId = body.ownerId;
     }
     const project = await prisma.project.create({ data });
+
+    // Invalidate projects list cache
+    await redis.del('projects:list');
+
     return NextResponse.json(project, { status: 201 });
   } catch (err: any) {
     console.error('Create project error', err);

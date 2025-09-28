@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/layout/Header';
 import PageLoader from '@/components/ui/PageLoader';
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
   title: 'LinguaFlash',
@@ -39,6 +40,8 @@ export default function RootLayout({
           </div>
           <Toaster />
         </AppProviders>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
