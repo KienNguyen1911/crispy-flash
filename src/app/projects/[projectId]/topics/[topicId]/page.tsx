@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { apiUrl } from "@/lib/api";
 import TopicViewer from '@/components/topics/TopicViewer';
 import useSWR from 'swr';
+import DataLoader from '@/components/ui/DataLoader';
 
 export default function TopicPage() {
   const params = useParams();
@@ -12,22 +13,17 @@ export default function TopicPage() {
   const topicId = params.topicId as string;
 
   const { data: projectRaw, error: projectError } = useSWR(
-    projectId ? apiUrl(`/projects/${projectId}`) : null,
-    {
-      onError: (err) => {
-        if (err.status === 404) notFound();
-      }
-    }
+    projectId ? apiUrl(`/projects/${projectId}`) : null
   );
 
   const { data: topic, error: topicError } = useSWR(
-    projectId && topicId ? apiUrl(`/projects/${projectId}/topics/${topicId}`) : null,
-    {
-      onError: (err) => {
-        if (err.status === 404) notFound();
-      }
-    }
+    projectId && topicId ? apiUrl(`/projects/${projectId}/topics/${topicId}`) : null
   );
+
+  // Handle 404 errors
+  if (projectError?.status === 404 || topicError?.status === 404) {
+    notFound();
+  }
 
   const project = projectRaw ? {
     id: projectRaw.id,
@@ -39,7 +35,7 @@ export default function TopicPage() {
   const error = projectError || topicError;
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <DataLoader />;
   }
 
   if (!project || !topic) {

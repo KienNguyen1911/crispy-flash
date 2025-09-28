@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { apiUrl } from "@/lib/api";
 import useSWR from 'swr';
+import DataLoader from '@/components/ui/DataLoader';
 import TopicCreate from "@/components/projects/TopicCreate";
 import ProjectHeaderEditor from "@/components/projects/ProjectHeaderEditor";
 import TopicCardClient from "@/components/projects/TopicCardClient";
@@ -24,13 +25,13 @@ export default function ProjectPage() {
   const projectId = params.projectId as string;
 
   const { data: projectRaw, error: projectError } = useSWR(
-    projectId ? apiUrl(`/projects/${projectId}`) : null,
-    {
-      onError: (err) => {
-        if (err.status === 404) notFound();
-      }
-    }
+    projectId ? apiUrl(`/projects/${projectId}`) : null
   );
+
+  // Handle 404 errors
+  if (projectError?.status === 404) {
+    notFound();
+  }
 
   const { data: topicsRaw, error: topicsError, mutate: mutateTopics } = useSWR(
     projectId ? apiUrl(`/projects/${projectId}/topics`) : null
@@ -57,7 +58,7 @@ export default function ProjectPage() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <DataLoader />;
   }
 
   if (!project) {
