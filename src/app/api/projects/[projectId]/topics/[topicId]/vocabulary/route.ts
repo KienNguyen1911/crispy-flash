@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(_req: Request, { params }: { params: { topicId: string } }) {
-  const { topicId } = params;
+export async function GET(_req: Request, { params }: { params: Promise<{ projectId: string; topicId: string }> }) {
+  const { topicId } = await params;
   const list = await prisma.vocabulary.findMany({ where: { topicId } });
   return NextResponse.json(list);
 }
 
-export async function POST(req: Request, { params }: { params: { topicId: string } }) {
-  const { topicId } = params;
+export async function POST(req: Request, { params }: { params: Promise<{ projectId: string; topicId: string }> }) {
+  const { topicId } = await params;
   const body = await req.json();
   console.log('Received body:', typeof body, Array.isArray(body), body.length || 'N/A');
 
@@ -51,8 +51,8 @@ export async function POST(req: Request, { params }: { params: { topicId: string
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: { topicId: string, projectId: string } }) {
-  const { topicId } = params;
+export async function PATCH(req: Request, { params }: { params: Promise<{ projectId: string; topicId: string }> }) {
+  const { topicId } = await params;
   const body = await req.json();
   const updates: Array<{ id: string; status: string }> = body.updates || [];
 

@@ -5,11 +5,19 @@ import { authOptions } from '@/lib/auth-options';
 
 export async function GET() {
   // Return lightweight project list: id/title/description with counts only
-  const projects = await prisma.project.findMany({ select: { id: true, title: true, description: true, _count: { select: { topics: true } } } });
+  const projects = await prisma.project.findMany({
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      _count: { select: { topics: true } },
+      topics: { select: { _count: { select: { vocabulary: true } } } }
+    }
+  });
 
-  // compute wordsCount per project by counting vocabulary where topic.projectId = project.id
-  const results = await Promise.all(projects.map(async (p) => {
-    const wordsCount = await prisma.vocabulary.count({ where: { topic: { projectId: p.id } as any } });
+  // compute wordsCount per project by summing vocabulary counts from topics
+  const results = projects.map((p) => {
+    const wordsCount = p.topics.reduce((sum, t) => sum + (t._count?.vocabulary ?? 0), 0);
     return {
       id: p.id,
       title: p.title,
@@ -17,7 +25,7 @@ export async function GET() {
       topicsCount: p._count?.topics ?? 0,
       wordsCount,
     };
-  }));
+  });
 
   return NextResponse.json(results);
 }

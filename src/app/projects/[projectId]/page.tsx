@@ -48,11 +48,17 @@ export default function ProjectPage() {
 
     const fetchData = async () => {
       try {
-        const projectRes = await fetch(apiUrl(`/projects/${projectId}`));
+        // Fetch project and topics in parallel
+        const [projectRes, reqTopicList] = await Promise.all([
+          fetch(apiUrl(`/projects/${projectId}`)),
+          fetch(apiUrl(`/projects/${projectId}/topics`))
+        ]);
+
         if (!projectRes.ok) {
           notFound();
           return;
         }
+
         const projectRaw = await projectRes.json();
         const projectData = {
           id: projectRaw.id,
@@ -61,7 +67,6 @@ export default function ProjectPage() {
         };
         setProject(projectData);
 
-        const reqTopicList = await fetch(apiUrl(`/projects/${projectId}/topics`));
         const topicsRaw = await reqTopicList.json();
         const topicsData = topicsRaw.map((t: any) => ({
           id: t.id,

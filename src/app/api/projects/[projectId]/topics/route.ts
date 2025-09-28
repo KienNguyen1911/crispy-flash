@@ -3,11 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: Request,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
+  const { projectId } = await params;
   // Return lightweight topics for a project with per-topic vocabulary counts
   const topics = await prisma.topic.findMany({
-    where: { projectId: params.projectId },
+    where: { projectId },
     select: {
       id: true,
       title: true,
@@ -27,9 +28,9 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { projectId } = params;
+  const { projectId } = await params;
   const body = await req.json();
   const topic = await prisma.topic.create({
     data: { title: body.title, projectId }

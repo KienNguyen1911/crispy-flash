@@ -3,9 +3,9 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { projectId } = params;
+  const { projectId } = await params;
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: { topics: { include: { vocabulary: false } } }
@@ -19,9 +19,9 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { projectId } = params;
+  const { projectId } = await params;
   const body = await req.json();
   const project = await prisma.project.update({
     where: { id: projectId },
@@ -33,9 +33,9 @@ export async function PATCH(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { projectId } = params;
+  const { projectId } = await params;
   // delete topics and vocabulary first to avoid FK constraint
   await prisma.vocabulary.deleteMany({
     where: { topic: { projectId } } as any

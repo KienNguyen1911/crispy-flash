@@ -32,6 +32,8 @@ model Topic {
   project   Project     @relation(fields: [projectId], references: [id])
   vocabulary Vocabulary[]
   createdAt DateTime    @default(now())
+
+  @@index([projectId])
 }
 
 model Vocabulary {
@@ -45,4 +47,6 @@ model Vocabulary {
   topicId   String
   topic     Topic    @relation(fields: [topicId], references: [id])
   createdAt DateTime @default(now())
+
+  @@index([topicId])
 }

@@ -4,6 +4,7 @@ import { AppProviders } from './providers';
 import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/layout/Header';
 import PageLoader from '@/components/ui/PageLoader';
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: 'LinguaFlash',
