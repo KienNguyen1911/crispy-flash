@@ -91,10 +91,6 @@ export default function ProjectPage() {
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-semibold font-headline">Topics</h2>
         <div className="flex gap-2">
-          <Button variant="outline" disabled={totalWords === 0}>
-            <BrainCircuit className="mr-2 h-4 w-4" />
-            Learn All
-          </Button>
           {/* TopicCreate is a client component that uses AppDataContext to add topics */}
           <TopicCreate projectId={projectId} onTopicCreated={refetchTopics} />
         </div>

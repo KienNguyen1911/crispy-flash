@@ -159,28 +159,32 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
               <TableHead>Kanji</TableHead>
               <TableHead>Kana</TableHead>
               <TableHead>Meaning</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="hidden sm:table-cell">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredVocabulary.length > 0 ? (
               filteredVocabulary.map((v: Vocabulary) => (
-                <TableRow key={v.id}>
+                <TableRow key={v.id} className={
+                  v.status === 'remembered' ? 'bg-green-50 sm:bg-transparent' :
+                  v.status === 'not_remembered' ? 'bg-red-50 sm:bg-transparent' :
+                  'bg-gray-50 sm:bg-transparent'
+                }>
                   <TableCell className="font-medium">{v.kanji}</TableCell>
                   <TableCell>{v.kana}</TableCell>
                   <TableCell>{v.meaning}</TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <Badge variant={
                         v.status === 'remembered' ? 'default' : v.status === 'not_remembered' ? 'destructive' : 'secondary'
                     } className={v.status === 'remembered' ? 'bg-green-500' : ''}>
-                        {v.status}
+                        {v.status == 'not_remembered' ? 'forgot' : v.status}
                     </Badge>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={3} className="h-24 text-center sm:col-span-4">
                   {(!topic.vocabulary || topic.vocabulary.length === 0) ? "No vocabulary in this topic yet." : "No results found."}
                 </TableCell>
               </TableRow>

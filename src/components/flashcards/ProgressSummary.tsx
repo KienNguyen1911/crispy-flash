@@ -62,9 +62,9 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
                         <p className="text-muted-foreground">Remembered</p>
                     </div>
                      <div>
-                        <p className="text-4xl font-bold text-red-500">{notRemembered}</p>
-                        <p className="text-muted-foreground">Not Remembered</p>
-                    </div>
+                         <p className="text-4xl font-bold text-red-500">{notRemembered}</p>
+                         <p className="text-muted-foreground">Forgot</p>
+                     </div>
                 </div>
 
                 <div className="text-2xl font-semibold">
@@ -78,7 +78,7 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
                     </Button>
                     {notRemembered > 0 && (
                         <Button onClick={() => router.push(`/projects/${projectId}/topics/${topicId}/learn?filter=not_remembered`)}>
-                            Review {notRemembered} Unremembered
+                            Review {notRemembered} Forgot
                         </Button>
                     )}
                     <Button asChild>
