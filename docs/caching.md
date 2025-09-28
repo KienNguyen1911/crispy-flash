@@ -92,7 +92,7 @@ Added Redis-based caching for Prisma queries to reduce database load:
   - `GET /api/projects` - Projects list with counts
   - `GET /api/projects/[projectId]` - Individual project details
   - `GET /api/projects/[projectId]/topics` - Topics list for project
-- **Cache Strategy**: Check Redis first, fallback to database, cache results with 5-minute TTL
+- **Cache Strategy**: Check Redis first, fallback to database, cache results with 10-minute TTL
 - **Invalidation**: Automatic cache clearing on data mutations (POST/PATCH/DELETE)
   - Creating/updating projects invalidates projects list
   - Creating topics invalidates projects list, project details, and topics list
@@ -110,4 +110,4 @@ Added Redis-based caching for Prisma queries to reduce database load:
 - Parallel API calls instead of sequential
 - Reduced server load through request deduplication
 - Background revalidation keeps cache fresh without blocking UI
-- Database query caching minimizes Supabase hits
+- Database query caching minimizes Supabase hits (10-minute TTL)

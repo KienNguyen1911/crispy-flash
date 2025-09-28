@@ -53,7 +53,7 @@ export async function GET() {
 
     // Cache the result (if Redis is available)
     if (redis) {
-      await redis.setex(cacheKey, 300, JSON.stringify(results)); // 5 minutes TTL
+      await redis.setex(cacheKey, 600, JSON.stringify(results)); // 10 minutes TTL
     }
 
     return NextResponse.json(results);
