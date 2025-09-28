@@ -21,11 +21,17 @@ export default function TopicPage() {
 
     const fetchData = async () => {
       try {
-        const projectRes = await fetch(apiUrl(`/projects/${projectId}`));
-        if (!projectRes.ok) {
+        // Fetch project and topic in parallel
+        const [projectRes, topicRes] = await Promise.all([
+          fetch(apiUrl(`/projects/${projectId}`)),
+          fetch(apiUrl(`/projects/${projectId}/topics/${topicId}`))
+        ]);
+
+        if (!projectRes.ok || !topicRes.ok) {
           notFound();
           return;
         }
+
         const projectRaw = await projectRes.json();
         const projectData = {
           id: projectRaw.id,
@@ -34,11 +40,6 @@ export default function TopicPage() {
         };
         setProject(projectData);
 
-        const topicRes = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}`));
-        if (!topicRes.ok) {
-          notFound();
-          return;
-        }
         const topicRaw = await topicRes.json();
         setTopic(topicRaw);
       } catch (error) {
