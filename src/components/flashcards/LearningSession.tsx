@@ -10,6 +10,7 @@ import { Button } from '../ui/button';
 import { ArrowLeft, ArrowRight, RotateCw } from 'lucide-react';
 import { Progress } from '../ui/progress';
 import { Card, CardContent } from '../ui/card';
+import { Switch } from '../ui/switch';
 import Link from 'next/link';
 import type { Vocabulary } from '@/lib/types';
 
@@ -43,6 +44,7 @@ export function LearningSession({ initialTopic }: { initialTopic?: any } = {}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sessionProgress, setSessionProgress] = useState<{ [key: string]: 'remembered' | 'not_remembered' }>({});
   const [isFinished, setIsFinished] = useState(false);
+  const [showSide, setShowSide] = useState<'kanji' | 'meaning'>('kanji');
 
   useEffect(() => {
     setIsClient(true);
@@ -128,11 +130,24 @@ export function LearningSession({ initialTopic }: { initialTopic?: any } = {}) {
         <Progress value={progressPercentage} />
       </div>
       
-      {currentCard && <Flashcard vocabulary={currentCard} />}
+      {currentCard && (
+        <Flashcard
+          key={`${currentIndex}-${showSide}`}
+          vocabulary={currentCard}
+          showFirst={showSide}
+        />
+      )}
 
       <Card className="w-full mt-8">
         <CardContent className="p-4 flex justify-center items-center gap-4">
-          <Button variant="outline" size="icon" onClick={goToPrevious} disabled={currentIndex === 0} aria-label="Back">
+          <Button
+            variant="outline"
+            size="icon"
+            className="w-20 md:w-28"
+            onClick={goToPrevious}
+            disabled={currentIndex === 0}
+            aria-label="Back"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
 
@@ -148,19 +163,36 @@ export function LearningSession({ initialTopic }: { initialTopic?: any } = {}) {
             Forget
           </Button>
 
-          <Button variant="outline" size="icon" onClick={() => {
-            // remember: mark as remembered and advance
-            const card = shuffledVocabulary[currentIndex];
-            if (card) {
-              setSessionProgress(prev => ({ ...prev, [card.id]: 'remembered' }));
-              setCurrentIndex(prev => prev + 1);
-            }
-          }} aria-label="Remember and Next">
+          <Button
+            variant="outline"
+            size="icon"
+            className="w-20 md:w-28"
+            onClick={() => {
+              // remember: mark as remembered and advance
+              const card = shuffledVocabulary[currentIndex];
+              if (card) {
+                setSessionProgress(prev => ({ ...prev, [card.id]: 'remembered' }));
+                setCurrentIndex(prev => prev + 1);
+              }
+            }}
+            aria-label="Remember and Next"
+          >
             <ArrowRight className="h-5 w-5" />
           </Button>
         </CardContent>
       </Card>
-      
+
+      <div className="w-full mt-4 flex items-center justify-center gap-2">
+        <span className="text-sm font-medium">Kanji</span>
+        <Switch
+          id="first-side"
+          checked={showSide === 'meaning'}
+          onCheckedChange={(checked) => setShowSide(checked ? 'meaning' : 'kanji')}
+        />
+        <span className="text-sm font-medium">Meaning</span>
+      </div>
+       
     </div>
   );
 }
+

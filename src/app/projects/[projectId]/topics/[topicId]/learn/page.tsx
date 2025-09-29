@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 
-export default async function LearnPage({ params }: { params: { projectId: string; topicId: string } }) {
-    const { projectId, topicId } = params as { projectId: string; topicId: string };
+export default async function LearnPage({ params }: { params: Promise<{ projectId: string; topicId: string }> }) {
+    const { projectId, topicId } = await params;
 
     const topicRaw = await prisma.topic.findUnique({
         where: { id: topicId },

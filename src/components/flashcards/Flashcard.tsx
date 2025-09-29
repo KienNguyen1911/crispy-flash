@@ -1,16 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import type { Vocabulary } from '@/lib/types';
 import { Card, CardContent } from '../ui/card';
 
 interface FlashcardProps {
   vocabulary: Vocabulary;
+  initialFlipped?: boolean;
+  showFirst?: 'kanji' | 'meaning';
 }
 
-export default function Flashcard({ vocabulary }: FlashcardProps) {
-  const [isFlipped, setIsFlipped] = useState(false);
+export default function Flashcard({
+  vocabulary,
+  initialFlipped,
+  showFirst = 'kanji',
+}: FlashcardProps) {
+  const [isFlipped, setIsFlipped] = useState<boolean>(
+    initialFlipped ?? (showFirst === 'meaning')
+  );
+
+  useEffect(() => {
+    // Keep the displayed side in sync when side preference or card changes
+    setIsFlipped(initialFlipped ?? (showFirst === 'meaning'));
+  }, [initialFlipped, showFirst, vocabulary?.id]);
 
   const flipCard = () => setIsFlipped(!isFlipped);
 
