@@ -19,8 +19,8 @@ model Project {
   id          String    @id @default(cuid())
   title       String
   description String?
-  ownerId     String?
-  owner       User?     @relation(fields: [ownerId], references: [id])
+  ownerId     String
+  owner       User      @relation(fields: [ownerId], references: [id])
   topics      Topic[]
   createdAt   DateTime  @default(now())
 }

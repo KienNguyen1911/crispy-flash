@@ -13,7 +13,21 @@ const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_RE
 
 export async function GET() {
   try {
-    const cacheKey = 'projects:list';
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Find the user
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const cacheKey = `projects:list:${user.id}`;
 
     // Check cache first (if Redis is available)
     if (redis) {
@@ -28,8 +42,9 @@ export async function GET() {
       }
     }
 
-    // Return lightweight project list: id/title/description with counts only
+    // Return lightweight project list: id/title/description with counts only, filtered by owner
     const projects = await prisma.project.findMany({
+      where: { ownerId: user.id },
       select: {
         id: true,
         title: true,
@@ -65,27 +80,30 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const data: any = { title: body.title, description: body.description || '' };
-    // try to attach owner from session if available
-    try {
-      const session = await getServerSession(authOptions as any) as any;
-      if (session?.user?.email) {
-        // find or create user by email
-        const user = await prisma.user.upsert({ where: { email: session.user.email }, update: {}, create: { email: session.user.email, name: session.user.name || undefined } });
-        data.ownerId = user.id;
-      } else if (body.ownerId) {
-        data.ownerId = body.ownerId;
-      }
-    } catch (e) {
-      // ignore session errors and fallback to body.ownerId if provided
-      if (body.ownerId) data.ownerId = body.ownerId;
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Find or create user by email
+    const user = await prisma.user.upsert({
+      where: { email: session.user.email },
+      update: {},
+      create: { email: session.user.email, name: session.user.name || undefined }
+    });
+
+    const body = await req.json();
+    const data = {
+      title: body.title,
+      description: body.description || '',
+      ownerId: user.id
+    };
+
     const project = await prisma.project.create({ data });
 
     // Invalidate projects list cache (if Redis is available)
     if (redis) {
-      await redis.del('projects:list');
+      await redis.del(`projects:list:${user.id}`);
     }
 
     return NextResponse.json(project, { status: 201 });

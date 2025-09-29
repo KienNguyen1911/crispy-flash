@@ -51,7 +51,7 @@ export default function TopicCardClient({ projectId, topic, onTopicUpdated, onTo
   }, [editing, topic.title, topic.description]);
 
   return (
-  <Card ref={containerRef} className="relative h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
+    <Card ref={containerRef} className="relative h-full flex flex-col hover:shadow-lg hover:scale-105 transition-all duration-300">
       <CardHeader>
         <div>
           {editing ? (

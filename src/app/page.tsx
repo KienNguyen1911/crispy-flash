@@ -1,17 +1,12 @@
 'use client';
 
 import { useContext } from 'react';
+import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { PlusCircle } from 'lucide-react';
 import { ProjectContext } from '@/context/ProjectContext';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Trash2 } from 'lucide-react';
 import { ProjectForm } from '@/components/projects/ProjectForm';
@@ -24,41 +19,78 @@ import {
 } from '@/components/ui/dialog';
 
 export default function Dashboard() {
+  const { data: session, status } = useSession();
   const { projects, addProject, deleteProject } = useContext(ProjectContext);
+
+  if (status === 'loading') {
+    return (
+      <div className="container mx-auto max-w-5xl py-8 px-4">
+        <div className="text-center py-20">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="container mx-auto max-w-5xl py-8 px-4">
+        <Card className="mb-8 p-6">
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold font-headline">Welcome to LinguaFlash</CardTitle>
+            <CardDescription>
+              Sign in to organize your vocabulary learning into projects.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button onClick={() => signIn('google')} size="lg">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Sign In with Google
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto max-w-5xl py-8 px-4">
-      <div className="flex items-center justify-between mb-8">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold font-headline">My Projects</h1>
-          <p className="text-muted-foreground">
-            Organize your vocabulary learning into projects.
-          </p>
+      <Card className="mb-8 p-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold font-headline">My Projects</h1>
+            <p className="text-muted-foreground">
+              Organize your vocabulary learning into projects.
+            </p>
+          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Project
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create a New Project</DialogTitle>
+              </DialogHeader>
+              <ProjectForm
+                onSubmit={addProject}
+                submitButtonText="Create Project"
+              />
+            </DialogContent>
+          </Dialog>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New Project
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create a New Project</DialogTitle>
-            </DialogHeader>
-            <ProjectForm
-              onSubmit={addProject}
-              submitButtonText="Create Project"
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
+      </Card>
 
       {projects.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
             <div key={project.id}>
-              <Card className="relative h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
+              <Card className="
+                relative h-full flex flex-col 
+                hover:shadow-lg hover:scale-105 hover:ring-2 hover:ring-primary/50 transition-all duration-300
+              ">
                 <CardHeader>
                   <div>
                     <CardTitle className="font-headline">{project.name}</CardTitle>

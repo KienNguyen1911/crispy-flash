@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AppProviders } from './providers';
 import { Toaster } from '@/components/ui/toaster';
-import { Header } from '@/components/layout/Header';
+import { FloatingDockClient } from '@/components/ui/floating-dock-client';
 import PageLoader from '@/components/ui/PageLoader';
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -17,6 +17,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -34,9 +35,9 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <AppProviders>
           <div className="relative flex min-h-screen flex-col">
-            <Header />
             <PageLoader />
             <main className="flex-1">{children}</main>
+            <FloatingDockClient />
           </div>
           <Toaster />
         </AppProviders>

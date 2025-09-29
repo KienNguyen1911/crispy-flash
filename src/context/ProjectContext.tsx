@@ -2,6 +2,7 @@
 
 import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import type { Project } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { apiUrl } from "@/lib/api";
@@ -37,28 +38,53 @@ export const ProjectContext = createContext<ProjectContextType>({
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const { toast } = useToast();
+  const { data: session, status } = useSession();
 
   const reloadProjects = async () => {
+    // Only load projects if user is authenticated
+    if (status !== 'authenticated' || !session) {
+      setProjects([]);
+      return;
+    }
+
     try {
       const res = await fetch(apiUrl("/projects"));
-      if (!res.ok) throw new Error("Failed to load projects");
+      if (!res.ok) {
+        if (res.status === 401) {
+          // User not authenticated, clear projects
+          setProjects([]);
+          return;
+        }
+        throw new Error("Failed to load projects");
+      }
       const data = await res.json();
+
       // data is expected to be lightweight project items with counts
-      setProjects(
-        data.map((p: any) => ({
-          id: p.id,
-          name: p.title ?? p.name ?? "",
-          description: p.description ?? "",
-          topics: [],
-          topicsCount: p.topicsCount,
-          wordsCount: p.wordsCount
-        }))
-      );
+      const loadedProjects = data.map((p: any) => ({
+        id: p.id,
+        name: p.title ?? p.name ?? "",
+        description: p.description ?? "",
+        topics: [],
+        topicsCount: p.topicsCount,
+        wordsCount: p.wordsCount
+      }));
+
+      setProjects(loadedProjects);
+
+      // Show toast if user has no projects
+      if (loadedProjects.length === 0) {
+        toast({
+          title: "No project yet",
+          description: "You don't have any project yet, let's start creating your first project!",
+          duration: 5000,
+        });
+      }
     } catch (err) {
       console.error(err);
       toast({
         title: "Load error",
-        description: "Could not load projects from server."
+        description: "Could not load projects from server.",
+        variant: "destructive"
       });
     }
   };
@@ -69,10 +95,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   // This prevents the provider from fetching `/api/projects` on every route
   // (for example on project detail pages like `/projects/:projectId`).
   useEffect(() => {
-    if (pathname === "/" || pathname === "/projects") {
+    if ((pathname === "/" || pathname === "/projects") && status === 'authenticated') {
       reloadProjects();
     }
-  }, [pathname]);
+  }, [pathname, status]);
 
   const getProjectById = (projectId: string) =>
     projects.find((p) => p.id === projectId);

@@ -91,14 +91,14 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
 
   return (
     <div className="container mx-auto max-w-5xl py-8 px-4">
-      {/* Breadcrumb */}
-      <div className="mb-8" ref={containerRef}>
+      {/* Breadcrumb and Header */}
+      <Card className="mb-8 p-6" ref={containerRef}>
         <nav className="mb-4 text-sm text-muted-foreground">
           <Link href="/">Projects</Link> / <Link href={`/projects/${projectId}`}>{projectName}</Link> / <span className="font-semibold">{topic.title}</span>
         </nav>
 
         <TopicHeaderEditor projectId={projectId} topic={topic} />
-      </div>
+      </Card>
 
       <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
         <div className="relative w-full md:w-auto flex-1">
@@ -158,7 +158,7 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
             <TableRow>
               <TableHead>Kanji</TableHead>
               <TableHead>Kana</TableHead>
-              <TableHead>Meaning</TableHead>
+              <TableHead className="w-1/3 md:w-1/4">Meaning</TableHead>
               <TableHead className="hidden sm:table-cell">Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -166,9 +166,9 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
             {filteredVocabulary.length > 0 ? (
               filteredVocabulary.map((v: Vocabulary) => (
                 <TableRow key={v.id} className={
-                  v.status === 'remembered' ? 'bg-green-50 sm:bg-transparent' :
-                  v.status === 'not_remembered' ? 'bg-red-50 sm:bg-transparent' :
-                  'bg-gray-50 sm:bg-transparent'
+                  v.status === 'remembered' ? 'bg-green-50 dark:bg-green-900/20 sm:bg-transparent dark:sm:bg-transparent' :
+                  v.status === 'not_remembered' ? 'bg-red-50 dark:bg-red-900/20 sm:bg-transparent dark:sm:bg-transparent' :
+                  'bg-gray-50 dark:bg-gray-800/20 sm:bg-transparent dark:sm:bg-transparent'
                 }>
                   <TableCell className="font-medium">{v.kanji}</TableCell>
                   <TableCell>{v.kana}</TableCell>

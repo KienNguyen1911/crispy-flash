@@ -1,0 +1,78 @@
+'use client';
+
+import { signIn, signOut, useSession } from 'next-auth/react';
+import { Button } from './button';
+import { LogIn, LogOut, User } from 'lucide-react';
+
+export function AuthButton() {
+  const { data: session, status } = useSession();
+
+  if (status === 'loading') {
+    return (
+      <Button variant="ghost" size="sm" disabled>
+        <User className="h-4 w-4" />
+      </Button>
+    );
+  }
+
+  if (session) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">
+          {session.user?.name || session.user?.email}
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => signOut()}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <LogOut className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => signIn('google')}
+      className="text-muted-foreground hover:text-foreground"
+    >
+      <LogIn className="h-4 w-4 mr-2" />
+    </Button>
+  );
+}
+
+// Simplified icon component for use in floating dock
+export function AuthIcon() {
+  const { data: session, status } = useSession();
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (session) {
+      signOut();
+    } else {
+      signIn('google');
+    }
+  };
+
+  if (status === 'loading') {
+    return (
+      <div className="h-full w-full flex items-center justify-center text-neutral-500 dark:text-neutral-300">
+        <User className="h-4 w-4" />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      className="h-full w-full flex items-center justify-center text-neutral-500 dark:text-neutral-300 hover:text-neutral-700 dark:hover:text-neutral-100 transition-colors"
+    >
+      {session ? <LogOut className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
+    </button>
+  );
+}
