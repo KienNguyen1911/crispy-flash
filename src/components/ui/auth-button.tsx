@@ -24,7 +24,7 @@ export function AuthButton() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => signOut()}
+          onClick={() => signOut({ callbackUrl: '/' })}
           className="text-muted-foreground hover:text-foreground"
         >
           <LogOut className="h-4 w-4" />
@@ -53,7 +53,7 @@ export function AuthIcon() {
     e.preventDefault();
     e.stopPropagation();
     if (session) {
-      signOut();
+      signOut({ callbackUrl: '/' });
     } else {
       signIn('google');
     }
