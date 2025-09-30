@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Check, X } from 'lucide-react';
 import { Project } from '@/lib/types';
 import { ProjectContext } from '@/context/ProjectContext';
+import { mutate } from 'swr';
+import { apiUrl } from '@/lib/api';
 
 export default function ProjectHeaderEditor({ project }: { project: { id: string; name: string; description: string } }) {
   const { updateProject } = useContext(ProjectContext);
@@ -12,22 +14,40 @@ export default function ProjectHeaderEditor({ project }: { project: { id: string
   const [description, setDescription] = useState(project.description ?? '');
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [optimisticProject, setOptimisticProject] = useState<{ name: string; description: string } | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const isDirty = name !== (project.name ?? '') || description !== (project.description ?? '');
 
-  const save = async () => {
+  const save = () => {
     if (!isDirty) { setEditing(false); return; }
-    try {
-      setSaving(true);
-      await updateProject(project.id, { name, description });
-      setEditing(false);
-    } catch (e) {
-      // updateProject will surface toasts; nothing else here
-    } finally {
-      setSaving(false);
-    }
+
+    // Create optimistic update - immediately show new data
+    const optimisticData = { name, description };
+    setOptimisticProject(optimisticData);
+    setEditing(false);
+
+    // Run API update in background
+    (async () => {
+      try {
+        setSaving(true);
+        await updateProject(project.id, { name, description });
+        // Revalidate the project data in SWR cache
+        await mutate(apiUrl(`/projects/${project.id}`));
+        // Clear optimistic data once API completes successfully
+        setOptimisticProject(null);
+      } catch (e) {
+        // On error, revert to original data
+        setOptimisticProject(null);
+        setName(project.name);
+        setDescription(project.description ?? '');
+        // updateProject will surface toasts
+      } finally {
+        setSaving(false);
+      }
+    })();
   };
+
 
   // Click outside to cancel editing and revert
   useEffect(() => {
@@ -46,6 +66,10 @@ export default function ProjectHeaderEditor({ project }: { project: { id: string
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [editing, project.name, project.description]);
 
+  // Use optimistic data if available, otherwise use current state or project data
+  const displayName = optimisticProject ? optimisticProject.name : (editing ? name : project.name);
+  const displayDescription = optimisticProject ? optimisticProject.description : (editing ? description : (project.description ?? ''));
+
   return (
     <div className="relative" ref={containerRef}>
       <div className={`group rounded-md p-2 transition-all ${editing ? 'ring-2 ring-primary/50' : 'hover:ring-1 hover:ring-primary/20'}`}>
@@ -53,12 +77,12 @@ export default function ProjectHeaderEditor({ project }: { project: { id: string
           {editing ? (
             <input className="text-3xl font-bold font-headline w-full bg-transparent outline-none" value={name} onChange={(e) => setName(e.target.value)} />
           ) : (
-            <h1 onClick={() => setEditing(true)} className="text-3xl font-bold font-headline cursor-text">{name}</h1>
+            <h1 onClick={() => setEditing(true)} className="text-3xl font-bold font-headline cursor-text">{displayName}</h1>
           )}
           {editing ? (
             <textarea className="text-lg text-muted-foreground w-full mt-1 bg-transparent outline-none" value={description} onChange={(e) => setDescription(e.target.value)} />
           ) : (
-            <p onClick={() => setEditing(true)} className="text-lg text-muted-foreground mt-1 cursor-text">{description}</p>
+            <p onClick={() => setEditing(true)} className="text-lg text-muted-foreground mt-1 cursor-text">{displayDescription}</p>
           )}
         </div>
       </div>

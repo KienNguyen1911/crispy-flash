@@ -264,8 +264,8 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
         </div>
       </div>
       
-      <Card>
-        <Table>
+      <Card className="h-[calc(80vh)] overflow-auto">
+        <Table className=''>
           <TableHeader>
             <TableRow>
               <TableHead>Kanji</TableHead>

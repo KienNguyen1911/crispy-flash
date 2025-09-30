@@ -147,7 +147,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         topics: []
       };
       setProjects((prev) => [...prev, created]);
-      toast({ title: "Project Created", description: `${created.name}` });
+      toast({ title: "Project Created", description: `${created.name}`, duration: 4000 });
       return true;
     } catch (err: any) {
       console.error(err);
@@ -187,7 +187,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setProjects((prev) =>
       prev.map((p) => (p.id === projectId ? { ...p, ...updated } : p))
     );
-    toast({ title: "Project Updated" });
+    toast({ title: "Project Updated", duration: 4000 });
   };
 
   const deleteProject = async (projectId: string) => {
@@ -196,7 +196,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     });
     if (!res.ok) throw new Error("Failed to delete project");
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
-    toast({ title: "Project Deleted", variant: "destructive" });
+    toast({ title: "Project Deleted", variant: "destructive", duration: 4000 });
   };
 
   const value = {

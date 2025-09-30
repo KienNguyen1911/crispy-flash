@@ -36,10 +36,10 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
       const result = await res.json();
       console.log('API response:', result);
       await reloadProjects();
-      toast({ title: 'Vocabulary Saved', description: `${vocabularyItems.length} new word(s) added.` });
+      toast({ title: 'Vocabulary Saved', description: `${vocabularyItems.length} new word(s) added.`, duration: 4000 });
     } catch (err) {
       console.error('addVocabulary error:', err);
-      toast({ title: 'Save failed', description: 'Could not save vocabulary', variant: 'destructive' });
+      toast({ title: 'Save failed', description: 'Could not save vocabulary', variant: 'destructive', duration: 4000 });
     }
   };
 
@@ -48,10 +48,10 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
       const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`), { method: 'PATCH', body: JSON.stringify(vocabData), headers: { 'Content-Type': 'application/json' } });
       if (!res.ok) throw new Error('Failed to update vocabulary');
       await reloadProjects();
-      toast({ title: 'Vocabulary Updated' });
+      toast({ title: 'Vocabulary Updated', duration: 4000 });
     } catch (err) {
       console.error(err);
-      toast({ title: 'Update failed', description: 'Could not update vocabulary', variant: 'destructive' });
+      toast({ title: 'Update failed', description: 'Could not update vocabulary', variant: 'destructive', duration: 4000 });
     }
   };
 
@@ -60,10 +60,10 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
       const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`), { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete vocabulary');
       await reloadProjects();
-      toast({ title: 'Vocabulary Deleted', variant: 'destructive' });
+      toast({ title: 'Vocabulary Deleted', variant: 'destructive', duration: 4000 });
     } catch (err) {
       console.error(err);
-      toast({ title: 'Delete failed', description: 'Could not delete vocabulary', variant: 'destructive' });
+      toast({ title: 'Delete failed', description: 'Could not delete vocabulary', variant: 'destructive', duration: 4000 });
     }
   };
 
@@ -74,7 +74,7 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
       await reloadProjects();
     } catch (err) {
       console.error(err);
-      toast({ title: 'Update failed', description: 'Could not update vocabulary status', variant: 'destructive' });
+      toast({ title: 'Update failed', description: 'Could not update vocabulary status', variant: 'destructive', duration: 4000 });
     }
   };
 

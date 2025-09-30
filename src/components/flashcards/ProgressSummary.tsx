@@ -39,10 +39,10 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
                     });
                     if (!res.ok) throw new Error('persist failed');
                     const data = await res.json();
-                    toast({ title: 'Session saved', description: `${data.updated} words updated.` });
+                    toast({ title: 'Session saved', description: `${data.updated} words updated.`, duration: 4000 });
                 } catch (err: any) {
                     console.error(err);
-                    toast({ title: 'Save failed', description: 'Could not save session results', variant: 'destructive' });
+                    toast({ title: 'Save failed', description: 'Could not save session results', variant: 'destructive', duration: 4000});
                 }
             }
             persist();

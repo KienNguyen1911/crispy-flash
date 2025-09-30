@@ -16,7 +16,7 @@ import {
   useTransform,
 } from "motion/react";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 export const FloatingDock = ({
   items,
@@ -36,18 +36,30 @@ const FloatingDockDesktop = ({
   items: { title: string; icon: React.ReactNode; href: string }[];
   className?: string;
 }) => {
+  const [isMobile, setIsMobile] = useState(false);
   let mouseX = useMotionValue(Infinity);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <motion.div
-      onMouseMove={(e) => mouseX.set(e.pageX)}
-      onMouseLeave={() => mouseX.set(Infinity)}
+      onMouseMove={!isMobile ? (e) => mouseX.set(e.pageX) : undefined}
+      onMouseLeave={!isMobile ? () => mouseX.set(Infinity) : undefined}
       className={cn(
         "fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 mx-auto h-16 items-end gap-4 rounded-2xl bg-gray-50 px-4 pb-3 flex dark:bg-neutral-900",
         className,
       )}
     >
       {items.map((item) => (
-        <IconContainer mouseX={mouseX} key={item.title} {...item} />
+        <IconContainer mouseX={mouseX} key={item.title} isMobile={isMobile} {...item} />
       ))}
     </motion.div>
   );
@@ -58,11 +70,13 @@ function IconContainer({
   title,
   icon,
   href,
+  isMobile,
 }: {
   mouseX: MotionValue;
   title: string;
   icon: React.ReactNode;
   href: string;
+  isMobile: boolean;
 }) {
   let ref = useRef<HTMLDivElement>(null);
 
@@ -72,14 +86,15 @@ function IconContainer({
     return val - bounds.x - bounds.width / 2;
   });
 
-  let widthTransform = useTransform(distance, [-150, 0, 150], [40, 80, 40]);
-  let heightTransform = useTransform(distance, [-150, 0, 150], [40, 80, 40]);
+  // Disable animations on mobile
+  let widthTransform = useTransform(distance, [-150, 0, 150], isMobile ? [40, 40, 40] : [40, 80, 40]);
+  let heightTransform = useTransform(distance, [-150, 0, 150], isMobile ? [40, 40, 40] : [40, 80, 40]);
 
-  let widthTransformIcon = useTransform(distance, [-150, 0, 150], [20, 40, 20]);
+  let widthTransformIcon = useTransform(distance, [-150, 0, 150], isMobile ? [20, 20, 20] : [20, 40, 20]);
   let heightTransformIcon = useTransform(
     distance,
     [-150, 0, 150],
-    [20, 40, 20],
+    isMobile ? [20, 20, 20] : [20, 40, 20],
   );
 
   let width = useSpring(widthTransform, {
@@ -110,12 +125,12 @@ function IconContainer({
     <motion.div
       ref={ref}
       style={{ width, height }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={!isMobile ? () => setHovered(true) : undefined}
+      onMouseLeave={!isMobile ? () => setHovered(false) : undefined}
       className="relative flex aspect-square items-center justify-center rounded-full bg-gray-200 dark:bg-neutral-800"
     >
       <AnimatePresence>
-        {hovered && (
+        {hovered && !isMobile && (
           <motion.div
             initial={{ opacity: 0, y: 10, x: "-50%" }}
             animate={{ opacity: 1, y: 0, x: "-50%" }}

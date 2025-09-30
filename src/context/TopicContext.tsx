@@ -41,10 +41,10 @@ export function TopicProvider({ children }: { children: ReactNode }) {
         const topicsList = await topicsRes.json();
         setProjectTopics(projectId, topicsList.map((t: any) => ({ id: t.id, title: t.title, description: t.description ?? '', vocabulary: [] })));
       }
-      toast({ title: 'Topic Created', description: `${created.title}` });
+      toast({ title: 'Topic Created', description: `${created.title}`, duration: 4000 });
     } catch (err) {
       console.error(err);
-      toast({ title: 'Create failed', description: 'Failed to create topic', variant: 'destructive' });
+      toast({ title: 'Create failed', description: 'Failed to create topic', variant: 'destructive', duration: 4000 });
     }
   };
 
@@ -58,10 +58,10 @@ export function TopicProvider({ children }: { children: ReactNode }) {
         const topicsList = await topicsRes.json();
         setProjectTopics(projectId, topicsList.map((t: any) => ({ id: t.id, title: t.title, description: t.description ?? '', vocabulary: [] })));
       }
-      toast({ title: 'Topic Updated' });
+      toast({ title: 'Topic Updated', duration: 4000 });
     } catch (err) {
       console.error(err);
-      toast({ title: 'Update failed', description: 'Failed to update topic', variant: 'destructive' });
+      toast({ title: 'Update failed', description: 'Failed to update topic', variant: 'destructive', duration: 4000 });
     }
   };
 
@@ -74,10 +74,10 @@ export function TopicProvider({ children }: { children: ReactNode }) {
         const topicsList = await topicsRes.json();
         setProjectTopics(projectId, topicsList.map((t: any) => ({ id: t.id, title: t.title, description: t.description ?? '', vocabulary: [] })));
       }
-      toast({ title: 'Topic Deleted', variant: 'destructive' });
+      toast({ title: 'Topic Deleted', variant: 'destructive', duration: 4000 });
     } catch (err) {
       console.error(err);
-      toast({ title: 'Delete failed', description: 'Could not delete topic', variant: 'destructive' });
+      toast({ title: 'Delete failed', description: 'Could not delete topic', variant: 'destructive', duration: 4000 });
     }
   };
 

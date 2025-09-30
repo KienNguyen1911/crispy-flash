@@ -36,7 +36,7 @@ export default function RootLayout({
         <AppProviders>
           <div className="relative flex min-h-screen flex-col">
             <PageLoader />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 mb-16">{children}</main>
             <FloatingDockClient />
           </div>
           <Toaster />
