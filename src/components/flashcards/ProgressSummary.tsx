@@ -29,9 +29,27 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
         useEffect(() => {
             // persist sessionProgress to DB via batch PATCH endpoint
             async function persist() {
+                const updates = Object.entries(sessionProgress).map(([id, status]) => ({ id, status }));
+                if (updates.length === 0) return;
+
+                // Build a stable fingerprint of this session's updates
+                const fingerprint = updates
+                    .slice()
+                    .sort((a, b) => a.id.localeCompare(b.id))
+                    .map(u => `${u.id}:${u.status}`)
+                    .join('|');
+                const storageKey = `vocabPersist:${projectId}:${topicId}:${fingerprint}`;
+
+                // Guard against double invocation (React StrictMode dev double-mount, remounts, rapid re-mounts)
+                if (typeof window !== 'undefined') {
+                    if (sessionStorage.getItem(storageKey)) {
+                        return;
+                    }
+                    // Mark as inflight BEFORE the request to prevent race conditions causing duplicate calls
+                    sessionStorage.setItem(storageKey, 'inflight');
+                }
+
                 try {
-                    const updates = Object.entries(sessionProgress).map(([id, status]) => ({ id, status }));
-                    if (updates.length === 0) return;
                     const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary`), {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
@@ -39,8 +57,17 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
                     });
                     if (!res.ok) throw new Error('persist failed');
                     const data = await res.json();
+
+                    if (typeof window !== 'undefined') {
+                        sessionStorage.setItem(storageKey, 'done');
+                    }
+
                     toast({ title: 'Session saved', description: `${data.updated} words updated.`, duration: 4000 });
                 } catch (err: any) {
+                    // Clear the inflight marker so the user can retry (e.g., by reloading)
+                    if (typeof window !== 'undefined') {
+                        sessionStorage.removeItem(storageKey);
+                    }
                     console.error(err);
                     toast({ title: 'Save failed', description: 'Could not save session results', variant: 'destructive', duration: 4000});
                 }
@@ -71,17 +98,17 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
                     You scored {percentage}%
                 </div>
 
-                <div className="flex justify-center gap-4 pt-4">
-                    <Button onClick={onRestart} variant="outline">
+                <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 pt-4">
+                    <Button onClick={onRestart} variant="outline" className="w-full sm:w-auto">
                         <RotateCw className="mr-2 h-4 w-4"/>
                         Restart Session
                     </Button>
                     {notRemembered > 0 && (
-                        <Button onClick={() => router.push(`/projects/${projectId}/topics/${topicId}/learn?filter=not_remembered`)}>
+                        <Button onClick={() => router.push(`/projects/${projectId}/topics/${topicId}/learn?filter=not_remembered`)} className="w-full sm:w-auto">
                             Review {notRemembered} Forgot
                         </Button>
                     )}
-                    <Button asChild>
+                    <Button asChild className="w-full sm:w-auto">
                         <Link href={`/projects/${projectId}/topics/${topicId}`}>
                             Back to Topic
                         </Link>
