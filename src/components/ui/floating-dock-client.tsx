@@ -18,6 +18,7 @@ export function FloatingDockClient() {
         <BookOpen className="h-full w-full text-primary" />
       ),
       href: "/guide",
+      isCurrentPage: pathname === "/guide",
     },
     {
       title: "Home",
@@ -25,6 +26,7 @@ export function FloatingDockClient() {
         <Home className="h-full w-full text-neutral-500 dark:text-neutral-300" />
       ),
       href: "/",
+      isCurrentPage: pathname === "/",
     },
     ...(isHomePage
       ? [

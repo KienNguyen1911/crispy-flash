@@ -91,11 +91,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   const pathname = usePathname();
 
-  // Only auto-load the projects list on the root or the projects-list page.
+  // Only auto-load the projects list on the projects-list page.
   // This prevents the provider from fetching `/api/projects` on every route
   // (for example on project detail pages like `/projects/:projectId`).
+  // The dashboard page (/) now handles its own data fetching with SWR.
   useEffect(() => {
-    if ((pathname === "/" || pathname === "/projects") && status === 'authenticated') {
+    if (pathname === "/projects" && status === 'authenticated') {
       reloadProjects();
     }
   }, [pathname, status]);

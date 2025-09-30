@@ -1,10 +1,8 @@
 'use client';
 
-import { useContext } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { PlusCircle } from 'lucide-react';
-import { ProjectContext } from '@/context/ProjectContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -17,19 +15,67 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import DataLoader from '@/components/ui/DataLoader';
+import useSWR from 'swr';
+import { apiUrl } from '@/lib/api';
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
-  const { projects, addProject, deleteProject } = useContext(ProjectContext);
 
-  if (status === 'loading') {
-    return (
-      <div className="container mx-auto max-w-5xl py-8 px-4">
-        <div className="text-center py-20">
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
+  const { data: projectsRaw, error: projectsError, mutate: mutateProjects } = useSWR(
+    status === 'authenticated' ? apiUrl('/projects') : null
+  );
+
+  const projects = projectsRaw ? projectsRaw.map((p: any) => ({
+    id: p.id,
+    name: p.title ?? p.name ?? '',
+    description: p.description ?? '',
+    topicsCount: p.topicsCount ?? 0,
+    wordsCount: p.wordsCount ?? 0
+  })) : [];
+
+  const loading = status === 'loading' || (status === 'authenticated' && !projectsRaw);
+  const error = projectsError;
+
+  const addProject = async (projectData: any) => {
+    try {
+      const body = {
+        title: projectData.name,
+        description: projectData.description || ''
+      };
+      const res = await fetch(apiUrl('/projects'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        throw new Error('Failed to create project');
+      }
+      mutateProjects(); // Refresh the projects list
+      return true;
+    } catch (err) {
+      console.error('Create project error:', err);
+      return false;
+    }
+  };
+
+  const deleteProject = async (projectId: string) => {
+    try {
+      const res = await fetch(apiUrl(`/projects/${projectId}`), {
+        method: 'DELETE'
+      });
+      if (!res.ok) {
+        throw new Error('Failed to delete project');
+      }
+      mutateProjects(); // Refresh the projects list
+    } catch (err) {
+      console.error('Delete project error:', err);
+      throw err;
+    }
+  };
+
+  if (loading) {
+    return <DataLoader />;
   }
 
   if (!session) {
@@ -88,7 +134,7 @@ export default function Dashboard() {
 
       {projects.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
+          {projects.map((project: any) => (
             <div key={project.id}>
               <Card className="
                 relative h-full flex flex-col 

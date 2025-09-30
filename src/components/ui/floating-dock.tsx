@@ -17,12 +17,13 @@ import {
 } from "motion/react";
 
 import { useRef, useState, useEffect } from "react";
+import Link from "next/link";
 
 export const FloatingDock = ({
   items,
   desktopClassName,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: { title: string; icon: React.ReactNode; href: string; isCurrentPage?: boolean }[];
   desktopClassName?: string;
 }) => {
   return <FloatingDockDesktop items={items} className={desktopClassName} />;
@@ -33,7 +34,7 @@ const FloatingDockDesktop = ({
   items,
   className,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: { title: string; icon: React.ReactNode; href: string; isCurrentPage?: boolean }[];
   className?: string;
 }) => {
   const [isMobile, setIsMobile] = useState(false);
@@ -59,7 +60,15 @@ const FloatingDockDesktop = ({
       )}
     >
       {items.map((item) => (
-        <IconContainer mouseX={mouseX} key={item.title} isMobile={isMobile} {...item} />
+        <IconContainer
+          mouseX={mouseX}
+          key={item.title}
+          isMobile={isMobile}
+          title={item.title}
+          icon={item.icon}
+          href={item.href}
+          isCurrentPage={item.isCurrentPage}
+        />
       ))}
     </motion.div>
   );
@@ -71,12 +80,14 @@ function IconContainer({
   icon,
   href,
   isMobile,
+  isCurrentPage = false,
 }: {
   mouseX: MotionValue;
   title: string;
   icon: React.ReactNode;
   href: string;
   isMobile: boolean;
+  isCurrentPage?: boolean;
 }) {
   let ref = useRef<HTMLDivElement>(null);
 
@@ -150,14 +161,15 @@ function IconContainer({
     </motion.div>
   );
 
-  // Don't wrap in anchor tag if href is "#" (for interactive elements like buttons)
-  if (href === "#") {
+  // Don't wrap in Link if href is "#" (for interactive elements like buttons)
+  // or if we're already on the current page (prevents unnecessary navigation)
+  if (href === "#" || isCurrentPage) {
     return content;
   }
 
   return (
-    <a href={href}>
+    <Link href={href}>
       {content}
-    </a>
+    </Link>
   );
 }
