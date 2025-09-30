@@ -13,11 +13,11 @@ export function FloatingDockClient() {
 
   const desktopItems = [
     {
-      title: "LinguaFlash",
+      title: "Guide",
       icon: (
         <BookOpen className="h-full w-full text-primary" />
       ),
-      href: "/",
+      href: "/guide",
     },
     {
       title: "Home",

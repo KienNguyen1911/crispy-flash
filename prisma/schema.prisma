@@ -49,4 +49,6 @@ model Vocabulary {
   createdAt DateTime @default(now())
 
   @@index([topicId])
+  @@index([status])
+  @@index([status, topicId])
 }

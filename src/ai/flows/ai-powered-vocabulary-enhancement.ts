@@ -12,7 +12,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import wav from 'wav';
 
 const EnhanceVocabularyEntryInputSchema = z.object({
   kanji: z.string().describe('The Kanji character of the vocabulary entry.'),

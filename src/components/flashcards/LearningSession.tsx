@@ -45,6 +45,7 @@ export function LearningSession({ initialTopic }: { initialTopic?: any } = {}) {
   const [sessionProgress, setSessionProgress] = useState<{ [key: string]: 'remembered' | 'not_remembered' }>({});
   const [isFinished, setIsFinished] = useState(false);
   const [showSide, setShowSide] = useState<'kanji' | 'meaning'>('kanji');
+  const [isPersisting, setIsPersisting] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -61,6 +62,45 @@ export function LearningSession({ initialTopic }: { initialTopic?: any } = {}) {
       setIsFinished(true);
     }
   }, [currentIndex, shuffledVocabulary.length]);
+
+  // Persist session progress to database
+  const persistProgress = async (progress: typeof sessionProgress) => {
+    if (Object.keys(progress).length === 0 || isPersisting) return;
+
+    setIsPersisting(true);
+    try {
+      const updates = Object.entries(progress).map(([id, status]) => ({ id, status }));
+      const response = await fetch(`/api/projects/${projectId}/topics/${topicId}/vocabulary`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to persist progress:', await response.text());
+      }
+    } catch (error) {
+      console.error('Error persisting progress:', error);
+    } finally {
+      setIsPersisting(false);
+    }
+  };
+
+  // Persist progress when it changes
+  useEffect(() => {
+    if (Object.keys(sessionProgress).length > 0) {
+      persistProgress(sessionProgress);
+    }
+  }, [sessionProgress]);
+
+  // Persist on unmount or session finish
+  useEffect(() => {
+    return () => {
+      if (Object.keys(sessionProgress).length > 0) {
+        persistProgress(sessionProgress);
+      }
+    };
+  }, [sessionProgress]);
 
   if (!topic) {
     return notFound();
@@ -82,8 +122,7 @@ export function LearningSession({ initialTopic }: { initialTopic?: any } = {}) {
 
   const currentCard = shuffledVocabulary[currentIndex];
 
-  // Previously we had handleMark to update vocabulary status when marking remembered/not-remembered.
-  // That logic has been removed per request; navigation and review bookmarking remain UI-only.
+  // Progress is now persisted to the database via API calls
 
   // UI-only handlers for navigation and review bookmarking
   const goToPrevious = () => {

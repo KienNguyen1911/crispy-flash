@@ -37,16 +37,19 @@ export default function Dashboard() {
       <div className="container mx-auto max-w-5xl py-8 px-4">
         <Card className="mb-8 p-6">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold font-headline">Welcome to LinguaFlash</CardTitle>
-            <CardDescription>
-              Sign in to organize your vocabulary learning into projects.
+            <CardTitle className="text-4xl font-bold font-headline mb-4">Welcome to LinguaFlash</CardTitle>
+            <CardDescription className="text-lg">
+              Master Japanese vocabulary with intelligent flashcards. Organize, learn, and track your progress effectively.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Button onClick={() => signIn('google')} size="lg">
-              <PlusCircle className="mr-2 h-4 w-4" />
+            <Button onClick={() => signIn('google')} size="lg" className="mb-4">
+              <PlusCircle className="mr-2 h-5 w-5" />
               Sign In with Google
             </Button>
+            <p className="text-sm text-muted-foreground">
+              New to LinguaFlash? Check out our <a href="/guide" className="text-primary hover:underline">complete guide</a> to get started.
+            </p>
           </CardContent>
         </Card>
       </div>
