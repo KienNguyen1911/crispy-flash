@@ -100,7 +100,7 @@ export default function Dashboard() {
   if (!session) {
     return (
       <div className="container mx-auto max-w-5xl py-8 px-4">
-        <Card className="mb-8 p-6">
+        <Card className="mb-8 p-6" variant="glass">
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-bold font-headline mb-4">
               Welcome to LinguaFlash
@@ -163,6 +163,7 @@ export default function Dashboard() {
           {projects.map((project: any) => (
             <div key={project.id}>
               <Card
+                variant="glass"
                 className="
                 relative h-full flex flex-col 
                 hover:shadow-lg hover:scale-105 hover:ring-2 hover:ring-primary/50 transition-all duration-300
