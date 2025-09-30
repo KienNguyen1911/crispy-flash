@@ -83,7 +83,7 @@ export function TopicForm({ topic, onSubmit, submitButtonText = 'Save' }: TopicF
             </FormItem>
           )}
         />
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-center gap-2">
             <DialogClose asChild>
                 <Button id="closeDialog" variant="ghost">Cancel</Button>
             </DialogClose>

@@ -102,7 +102,7 @@ export function ProjectForm({ project, onSubmit, submitButtonText = 'Save' }: Pr
             </FormItem>
           )}
         />
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-center gap-2">
             <DialogClose asChild>
                 <Button id="closeDialog" variant="ghost">Cancel</Button>
             </DialogClose>

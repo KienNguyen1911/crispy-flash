@@ -185,6 +185,30 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
         return v.status === statusFilter;
     });
 
+  const LearnDialog = () => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>
+          <BrainCircuit className="mr-2 h-4 w-4" /> Learn
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Choose vocabulary set</DialogTitle>
+          <DialogDescription>Select which set to study with flashcards.</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-2 mt-4">
+          <Button asChild>
+            <Link href={`/projects/${projectId}/topics/${topic.id}/learn`}>All vocabularies</Link>
+          </Button>
+          <Button asChild>
+            <Link href={`/projects/${projectId}/topics/${topic.id}/learn?filter=not_remembered`}>Not remembered</Link>
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <div className="container mx-auto max-w-5xl py-8 px-4">
       {/* Breadcrumb and Header */}
@@ -197,14 +221,18 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
       </Card>
 
       <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
-        <div className="relative w-full md:w-auto flex-1">
+        <div className="relative w-full md:w-auto flex-1 flex flex-row items-center gap-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input 
-                placeholder="Search vocabulary..." 
-                className="pl-10 w-full md:w-80"
+            <Input
+                placeholder="Search vocabulary..."
+                className="pl-10 flex-1 md:w-80"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <div className="block md:hidden">
+              {/* Learn chooser dialog: pick All or Not Remembered */}
+              <LearnDialog />
+            </div>
         </div>
         <div className="flex w-full md:w-auto items-center gap-2">
           {!isEditMode ? (
@@ -228,28 +256,10 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
                   <Upload className="mr-2 h-4 w-4" /> Import
                 </Link>
               </Button>
-              {/* Learn chooser dialog: pick All or Not Remembered */}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <BrainCircuit className="mr-2 h-4 w-4" /> Learn
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Choose vocabulary set</DialogTitle>
-                    <DialogDescription>Select which set to study with flashcards.</DialogDescription>
-                  </DialogHeader>
-                  <div className="flex flex-col gap-2 mt-4">
-                    <Button asChild>
-                      <Link href={`/projects/${projectId}/topics/${topic.id}/learn`}>All vocabularies</Link>
-                    </Button>
-                    <Button asChild>
-                      <Link href={`/projects/${projectId}/topics/${topic.id}/learn?filter=not_remembered`}>Not remembered</Link>
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <div className="hidden md:block">
+                {/* Learn chooser dialog: pick All or Not Remembered */}
+                <LearnDialog />
+              </div>
             </>
           ) : (
             <>
