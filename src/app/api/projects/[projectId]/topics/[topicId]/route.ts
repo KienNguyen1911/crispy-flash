@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
+import { invalidateCache } from '@/lib/cache';
 
 export async function GET(_req: Request, { params }: { params: Promise<{ projectId: string; topicId: string }> }) {
   try {
@@ -79,6 +80,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ projec
       data: { title: body.title }
     });
 
+    await invalidateCache(
+      `vocabulary:list:${topicId}`,
+      `topics:${projectId}`,
+      `projects:list:${user.id}`,
+      `project:${projectId}`
+    );
+
     return NextResponse.json(topic);
   } catch (error) {
     console.error('Error in PATCH /api/projects/[projectId]/topics/[topicId]:', error);
@@ -115,6 +123,13 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ proj
 
     await prisma.vocabulary.deleteMany({ where: { topicId } });
     await prisma.topic.delete({ where: { id: topicId } });
+
+    await invalidateCache(
+      `vocabulary:list:${topicId}`,
+      `topics:${projectId}`,
+      `projects:list:${user.id}`,
+      `project:${projectId}`
+    );
 
     return NextResponse.json({ ok: true });
   } catch (error) {

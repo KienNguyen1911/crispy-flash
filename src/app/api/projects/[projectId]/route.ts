@@ -1,15 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Redis } from "@upstash/redis";
+import { getCachedOrFetch, invalidateCache } from "@/lib/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    })
-  : null;
 
 export async function GET(
   _req: Request,
@@ -34,26 +28,15 @@ export async function GET(
 
     const cacheKey = `project:${projectId}`;
 
-    // Check cache first (if Redis is available)
-    if (redis) {
-      try {
-        const cached = await redis.get(cacheKey);
-        if (cached && typeof cached === 'string') {
-          const cachedProject = JSON.parse(cached);
-          // Check if cached project belongs to user
-          if (cachedProject.ownerId === user.id) {
-            return NextResponse.json(cachedProject);
-          }
-        }
-      } catch (cacheError) {
-        console.warn('Cache read error:', cacheError);
-        // Continue to database query
-      }
-    }
-
-    const project = await prisma.project.findUnique({
-      where: { id: projectId }
-    });
+    const project = await getCachedOrFetch(
+      cacheKey,
+      async () => {
+        return await prisma.project.findUnique({
+          where: { id: projectId }
+        });
+      },
+      600
+    );
 
     if (!project) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -62,11 +45,6 @@ export async function GET(
     // Check ownership
     if (project.ownerId !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    // Cache the result (if Redis is available)
-    if (redis) {
-      await redis.setex(cacheKey, 600, JSON.stringify(project)); // 10 minutes TTL
     }
 
     return NextResponse.json(project);
@@ -116,11 +94,8 @@ export async function PATCH(
       data: { title: body.title, description: body.description }
     });
 
-    // Invalidate cache (if Redis is available)
-    if (redis) {
-      await redis.del(`project:${projectId}`);
-      await redis.del(`projects:list:${user.id}`);
-    }
+    // Invalidate cache
+    await invalidateCache(`project:${projectId}`, `projects:list:${user.id}`);
 
     return NextResponse.json(updatedProject);
   } catch (error) {
@@ -170,11 +145,8 @@ export async function DELETE(
     await prisma.topic.deleteMany({ where: { projectId } });
     await prisma.project.delete({ where: { id: projectId } });
 
-    // Invalidate cache (if Redis is available)
-    if (redis) {
-      await redis.del(`project:${projectId}`);
-      await redis.del(`projects:list:${user.id}`);
-    }
+    // Invalidate cache
+    await invalidateCache(`project:${projectId}`, `projects:list:${user.id}`);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

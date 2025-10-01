@@ -1,15 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Redis } from "@upstash/redis";
+import { getCachedOrFetch, invalidateCache } from "@/lib/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    })
-  : null;
 
 export async function GET(
   req: Request,
@@ -43,40 +37,28 @@ export async function GET(
 
     const cacheKey = `topics:${projectId}`;
 
-    // Check cache first (if Redis is available)
-    if (redis) {
-      try {
-        const cached = await redis.get(cacheKey);
-        if (cached && typeof cached === 'string') {
-          return NextResponse.json(JSON.parse(cached));
-        }
-      } catch (cacheError) {
-        console.warn('Cache read error:', cacheError);
-        // Continue to database query
-      }
-    }
+    const results = await getCachedOrFetch(
+      cacheKey,
+      async () => {
+        // Return lightweight topics for a project with per-topic vocabulary counts
+        const topics = await prisma.topic.findMany({
+          where: { projectId },
+          select: {
+            id: true,
+            title: true,
+            createdAt: true,
+            _count: { select: { vocabulary: true } }
+          }
+        });
 
-    // Return lightweight topics for a project with per-topic vocabulary counts
-    const topics = await prisma.topic.findMany({
-      where: { projectId },
-      select: {
-        id: true,
-        title: true,
-        createdAt: true,
-        _count: { select: { vocabulary: true } }
-      }
-    });
-
-    const results = topics.map((t) => ({
-      id: t.id,
-      title: t.title,
-      wordsCount: (t as any)._count?.vocabulary ?? 0
-    }));
-
-    // Cache the result (if Redis is available)
-    if (redis) {
-      await redis.setex(cacheKey, 600, JSON.stringify(results)); // 10 minutes TTL
-    }
+        return topics.map((t) => ({
+          id: t.id,
+          title: t.title,
+          wordsCount: (t as any)._count?.vocabulary ?? 0
+        }));
+      },
+      600 // 10 minutes TTL
+    );
 
     return NextResponse.json(results);
   } catch (error) {
@@ -120,12 +102,8 @@ export async function POST(
       data: { title: body.title, projectId }
     });
 
-    // Invalidate caches (if Redis is available)
-    if (redis) {
-      await redis.del(`topics:${projectId}`);
-      await redis.del(`projects:list:${user.id}`);
-      await redis.del(`project:${projectId}`);
-    }
+    // Invalidate caches
+    await invalidateCache(`topics:${projectId}`, `projects:list:${user.id}`, `project:${projectId}`);
 
     return NextResponse.json(topic, { status: 201 });
   } catch (error) {

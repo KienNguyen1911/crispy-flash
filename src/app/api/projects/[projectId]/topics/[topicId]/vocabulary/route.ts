@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
+import { getCachedOrFetch, invalidateCache } from '@/lib/cache';
 
 export async function GET(_req: Request, { params }: { params: Promise<{ projectId: string; topicId: string }> }) {
   try {
@@ -30,7 +31,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ project
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const list = await prisma.vocabulary.findMany({ where: { topicId } });
+    const cacheKey = `vocabulary:list:${topicId}`;
+    const list = await getCachedOrFetch(
+      cacheKey,
+      async () => {
+        return await prisma.vocabulary.findMany({ where: { topicId } });
+      },
+      600
+    );
     return NextResponse.json(list);
   } catch (error) {
     console.error('Error in GET /api/projects/[projectId]/topics/[topicId]/vocabulary:', error);
@@ -83,6 +91,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ project
           }))
         });
         console.log(`Successfully created ${items.count} vocabulary items`);
+        await invalidateCache(
+          `vocabulary:list:${topicId}`,
+          `topics:${projectId}`,
+          `projects:list:${user.id}`,
+          `project:${projectId}`
+        );
         return NextResponse.json({ created: items.count }, { status: 201 });
       } catch (error) {
         console.error('Bulk insert error:', error);
@@ -99,6 +113,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ project
           type: body.type || 1,
           topicId,
         } });
+        await invalidateCache(
+          `vocabulary:list:${topicId}`,
+          `topics:${projectId}`,
+          `projects:list:${user.id}`,
+          `project:${projectId}`
+        );
         return NextResponse.json(item, { status: 201 });
       } catch (error) {
         console.error('Single insert error:', error);
@@ -149,6 +169,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ projec
     const ops = updates.map(u => prisma.vocabulary.update({ where: { id: u.id }, data: { status: u.status } }));
     try {
       const results = await prisma.$transaction(ops);
+      await invalidateCache(
+        `vocabulary:list:${topicId}`,
+        `topics:${projectId}`,
+        `projects:list:${user.id}`,
+        `project:${projectId}`
+      );
       return NextResponse.json({ updated: results.length });
     } catch (err: any) {
       console.error('Batch update error', err);

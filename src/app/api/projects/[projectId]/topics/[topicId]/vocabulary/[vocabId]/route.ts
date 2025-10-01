@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
+import { invalidateCache } from '@/lib/cache';
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ projectId: string; topicId: string; vocabId: string }> }) {
   try {
@@ -46,7 +47,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ proj
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { projectId, vocabId } = await params;
+    const { projectId, topicId, vocabId } = await params;
 
     // Find user
     const user = await prisma.user.findUnique({
@@ -67,6 +68,12 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ proj
     }
 
     await prisma.vocabulary.delete({ where: { id: vocabId } });
+    await invalidateCache(
+      `vocabulary:list:${topicId}`,
+      `topics:${projectId}`,
+      `projects:list:${user.id}`,
+      `project:${projectId}`
+    );
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('Error in DELETE /api/projects/[projectId]/topics/[topicId]/vocabulary/[vocabId]:', error);
