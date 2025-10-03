@@ -2,10 +2,10 @@
 
 import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/context/AuthContext";
 import type { Project } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { apiUrl } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 
 interface ProjectContextType {
   projects: Project[];
@@ -38,26 +38,18 @@ export const ProjectContext = createContext<ProjectContextType>({
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const { toast } = useToast();
-  const { data: session, status } = useSession();
+  const { isAuthenticated } = useAuth();
 
   const reloadProjects = async () => {
     // Only load projects if user is authenticated
-    if (status !== 'authenticated' || !session) {
+    if (!isAuthenticated) {
       setProjects([]);
       return;
     }
 
     try {
-      const res = await fetch(apiUrl("/projects"));
-      if (!res.ok) {
-        if (res.status === 401) {
-          // User not authenticated, clear projects
-          setProjects([]);
-          return;
-        }
-        throw new Error("Failed to load projects");
-      }
-      const data = await res.json();
+      // Token is now handled by apiClient automatically
+      const data = await apiClient("/projects");
 
       // data is expected to be lightweight project items with counts
       const loadedProjects = data.map((p: any) => ({
@@ -96,10 +88,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   // (for example on project detail pages like `/projects/:projectId`).
   // The dashboard page (/) now handles its own data fetching with SWR.
   useEffect(() => {
-    if (pathname === "/projects" && status === 'authenticated') {
+    if (pathname === "/projects" && isAuthenticated) {
       reloadProjects();
     }
-  }, [pathname, status]);
+  }, [pathname, isAuthenticated]);
 
   const getProjectById = (projectId: string) =>
     projects.find((p) => p.id === projectId);
@@ -126,21 +118,19 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         title: (projectData as any).name,
         description: (projectData as any).description
       };
-      const res = await fetch(apiUrl("/projects"), {
+      const createdRaw = await apiClient("/projects", {
         method: "POST",
         body: JSON.stringify(body),
-        headers: { "Content-Type": "application/json" }
-      });
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
+      }).catch((err) => {
         toast({
           title: "Create failed",
-          description: errBody?.error || "Failed to create project",
+          description: err?.message || "Failed to create project",
           variant: "destructive"
         });
-        return false;
-      }
-      const createdRaw: any = await res.json();
+        return null;
+      });
+      
+      if (!createdRaw) return false;
       const created: Project = {
         id: createdRaw.id,
         name: createdRaw.title ?? createdRaw.name ?? projectData.name,
@@ -169,16 +159,10 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       title: projectData.name,
       description: projectData.description
     };
-    const res = await fetch(apiUrl(`/projects/${projectId}`), {
+    const updatedRaw = await apiClient(`/projects/${projectId}`, {
       method: "PATCH",
       body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" }
     });
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => ({}));
-      throw new Error(errBody?.error || "Failed to update project");
-    }
-    const updatedRaw: any = await res.json();
     const updated: Project = {
       id: updatedRaw.id,
       name: updatedRaw.title ?? updatedRaw.name ?? projectData.name ?? "",
@@ -192,10 +176,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteProject = async (projectId: string) => {
-    const res = await fetch(apiUrl(`/projects/${projectId}`), {
-      method: "DELETE"
+    await apiClient(`/projects/${projectId}`, {
+      method: "DELETE",
     });
-    if (!res.ok) throw new Error("Failed to delete project");
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
     toast({ title: "Project Deleted", variant: "destructive", duration: 4000 });
   };

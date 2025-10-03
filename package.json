@@ -50,6 +50,7 @@
     "firebase": "^11.9.1",
     "framer-motion": "^11.2.12",
     "genkit": "^1.14.1",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.475.0",
     "motion": "^12.23.22",
     "next": "15.3.3",

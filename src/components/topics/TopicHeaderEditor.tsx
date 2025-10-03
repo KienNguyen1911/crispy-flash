@@ -4,7 +4,7 @@ import React, { useState, useContext, useRef, useEffect } from 'react';
 import { Check, X } from 'lucide-react';
 import { TopicContext } from '@/context/TopicContext';
 import { mutate } from 'swr';
-import { apiUrl } from '@/lib/api';
+import { apiUrl, apiClient } from '@/lib/api';
 
 export default function TopicHeaderEditor({ projectId, topic }: { projectId: string; topic: { id: string; title: string; description?: string } }) {
   const { updateTopic } = useContext(TopicContext) as any;

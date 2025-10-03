@@ -4,7 +4,8 @@ import React, { createContext, ReactNode, useContext } from 'react';
 import type { Vocabulary } from '@/lib/types';
 import { ProjectContext } from '@/context/ProjectContext';
 import { useToast } from '@/hooks/use-toast';
-import { apiUrl } from '@/lib/api';
+import { apiUrl, apiClient } from '@/lib/api';
+import { useAuth } from './AuthContext';
 
 interface VocabularyContextType {
   addVocabulary: (projectId: string, topicId: string, vocabularyItems: Omit<Vocabulary, 'id' | 'topicId' | 'status'>[]) => Promise<void>;
@@ -23,17 +24,15 @@ export const VocabularyContext = createContext<VocabularyContextType>({
 export function VocabularyProvider({ children }: { children: ReactNode }) {
   const { reloadProjects } = useContext(ProjectContext);
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
 
   const addVocabulary = async (projectId: string, topicId: string, vocabularyItems: Omit<Vocabulary, 'id' | 'topicId' | 'status'>[]) => {
     try {
       console.log(`Sending ${vocabularyItems.length} vocabulary items to API`);
-      const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary`), { method: 'POST', body: JSON.stringify(vocabularyItems), headers: { 'Content-Type': 'application/json' } });
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('API response error:', res.status, errorText);
-        throw new Error('Failed to create vocabulary');
-      }
-      const result = await res.json();
+      const result = await apiClient(`/projects/${projectId}/topics/${topicId}/vocabulary`, {
+        method: 'POST',
+        body: JSON.stringify(vocabularyItems),
+      });
       console.log('API response:', result);
       await reloadProjects();
       toast({ title: 'Vocabulary Saved', description: `${vocabularyItems.length} new word(s) added.`, duration: 4000 });
@@ -45,8 +44,10 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
 
   const updateVocabulary = async (projectId: string, topicId: string, vocabId: string, vocabData: Partial<Vocabulary>) => {
     try {
-      const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`), { method: 'PATCH', body: JSON.stringify(vocabData), headers: { 'Content-Type': 'application/json' } });
-      if (!res.ok) throw new Error('Failed to update vocabulary');
+      await apiClient(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(vocabData),
+      });
       await reloadProjects();
       toast({ title: 'Vocabulary Updated', duration: 4000 });
     } catch (err) {
@@ -57,8 +58,9 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
 
   const deleteVocabulary = async (projectId: string, topicId: string, vocabId: string) => {
     try {
-      const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`), { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete vocabulary');
+      await apiClient(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`, {
+        method: 'DELETE',
+      });
       await reloadProjects();
       toast({ title: 'Vocabulary Deleted', variant: 'destructive', duration: 4000 });
     } catch (err) {
@@ -69,8 +71,10 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
 
   const updateVocabularyStatus = async (projectId: string, topicId: string, vocabId: string, status: Vocabulary['status']) => {
     try {
-      const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`), { method: 'PATCH', body: JSON.stringify({ status }), headers: { 'Content-Type': 'application/json' } });
-      if (!res.ok) throw new Error('Failed to update vocabulary status');
+      await apiClient(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
       await reloadProjects();
     } catch (err) {
       console.error(err);

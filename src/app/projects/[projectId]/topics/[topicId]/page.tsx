@@ -2,7 +2,8 @@
 
 import { notFound } from "next/navigation";
 import { useParams } from "next/navigation";
-import { apiUrl } from "@/lib/api";
+import { apiClient } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import TopicViewer from '@/components/topics/TopicViewer';
 import useSWR from 'swr';
 import DataLoader from '@/components/ui/DataLoader';
@@ -11,13 +12,14 @@ export default function TopicPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const topicId = params.topicId as string;
+  const { isAuthenticated } = useAuth();
 
   const { data: projectRaw, error: projectError } = useSWR(
-    projectId ? apiUrl(`/projects/${projectId}`) : null
+    projectId && isAuthenticated ? `/projects/${projectId}` : null
   );
 
   const { data: topic, error: topicError } = useSWR(
-    projectId && topicId ? apiUrl(`/projects/${projectId}/topics/${topicId}`) : null
+    projectId && topicId && isAuthenticated ? `/projects/${projectId}/topics/${topicId}` : null
   );
 
   // Handle 404 errors
@@ -46,4 +48,3 @@ export default function TopicPage() {
     <TopicViewer projectId={projectId} topic={topic} projectName={project.name} />
   );
 }
-

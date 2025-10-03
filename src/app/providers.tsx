@@ -6,13 +6,11 @@ import { VocabularyProvider } from '@/context/VocabularyContext';
 import { type ReactNode } from 'react';
 import { SWRConfig } from 'swr';
 import { ThemeProvider } from 'next-themes';
-import { SessionProvider } from 'next-auth/react';
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { AuthProvider } from '@/context/AuthContext'; // Import AuthProvider
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <SessionProvider>
+    <AuthProvider> { /* Use AuthProvider instead of SessionProvider */ }
       <ThemeProvider
         attribute="class"
         defaultTheme="system"
@@ -21,7 +19,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
       >
         <SWRConfig
           value={{
-            fetcher,
             revalidateOnFocus: false,
             revalidateOnReconnect: true,
             dedupingInterval: 5000, // 5 seconds
@@ -29,13 +26,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
         >
           <ProjectProvider>
             <TopicProvider>
-              <VocabularyProvider>
-                {children}
-              </VocabularyProvider>
+              <VocabularyProvider>{children}</VocabularyProvider>
             </TopicProvider>
           </ProjectProvider>
         </SWRConfig>
       </ThemeProvider>
-    </SessionProvider>
+    </AuthProvider>
   );
 }
