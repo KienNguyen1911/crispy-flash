@@ -6,6 +6,8 @@ import { ProjectContext } from "@/context/ProjectContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiUrl, apiClient } from "@/lib/api";
 import { useAuth } from "./AuthContext";
+import { useSWRConfig } from "swr";
+import { invalidateCache } from "@/lib/cache";
 
 interface TopicContextType {
   getTopicById: (projectId: string, topicId: string) => Topic | undefined;
@@ -33,11 +35,23 @@ export function TopicProvider({ children }: { children: ReactNode }) {
     useContext(ProjectContext);
   const { setProjectTopics } = useContext(ProjectContext);
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
+  const { mutate } = useSWRConfig();
 
-  const getTopicById = (projectId: string, topicId: string) => {
-    const project = projects.find((p) => p.id === projectId);
-    return project?.topics.find((t) => t.id === topicId);
+  const getTopicById = async (projectId: string, topicId: string) => {
+    try {
+      const topic = await apiClient(`/topics/${topicId}`, {});
+      return topic;
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Fetch failed",
+        description: "Failed to fetch topic",
+        variant: "destructive",
+        duration: 4000
+      });
+      return undefined;
+    }
   };
 
   const addTopic = async (
@@ -45,23 +59,21 @@ export function TopicProvider({ children }: { children: ReactNode }) {
     topicData: Omit<Topic, "id" | "projectId" | "vocabulary">
   ) => {
     try {
-      const created = await apiClient(`/projects/${projectId}/topics`, {
+      const created = await apiClient(`/api/topics`, {
         method: "POST",
-        body: JSON.stringify(topicData)
+        body: JSON.stringify({ ...topicData, projectId })
       });
 
-      // fetch updated topic list for this project and update ProjectContext only
-      const topicsList = await apiClient(`/projects/${projectId}/topics`, {});
+      // Invalidate the project cache to refresh topics
+      await mutate(`/api/projects/${projectId}/topics`);
+      if (user) {
+        await invalidateCache(
+          `topics:${projectId}`,
+          `projects:list:${user.id}`,
+          `project:${projectId}`
+        );
+      }
 
-      setProjectTopics(
-        projectId,
-        topicsList.map((t: any) => ({
-          id: t.id,
-          title: t.title,
-          description: t.description ?? "",
-          vocabulary: []
-        }))
-      );
       toast({
         title: "Topic Created",
         description: `${created.title}`,
@@ -84,23 +96,22 @@ export function TopicProvider({ children }: { children: ReactNode }) {
     topicData: Partial<Topic>
   ) => {
     try {
-      await apiClient(`/projects/${projectId}/topics/${topicId}`, {
+      await apiClient(`/api/topics/${topicId}`, {
         method: "PATCH",
         body: JSON.stringify(topicData)
       });
 
-      // refresh topics for the project
-      const topicsList = await apiClient(`/projects/${projectId}/topics`, {});
+      // Invalidate the project cache to refresh topics
+      await mutate(`/api/projects/${projectId}/topics`);
+      if (user) {
+        await invalidateCache(
+          `vocabulary:list:${topicId}`,
+          `topics:${projectId}`,
+          `projects:list:${user.id}`,
+          `project:${projectId}`
+        );
+      }
 
-      setProjectTopics(
-        projectId,
-        topicsList.map((t: any) => ({
-          id: t.id,
-          title: t.title,
-          description: t.description ?? "",
-          vocabulary: []
-        }))
-      );
       toast({ title: "Topic Updated", duration: 4000 });
     } catch (err) {
       console.error(err);
@@ -115,21 +126,13 @@ export function TopicProvider({ children }: { children: ReactNode }) {
 
   const deleteTopic = async (projectId: string, topicId: string) => {
     try {
-      await apiClient(`/projects/${projectId}/topics/${topicId}`, {
+      await apiClient(`/api/topics/${topicId}`, {
         method: "DELETE"
       });
 
-      const topicsList = await apiClient(`/projects/${projectId}/topics`, {});
+      // Invalidate the project cache to refresh topics
+      await mutate(`/api/projects/${projectId}/topics`);
 
-      setProjectTopics(
-        projectId,
-        topicsList.map((t: any) => ({
-          id: t.id,
-          title: t.title,
-          description: t.description ?? "",
-          vocabulary: []
-        }))
-      );
       toast({ title: "Topic Deleted", variant: "destructive", duration: 4000 });
     } catch (err) {
       console.error(err);

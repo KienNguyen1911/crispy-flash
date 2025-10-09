@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [setAuthToken]);
 
   const login = () => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    const apiUrl = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
     window.location.href = `${apiUrl}/api/auth/google`;
   };
 
@@ -95,7 +95,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  console.log("AuthContext:", context);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }

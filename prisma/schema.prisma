@@ -12,7 +12,7 @@ model User {
   id        String    @id @default(cuid())
   email     String    @unique
   name      String
-  googleId  String    @unique
+  googleId  String?    @unique
   projects  Project[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt @default(now())

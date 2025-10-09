@@ -1,51 +1,50 @@
 'use client';
 
-import React, { useState, useContext, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Check, X } from 'lucide-react';
-import { TopicContext } from '@/context/TopicContext';
 import { mutate } from 'swr';
-import { apiUrl, apiClient } from '@/lib/api';
+import { useAuthFetcher } from '@/hooks/useAuthFetcher';
+import { toast } from 'sonner';
 
 export default function TopicHeaderEditor({ projectId, topic }: { projectId: string; topic: { id: string; title: string; description?: string } }) {
-  const { updateTopic } = useContext(TopicContext) as any;
   const [title, setTitle] = useState(topic.title);
   const [description, setDescription] = useState(topic.description ?? '');
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [optimisticTopic, setOptimisticTopic] = useState<{ title: string; description: string } | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const fetcher = useAuthFetcher();
 
   const isDirty = title !== (topic.title ?? '') || description !== (topic.description ?? '');
 
-  const save = () => {
-    if (!isDirty) { setEditing(false); return; }
+  const save = async () => {
+    if (!isDirty) {
+      setEditing(false);
+      return;
+    }
 
-    // Create optimistic update - immediately show new data
-    const optimisticData = { title, description };
-    setOptimisticTopic(optimisticData);
-    setEditing(false);
-
-    // Run API update in background
-    (async () => {
-      try {
-        setSaving(true);
-        await updateTopic(projectId, topic.id, { title, description });
-        // Revalidate the topic data in SWR cache
-        await mutate(apiUrl(`/projects/${projectId}/topics/${topic.id}`));
-        // Clear optimistic data once API completes successfully
-        setOptimisticTopic(null);
-      } catch (e) {
-        // On error, revert to original data
-        setOptimisticTopic(null);
-        setTitle(topic.title);
-        setDescription(topic.description ?? '');
-        // TopicContext handles toasts
-      } finally {
-        setSaving(false);
-      }
-    })();
+    setSaving(true);
+    try {
+      const updatedTopic = await fetcher(
+        `/api/projects/${projectId}/topics/${topic.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, description }),
+        }
+      );
+      mutate(`/api/projects/${projectId}/topics/${topic.id}`, updatedTopic, false);
+      toast.success('Topic updated successfully!');
+      setEditing(false);
+    } catch (error) {
+      console.error('Failed to update topic:', error);
+      toast.error('Failed to update topic.');
+      // Revert changes on error
+      setTitle(topic.title);
+      setDescription(topic.description ?? '');
+    } finally {
+      setSaving(false);
+    }
   };
-
 
   useEffect(() => {
     if (!editing) return;
@@ -62,10 +61,6 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [editing, topic.title, topic.description]);
 
-  // Use optimistic data if available, otherwise use current state or topic data
-  const displayTitle = optimisticTopic ? optimisticTopic.title : (editing ? title : topic.title);
-  const displayDescription = optimisticTopic ? optimisticTopic.description : (editing ? description : (topic.description ?? ''));
-
   return (
     <div className="relative" ref={containerRef}>
       <div className={`group rounded-md p-2 transition-all ${editing ? 'ring-2 ring-primary/50' : 'hover:ring-1 hover:ring-primary/20'}`}>
@@ -73,12 +68,12 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
           {editing ? (
             <input className="text-3xl font-bold font-headline w-full bg-transparent outline-none" value={title} onChange={(e) => setTitle(e.target.value)} />
           ) : (
-            <h1 onClick={() => setEditing(true)} className="text-3xl font-bold font-headline cursor-text">{displayTitle}</h1>
+            <h1 onClick={() => setEditing(true)} className="text-3xl font-bold font-headline cursor-text">{topic.title}</h1>
           )}
           {editing ? (
             <textarea className="text-lg text-muted-foreground w-full mt-1 bg-transparent outline-none" value={description} onChange={(e) => setDescription(e.target.value)} />
           ) : (
-            <p onClick={() => setEditing(true)} className="text-lg text-muted-foreground mt-1 cursor-text">{displayDescription}</p>
+            <p onClick={() => setEditing(true)} className="text-lg text-muted-foreground mt-1 cursor-text">{topic.description ?? ''}</p>
           )}
         </div>
       </div>

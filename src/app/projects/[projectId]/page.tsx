@@ -3,8 +3,9 @@
 import { notFound } from "next/navigation";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import useSWR from 'swr';
-import DataLoader from '@/components/ui/DataLoader';
+import { useAuthFetcher } from "@/hooks/useAuthFetcher";
+import useSWR from "swr";
+import DataLoader from "@/components/ui/DataLoader";
 import TopicCreate from "@/components/projects/TopicCreate";
 import ProjectHeaderEditor from "@/components/projects/ProjectHeaderEditor";
 import TopicCardClient from "@/components/projects/TopicCardClient";
@@ -17,16 +18,17 @@ import {
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
 import { Card } from "@/components/ui/card";
+import { invalidateCache } from "@/lib/cache";
 
 export default function ProjectPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const { isAuthenticated } = useAuth();
+  const fetcher = useAuthFetcher();
 
-  // The global fetcher in providers.tsx handles the token automatically.
   const { data: projectRaw, error: projectError } = useSWR(
-    // Only fetch if authenticated and projectId is available
-    isAuthenticated && projectId ? `/projects/${projectId}` : null
+    isAuthenticated && projectId ? `/api/projects/${projectId}` : null,
+    fetcher
   );
 
   // Handle 404 errors
@@ -34,28 +36,40 @@ export default function ProjectPage() {
     notFound();
   }
 
-  const { data: topicsRaw, error: topicsError, mutate: mutateTopics } = useSWR(
-    isAuthenticated && projectId ? `/projects/${projectId}/topics` : null
+  const {
+    data: topicsRaw,
+    error: topicsError,
+    mutate: mutateTopics
+  } = useSWR(
+    isAuthenticated && projectId ? `/api/projects/${projectId}/topics` : null,
+    fetcher
   );
 
-  const project = projectRaw ? {
-    id: projectRaw.id,
-    name: projectRaw.title ?? "",
-    description: projectRaw.description ?? ""
-  } : null;
+  const project = projectRaw
+    ? {
+        id: projectRaw.id,
+        name: projectRaw.title ?? "",
+        description: projectRaw.description ?? ""
+      }
+    : null;
 
-  const topics = topicsRaw ? topicsRaw.map((t: any) => ({
-    id: t.id,
-    title: t.title,
-    description: "",
-    vocabularyCount: t.wordsCount ?? 0
-  })) : [];
+  const topics = topicsRaw
+    ? topicsRaw.map((t: any) => ({
+        id: t.id,
+        title: t.title,
+        description: "",
+        vocabularyCount: t.wordsCount ?? 0
+      }))
+    : [];
 
   // isLoading is true if either the project or topics are not yet loaded.
   const isLoading = !projectRaw || !topicsRaw;
   const error = projectError || topicsError;
 
   const refetchTopics = () => {
+    // invalidate the topics cache to refresh topics
+    // This will trigger a refetch of the topics data
+    invalidateCache(`projects:topics:${projectId}`);
     mutateTopics();
   };
 
@@ -104,7 +118,12 @@ export default function ProjectPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {topics.map((topic: any) => (
             <div key={topic.id}>
-              <TopicCardClient projectId={projectId} topic={topic} onTopicUpdated={refetchTopics} onTopicDeleted={refetchTopics} />
+              <TopicCardClient
+                projectId={projectId}
+                topic={topic}
+                onTopicUpdated={refetchTopics}
+                onTopicDeleted={refetchTopics}
+              />
             </div>
           ))}
         </div>

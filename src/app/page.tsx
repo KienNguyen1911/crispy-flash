@@ -33,6 +33,7 @@ import useSWR from "swr";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useAuthFetcher } from '@/hooks/useAuthFetcher';
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const { isAuthenticated, isLoading, login } = useAuth();
@@ -60,25 +61,27 @@ export default function Dashboard() {
         description: projectData.description || ""
       };
       // No need to pass token, apiClient handles it
-      await apiClient("/projects", {
+      await apiClient("/api/projects", {
         method: "POST",
         body: JSON.stringify(body)
       });
-      mutateProjects(); // Refresh the projects list
-      return true;
+      // Refresh the projects list after creation
+      mutateProjects();
+      toast.success("Project created successfully");
     } catch (err) {
       console.error("Create project error:", err);
-      return false;
     }
   };
 
   const deleteProject = async (projectId: string) => {
     try {
       // No need to pass token, apiClient handles it
-      await apiClient(`/projects/${projectId}`, {
+      await apiClient(`/api/projects/${projectId}`, {
         method: "DELETE"
       });
       mutateProjects(); // Refresh the projects list
+
+      toast.success("Project deleted successfully");
     } catch (err) {
       console.error("Delete project error:", err);
       throw err;

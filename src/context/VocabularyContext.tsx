@@ -8,10 +8,10 @@ import { apiUrl, apiClient } from '@/lib/api';
 import { useAuth } from './AuthContext';
 
 interface VocabularyContextType {
-  addVocabulary: (projectId: string, topicId: string, vocabularyItems: Omit<Vocabulary, 'id' | 'topicId' | 'status'>[]) => Promise<void>;
-  updateVocabulary: (projectId: string, topicId: string, vocabId: string, vocabData: Partial<Vocabulary>) => Promise<void>;
-  deleteVocabulary: (projectId: string, topicId: string, vocabId: string) => Promise<void>;
-  updateVocabularyStatus: (projectId: string, topicId: string, vocabId: string, status: Vocabulary['status']) => Promise<void>;
+  addVocabulary: (topicId: string, vocabularyItems: Omit<Vocabulary, 'id' | 'topicId' | 'status'> | Omit<Vocabulary, 'id' | 'topicId' | 'status'>[]) => Promise<void>;
+  updateVocabulary: (vocabId: string, vocabData: Partial<Vocabulary>) => Promise<void>;
+  deleteVocabulary: (vocabId: string) => Promise<void>;
+  updateVocabularyStatus: (vocabId: string, status: Vocabulary['status']) => Promise<void>;
 }
 
 export const VocabularyContext = createContext<VocabularyContextType>({
@@ -26,25 +26,26 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
 
-  const addVocabulary = async (projectId: string, topicId: string, vocabularyItems: Omit<Vocabulary, 'id' | 'topicId' | 'status'>[]) => {
+  const addVocabulary = async (topicId: string, vocabularyItems: Omit<Vocabulary, 'id' | 'topicId' | 'status'> | Omit<Vocabulary, 'id' | 'topicId' | 'status'>[]) => {
     try {
-      console.log(`Sending ${vocabularyItems.length} vocabulary items to API`);
-      const result = await apiClient(`/projects/${projectId}/topics/${topicId}/vocabulary`, {
+      const itemsArray = Array.isArray(vocabularyItems) ? vocabularyItems : [vocabularyItems];
+      console.log(`Sending ${itemsArray.length} vocabulary items to API`);
+      const result = await apiClient('/api/vocabulary', {
         method: 'POST',
-        body: JSON.stringify(vocabularyItems),
+        body: JSON.stringify(itemsArray.map(item => ({ ...item, topicId }))),
       });
       console.log('API response:', result);
       await reloadProjects();
-      toast({ title: 'Vocabulary Saved', description: `${vocabularyItems.length} new word(s) added.`, duration: 4000 });
+      toast({ title: 'Vocabulary Saved', description: `${itemsArray.length} new word(s) added.`, duration: 4000 });
     } catch (err) {
       console.error('addVocabulary error:', err);
       toast({ title: 'Save failed', description: 'Could not save vocabulary', variant: 'destructive', duration: 4000 });
     }
   };
 
-  const updateVocabulary = async (projectId: string, topicId: string, vocabId: string, vocabData: Partial<Vocabulary>) => {
+  const updateVocabulary = async (vocabId: string, vocabData: Partial<Vocabulary>) => {
     try {
-      await apiClient(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`, {
+      await apiClient(`/api/vocabulary/${vocabId}`, {
         method: 'PATCH',
         body: JSON.stringify(vocabData),
       });
@@ -56,9 +57,9 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const deleteVocabulary = async (projectId: string, topicId: string, vocabId: string) => {
+  const deleteVocabulary = async (vocabId: string) => {
     try {
-      await apiClient(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`, {
+      await apiClient(`/api/vocabulary/${vocabId}`, {
         method: 'DELETE',
       });
       await reloadProjects();
@@ -69,9 +70,9 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateVocabularyStatus = async (projectId: string, topicId: string, vocabId: string, status: Vocabulary['status']) => {
+  const updateVocabularyStatus = async (vocabId: string, status: Vocabulary['status']) => {
     try {
-      await apiClient(`/projects/${projectId}/topics/${topicId}/vocabulary/${vocabId}`, {
+      await apiClient(`/api/vocabulary/${vocabId}`, {
         method: 'PATCH',
         body: JSON.stringify({ status }),
       });
