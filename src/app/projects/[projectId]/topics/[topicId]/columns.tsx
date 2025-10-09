@@ -74,5 +74,10 @@ export const columns: ColumnDef<Vocabulary>[] = [
       return <Badge variant={variant} className="capitalize">{status.toLowerCase().replace("_", " ")}</Badge>
     },
     enableHiding: true,
+    filterFn: (row, columnId, filterValue) => {
+      // Chỉ so sánh khi giá trị cột BẰNG CHÍNH XÁC giá trị bộ lọc
+      // (filterValue phải là 'REMEMBERED', 'NOT_REMEMBERED', hoặc 'UNKNOWN')
+      return row.getValue(columnId) === filterValue;
+    },
   },
 ]

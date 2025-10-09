@@ -49,7 +49,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
     try {
       // Token is now handled by apiClient automatically
-      const data = await apiClient("/projects");
+      const data = await apiClient("/api/projects");
 
       // data is expected to be lightweight project items with counts
       const loadedProjects = data.map((p: any) => ({
@@ -176,7 +176,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteProject = async (projectId: string) => {
-    await apiClient(`/projects/${projectId}`, {
+    await apiClient(`/api/projects/${projectId}`, {
       method: "DELETE",
     });
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
