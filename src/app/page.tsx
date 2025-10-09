@@ -54,7 +54,7 @@ export default function Dashboard() {
       }))
     : [];
 
-  const addProject = async (projectData: any) => {
+  const addProject = async (projectData: any): Promise<boolean> => {
     try {
       const body = {
         title: projectData.name,
@@ -68,8 +68,10 @@ export default function Dashboard() {
       // Refresh the projects list after creation
       mutateProjects();
       toast.success("Project created successfully");
+      return true;
     } catch (err) {
       console.error("Create project error:", err);
+      return false;
     }
   };
 
