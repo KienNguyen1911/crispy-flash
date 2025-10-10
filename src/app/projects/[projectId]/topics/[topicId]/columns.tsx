@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ColumnDef } from "@tanstack/react-table"
+import { ColumnDef, CellContext } from "@tanstack/react-table"
 import { Vocabulary } from "@prisma/client"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal } from "lucide-react"
@@ -16,11 +16,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 
-const EditableCell = ({ getValue, row, column, table }) => {
+const EditableCell = ({
+  getValue,
+  row,
+  column,
+  table,
+}: CellContext<Vocabulary, unknown>) => {
   const initialValue = getValue();
   const [value, setValue] = React.useState(initialValue);
 
-  const { isEditing } = table.options.meta;
+  const isEditing = table.options.meta?.isEditing;
 
   React.useEffect(() => {
     setValue(initialValue);
@@ -61,6 +66,7 @@ export const columns: ColumnDef<Vocabulary>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
+      // @ts-ignore
       const status = row.getValue("status") as string
       let variant: "success" | "secondary" | "destructive" | "outline" = "secondary";
       if (status === "REMEMBERED") {
