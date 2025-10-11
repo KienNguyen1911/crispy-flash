@@ -7,7 +7,7 @@ export function useAuthFetcher() {
 
   const authFetcher = useCallback(async (url: string) => {
     try {
-      const data = await apiClient(url, { token });
+      const data = await apiClient(url);
       return data;
     } catch (error: any) {
       if (error.message.includes('401')) {

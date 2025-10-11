@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Check, X } from 'lucide-react';
 import { mutate } from 'swr';
-import { useAuthFetcher } from '@/hooks/useAuthFetcher';
+import { apiClient } from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function TopicHeaderEditor({ projectId, topic }: { projectId: string; topic: { id: string; title: string; description?: string } }) {
@@ -12,7 +12,7 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const fetcher = useAuthFetcher();
+
 
   const isDirty = title !== (topic.title ?? '') || description !== (topic.description ?? '');
 
@@ -24,7 +24,7 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
 
     setSaving(true);
     try {
-      const updatedTopic = await fetcher(
+      const updatedTopic = await apiClient(
         `/api/projects/${projectId}/topics/${topic.id}`,
         {
           method: 'PUT',

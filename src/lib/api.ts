@@ -1,3 +1,8 @@
+import { VocabularyWithSrs, DueReviewCount, ReviewFeedbackDto } from '@/types/srs';
+
+// Re-export SRS types for convenience
+export type { VocabularyWithSrs, DueReviewCount, ReviewFeedbackDto };
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
 export function apiUrl(path: string): string {
@@ -25,7 +30,7 @@ export async function apiClient<T = any>(
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('jwt_token');
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
   }
   // --- END OF CHANGE ---
@@ -49,3 +54,31 @@ export async function apiClient<T = any>(
 
   return response.json();
 }
+
+// SRS API Functions
+export const srsApi = {
+  // Get vocabulary due for review
+  getDueReviews: async () => {
+    return apiClient<VocabularyWithSrs[]>('/api/vocabulary/review/due');
+  },
+
+  // Get count of due reviews
+  getDueReviewCount: async () => {
+    return apiClient<DueReviewCount>('/api/vocabulary/review/due/count');
+  },
+
+  // Submit review feedback
+  submitReviewFeedback: async (vocabId: string, feedback: ReviewFeedbackDto) => {
+    return apiClient<VocabularyWithSrs>(`/api/vocabulary/review/${vocabId}`, {
+      method: 'POST',
+      body: JSON.stringify(feedback),
+    });
+  },
+
+  // Initialize SRS data for vocabulary
+  initializeSrsData: async (vocabId: string) => {
+    return apiClient<VocabularyWithSrs>(`/api/vocabulary/${vocabId}/srs/initialize`, {
+      method: 'POST',
+    });
+  },
+};

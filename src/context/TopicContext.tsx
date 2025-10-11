@@ -10,7 +10,7 @@ import { useSWRConfig } from "swr";
 import { invalidateCache } from "@/lib/cache";
 
 interface TopicContextType {
-  getTopicById: (projectId: string, topicId: string) => Topic | undefined;
+  getTopicById: (projectId: string, topicId: string) => Promise<Topic | undefined>;
   addTopic: (
     projectId: string,
     topicData: Omit<Topic, "id" | "projectId" | "vocabulary">
@@ -24,7 +24,7 @@ interface TopicContextType {
 }
 
 export const TopicContext = createContext<TopicContextType>({
-  getTopicById: () => undefined,
+  getTopicById: async () => undefined,
   addTopic: async () => {},
   updateTopic: async () => {},
   deleteTopic: async () => {}

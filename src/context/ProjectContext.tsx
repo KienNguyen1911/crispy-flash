@@ -88,7 +88,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   // (for example on project detail pages like `/projects/:projectId`).
   // The dashboard page (/) now handles its own data fetching with SWR.
   useEffect(() => {
-    if (pathname === "api/projects" && isAuthenticated) {
+    if (pathname === "/projects" && isAuthenticated) {
       reloadProjects();
     }
   }, [pathname, isAuthenticated]);

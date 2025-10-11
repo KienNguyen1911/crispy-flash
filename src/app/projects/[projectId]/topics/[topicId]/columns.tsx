@@ -37,13 +37,15 @@ const EditableCell = ({
         value={value as string}
         onChange={(e) => setValue(e.target.value)}
         onBlur={() => {
-          table.options.meta?.updateData(row.index, column.id, value);
+          if (table.options.meta?.updateData) {
+            table.options.meta.updateData(row.index, column.id, value);
+          }
         }}
       />
     );
   }
 
-  return <span>{value}</span>;
+  return <span>{value as React.ReactNode}</span>;
 };
 
 export const columns: ColumnDef<Vocabulary>[] = [
@@ -68,9 +70,9 @@ export const columns: ColumnDef<Vocabulary>[] = [
     cell: ({ row }) => {
       // @ts-ignore
       const status = row.getValue("status") as string
-      let variant: "success" | "secondary" | "destructive" | "outline" = "secondary";
+      let variant: "default" | "secondary" | "destructive" | "outline" = "secondary";
       if (status === "REMEMBERED") {
-        variant = "success"
+        variant = "default"
       } else if (status === "NOT_REMEMBERED") {
         variant = "destructive"
       } else if (status === "UNKNOWN") {
