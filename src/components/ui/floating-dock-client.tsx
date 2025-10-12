@@ -1,14 +1,17 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FloatingDock } from '@/components/ui/floating-dock';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { AuthIcon } from '@/components/ui/auth-button';
 import { BackButton } from '@/components/ui/back-button';
-import { BookOpen, Home, FolderOpen } from 'lucide-react';
+import { DueReviewBadge } from '@/components/srs/DueReviewBadge';
+import { BookOpen, Home, FolderOpen, Brain, Bell } from 'lucide-react';
 
 export function FloatingDockClient() {
   const pathname = usePathname();
+  const router = useRouter();
   const isHomePage = pathname === '/';
 
   const desktopItems = [
@@ -19,6 +22,14 @@ export function FloatingDockClient() {
       ),
       href: "/guide",
       isCurrentPage: pathname === "/guide",
+    },
+    {
+      title: "Review",
+      icon: (
+        <Bell className="h-full w-full" />
+      ),
+      href: "/review",
+      isCurrentPage: pathname === "/review",
     },
     {
       title: "Home",

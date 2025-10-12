@@ -7,48 +7,63 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String
+  googleId  String?    @unique
   projects  Project[]
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt @default(now())
+
+  @@index([googleId])
 }
 
 model Project {
   id          String    @id @default(cuid())
   title       String
   description String?
+  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     String
-  owner       User      @relation(fields: [ownerId], references: [id])
   topics      Topic[]
   createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt @default(now())
+
+  @@index([ownerId])
 }
 
 model Topic {
-  id        String      @id @default(cuid())
-  title     String
-  projectId String
-  project   Project     @relation(fields: [projectId], references: [id])
-  vocabulary Vocabulary[]
-  createdAt DateTime    @default(now())
+  id          String       @id @default(cuid())
+  title       String
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  vocabulary  Vocabulary[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt @default(now())
 
   @@index([projectId])
 }
 
 model Vocabulary {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   kanji     String?
   kana      String?
   meaning   String
   image     String?
-  type      Int      @default(1)
-  status    String   @default("unknown")
+  type      Int             @default(1)
+  status    VocabularyStatus @default(UNKNOWN)
+  topic     Topic           @relation(fields: [topicId], references: [id], onDelete: Cascade)
   topicId   String
-  topic     Topic    @relation(fields: [topicId], references: [id])
-  createdAt DateTime @default(now())
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt @default(now())
 
   @@index([topicId])
   @@index([status])
-  @@index([status, topicId])
+}
+
+enum VocabularyStatus {
+  UNKNOWN
+  REMEMBERED
+  NOT_REMEMBERED
 }

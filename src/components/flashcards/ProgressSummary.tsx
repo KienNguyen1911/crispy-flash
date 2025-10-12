@@ -7,7 +7,8 @@ import { RotateCw } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { apiUrl } from '@/lib/api';
+import { apiClient } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 interface ProgressSummaryProps {
   sessionProgress: { [key: string]: 'remembered' | 'not_remembered' };
@@ -19,6 +20,7 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
     const router = useRouter();
     const projectId = params.projectId as string;
     const topicId = params.topicId as string;
+    const { isAuthenticated } = useAuth();
 
     const total = Object.keys(sessionProgress).length;
     const remembered = Object.values(sessionProgress).filter(s => s === 'remembered').length;
@@ -50,13 +52,10 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
                 }
 
                 try {
-                    const res = await fetch(apiUrl(`/projects/${projectId}/topics/${topicId}/vocabulary`), {
+                    const data = await apiClient(`/projects/${projectId}/topics/${topicId}/vocabulary`, {
                         method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ updates }),
                     });
-                    if (!res.ok) throw new Error('persist failed');
-                    const data = await res.json();
 
                     if (typeof window !== 'undefined') {
                         sessionStorage.setItem(storageKey, 'done');
@@ -72,8 +71,10 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
                     toast({ title: 'Save failed', description: 'Could not save session results', variant: 'destructive', duration: 4000});
                 }
             }
-            persist();
-        }, []);
+            if (isAuthenticated) {
+              persist();
+            }
+        }, [isAuthenticated]);
 
   return (
     <div className="container mx-auto max-w-2xl py-8 px-4">

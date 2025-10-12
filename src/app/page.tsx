@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,16 +30,19 @@ import {
 } from "@/components/ui/dialog";
 import DataLoader from "@/components/ui/DataLoader";
 import useSWR from "swr";
-import { apiUrl } from "@/lib/api";
+import { apiClient } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { useAuthFetcher } from '@/hooks/useAuthFetcher';
+import { toast } from "sonner";
 
 export default function Dashboard() {
-  const { data: session, status } = useSession();
+  const { isAuthenticated, isLoading, login } = useAuth();
+  const fetcher = useAuthFetcher();
 
-  const {
-    data: projectsRaw,
-    error: projectsError,
-    mutate: mutateProjects
-  } = useSWR(status === "authenticated" ? apiUrl("/projects") : null);
+  const { data: projectsRaw, error: projectsError, mutate: mutateProjects } = useSWR(
+    isAuthenticated ? '/api/projects' : null,
+    fetcher
+  );
 
   const projects = projectsRaw
     ? projectsRaw.map((p: any) => ({
@@ -52,25 +54,20 @@ export default function Dashboard() {
       }))
     : [];
 
-  const loading =
-    status === "loading" || (status === "authenticated" && !projectsRaw);
-  const error = projectsError;
-
-  const addProject = async (projectData: any) => {
+  const addProject = async (projectData: any): Promise<boolean> => {
     try {
       const body = {
         title: projectData.name,
         description: projectData.description || ""
       };
-      const res = await fetch(apiUrl("/projects"), {
+      // No need to pass token, apiClient handles it
+      await apiClient("/api/projects", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
       });
-      if (!res.ok) {
-        throw new Error("Failed to create project");
-      }
-      mutateProjects(); // Refresh the projects list
+      // Refresh the projects list after creation
+      mutateProjects();
+      toast.success("Project created successfully");
       return true;
     } catch (err) {
       console.error("Create project error:", err);
@@ -80,24 +77,24 @@ export default function Dashboard() {
 
   const deleteProject = async (projectId: string) => {
     try {
-      const res = await fetch(apiUrl(`/projects/${projectId}`), {
+      // No need to pass token, apiClient handles it
+      await apiClient(`/api/projects/${projectId}`, {
         method: "DELETE"
       });
-      if (!res.ok) {
-        throw new Error("Failed to delete project");
-      }
       mutateProjects(); // Refresh the projects list
+
+      toast.success("Project deleted successfully");
     } catch (err) {
       console.error("Delete project error:", err);
       throw err;
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <DataLoader />;
   }
 
-  if (!session) {
+  if (!isAuthenticated) {
     return (
       <div className="container mx-auto max-w-5xl py-8 px-4">
         <Card className="mb-8 p-6" variant="glass">
@@ -111,7 +108,8 @@ export default function Dashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Button onClick={() => signIn("google")} size="lg" className="mb-4">
+            {/* Use the login function from useAuth */}
+            <Button onClick={login} size="lg" className="mb-4">
               <PlusCircle className="mr-2 h-5 w-5" />
               Sign In with Google
             </Button>

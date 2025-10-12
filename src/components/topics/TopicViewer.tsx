@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { Search, BrainCircuit, Upload, Check, X, Edit, Save, Trash2 } from 'lucide-react';
+import { Search, BrainCircuit, Upload, Check, X, Edit, Save, Trash2, Clock } from 'lucide-react';
+import { DueReviewButton } from '@/components/srs/DueReviewBadge';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -95,7 +96,7 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
       try {
         // Delete items first
         const deletePromises = Array.from(deletedIds).map(id =>
-          deleteVocabulary(projectId, topic.id, id)
+          deleteVocabulary(id)
         );
         await Promise.all(deletePromises);
 
@@ -110,7 +111,7 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
               original.meaning !== local.meaning
             );
           })
-          .map((local: Vocabulary) => updateVocabulary(projectId, topic.id, local.id, {
+          .map((local: Vocabulary) => updateVocabulary(local.id, {
             kanji: local.kanji,
             kana: local.kana,
             meaning: local.meaning
@@ -237,6 +238,10 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
         <div className="flex w-full md:w-auto items-center gap-2">
           {!isEditMode ? (
             <>
+              <DueReviewButton 
+                onReviewClick={() => window.location.href = '/review'}
+                className="hidden md:inline-flex"
+              />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full md:w-[180px]">
                   <SelectValue placeholder="Filter by status" />

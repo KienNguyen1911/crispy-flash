@@ -17,9 +17,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['PT Sans', 'sans-serif'],
-        headline: ['Poppins', 'sans-serif'],
-        code: ['monospace'],
+          body: ['Noto Sans', 'sans-serif'],
+          headline: ['Noto Sans JP', 'Noto Sans', 'sans-serif'], // Noto Sans JP là phiên bản tiếng Nhật
+          code: ['monospace'], // Giữ nguyên code font
       },
       colors: {
         border: "hsl(var(--border))",

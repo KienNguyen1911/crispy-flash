@@ -23,19 +23,26 @@ export function LearningSession({ initialTopic }: { initialTopic?: any } = {}) {
   const projectId = params.projectId as string;
   const topicId = params.topicId as string;
   
-  let topic = getTopicById(projectId, topicId);
-  // If TopicContext doesn't have the topic (because we navigated directly to learn),
-  // fall back to the server-provided initialTopic prop.
-  if (!topic && initialTopic && initialTopic.id === topicId) {
-    topic = initialTopic;
-  }
+  const [topic, setTopic] = useState<any>(null);
+  
+  useEffect(() => {
+    const loadTopic = async () => {
+      const topicData = await getTopicById(projectId, topicId);
+      if (topicData) {
+        setTopic(topicData);
+      } else if (initialTopic && initialTopic.id === topicId) {
+        setTopic(initialTopic);
+      }
+    };
+    loadTopic();
+  }, [projectId, topicId, initialTopic]);
   
   const filterNotRemembered = searchParams.get('filter') === 'not_remembered';
   
   const initialVocabulary = useMemo(() => {
     if (!topic) return [];
     return filterNotRemembered 
-      ? topic.vocabulary.filter(v => v.status === 'not_remembered')
+      ? topic.vocabulary.filter((v: any) => v.status === 'not_remembered')
       : topic.vocabulary;
   }, [topic, filterNotRemembered]);
 
@@ -197,4 +204,3 @@ export function LearningSession({ initialTopic }: { initialTopic?: any } = {}) {
     </div>
   );
 }
-
