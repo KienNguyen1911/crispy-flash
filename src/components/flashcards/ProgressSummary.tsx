@@ -52,7 +52,7 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
                 }
 
                 try {
-                    const data = await apiClient(`/projects/${projectId}/topics/${topicId}/vocabulary`, {
+                    const data = await apiClient(`/api/projects/${projectId}/topics/${topicId}/vocabulary`, {
                         method: 'PATCH',
                         body: JSON.stringify({ updates }),
                     });

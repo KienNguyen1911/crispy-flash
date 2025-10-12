@@ -33,7 +33,7 @@ export default function ProjectHeaderEditor({ project }: { project: { id: string
         setSaving(true);
         await updateProject(project.id, { name, description });
         // Revalidate the project data in SWR cache
-        await mutate(apiUrl(`/projects/${project.id}`));
+        await mutate(apiUrl(`/api/projects/${project.id}`));
         // Clear optimistic data once API completes successfully
         setOptimisticProject(null);
       } catch (e) {

@@ -36,7 +36,7 @@ import { useAuthFetcher } from "@/hooks/useAuthFetcher"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { toast } from "sonner"
 
-import { BookOpenCheck, Pen, Plus } from "lucide-react";
+import { BookOpenCheck, Pen, Plus, Trash2 } from "lucide-react";
 import { apiClient } from "@/lib/api"
 import Link from "next/link"
 
@@ -66,19 +66,44 @@ export function DataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = React.useState({})
   const [isEditing, setIsEditing] = React.useState(false)
   const [data, setData] = React.useState(initialData);
+  const [deletedVocabularyIds, setDeletedVocabularyIds] = React.useState<Set<string>>(new Set());
   const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  const augmentedColumns = React.useMemo(() => {
+    const actionColumn: ColumnDef<TData, TValue> = {
+      id: "actions",
+      cell: ({ row, table }) => {
+        const meta = table.options.meta as any;
+        if (!meta.isEditing) {
+          return null;
+        }
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => meta.deleteRow(row.index)}
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        );
+      },
+    };
+    return [...columns, actionColumn];
+  }, [columns]);
 
   React.useEffect(() => {
     setData(initialData);
   }, [initialData]);
 
   React.useEffect(() => {
-    setColumnVisibility(current => ({...current, status: isDesktop }))
-  }, [isDesktop]);
+    setColumnVisibility(current => ({...current, status: isDesktop, actions: isEditing }))
+  }, [isDesktop, isEditing]);
+
+  const visibleData = React.useMemo(() => data.filter(row => !deletedVocabularyIds.has((row as any).id)), [data, deletedVocabularyIds]);
 
   const table = useReactTable({
-    data,
-    columns,
+    data: visibleData,
+    columns: augmentedColumns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
@@ -107,6 +132,10 @@ export function DataTable<TData, TValue>({
           })
         )
       },
+      deleteRow: (rowIndex: number) => {
+        const idToDelete = (visibleData[rowIndex] as any).id;
+        setDeletedVocabularyIds(old => new Set(old).add(idToDelete));
+      },
     },
   })
 
@@ -118,29 +147,55 @@ export function DataTable<TData, TValue>({
       }, {});
 
       const changedVocabularies = (data as any[]).filter(row => {
-        const originalRow = initialDataById[row.id];
+        if (deletedVocabularyIds.has((row as any).id)) return false;
+        const originalRow = initialDataById[(row as any).id];
         if (!originalRow) {
             return false;
         }
         return JSON.stringify(row) !== JSON.stringify(originalRow);
       });
 
+      const deletePromise = deletedVocabularyIds.size > 0
+      ? apiClient(`/api/topics/${topicId}/vocabularies`, {
+          method: 'DELETE',
+          body: JSON.stringify({ ids: Array.from(deletedVocabularyIds) }),
+        })
+      : Promise.resolve();
 
-      if (changedVocabularies.length === 0) {
-        toast.info("No changes to save.");
-        setIsEditing(false);
-        return;
+      const updatePromise = changedVocabularies.length > 0
+        ? apiClient(`/api/topics/${topicId}/vocabularies`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({ vocabularies: changedVocabularies }),
+        })
+        : Promise.resolve();
+
+      await Promise.all([deletePromise, updatePromise]);
+      
+      let messages = [];
+      if (deletedVocabularyIds.size > 0) {
+        messages.push(`${deletedVocabularyIds.size} vocabularies deleted`);
+      }
+      if (changedVocabularies.length > 0) {
+        messages.push(`${changedVocabularies.length} vocabularies updated`);
       }
 
-      await apiClient(`/api/topics/${topicId}/vocabularies`,
-      {
-        method: 'PUT',
-        body: JSON.stringify({ vocabularies: changedVocabularies }),
-      });
-      toast.success(`${changedVocabularies.length} vocabularies updated successfully`);
+      if (messages.length > 0) {
+        toast.success(messages.join(' and ') + ' successfully.');
+      } else {
+        toast.info("No changes to save.");
+      }
     } catch (error) {
       toast.error("Failed to update vocabularies");
+    } finally {
+      setIsEditing(false);
+      setDeletedVocabularyIds(new Set());
     }
+  };
+
+  const handleCancel = () => {
+    setData(initialData);
+    setDeletedVocabularyIds(new Set());
     setIsEditing(false);
   };
 
@@ -194,7 +249,7 @@ export function DataTable<TData, TValue>({
         </Link>
       {isEditing ? (
         <>
-          <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+          <Button variant="outline" onClick={handleCancel}>Cancel</Button>
           <Button onClick={handleSave}>Save</Button>
         </>
       ) : (

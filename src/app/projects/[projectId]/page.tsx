@@ -17,8 +17,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { invalidateCache } from "@/lib/cache";
+import Link from "next/link";
 
 export default function ProjectPage() {
   const params = useParams();
@@ -110,6 +112,9 @@ export default function ProjectPage() {
         <h2 className="text-2xl font-semibold font-headline">Topics</h2>
         <div className="flex gap-2">
           {/* TopicCreate is a client component that uses AppDataContext to add topics */}
+          <Link href={`/projects/${projectId}/analytics`}>
+            <Button variant="outline">Analytics</Button>
+          </Link>
           <TopicCreate projectId={projectId} onTopicCreated={refetchTopics} />
         </div>
       </div>

@@ -1,20 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useDueReviews, useReviewSession } from '@/hooks/use-srs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
-  ChevronRight, 
   ChevronLeft, 
-  RotateCcw, 
-  Check, 
-  X, 
-  Clock,
   Brain,
-  Volume2
+  Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VocabularyWithSrs } from '@/lib/api';
@@ -24,34 +19,130 @@ interface ReviewSessionProps {
   onCancel?: () => void;
 }
 
-const QUALITY_LEVELS = [
-  { value: 0, label: 'Khó', color: 'destructive', description: 'Không nhớ hoặc rất khó nhớ' },
-  { value: 3, label: 'Trung bình', color: 'warning', description: 'Nhớ với effort trung bình' },
-  { value: 5, label: 'Dễ', color: 'success', description: 'Nhớ dễ dàng' },
-];
+const TIME_LIMIT = 10; // 10 seconds per card
+
+// Helper to shuffle array
+function shuffleArray<T>(array: T[]): T[] {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
 
 export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
   const { dueReviews, isLoading } = useDueReviews();
   const { submitFeedback } = useReviewSession();
   
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(false);
   const [sessionReviews, setSessionReviews] = useState<VocabularyWithSrs[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sessionStartTime, setSessionStartTime] = useState<Date>(new Date());
+  
+  // New state for multiple choice & timer
+  const [answerOptions, setAnswerOptions] = useState<string[]>([]);
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
 
   useEffect(() => {
     if (dueReviews.length > 0 && sessionReviews.length === 0) {
-      setSessionReviews(dueReviews);
-      setSessionStartTime(new Date());
+      // Shuffle reviews to make sessions less predictable
+      setSessionReviews(shuffleArray(dueReviews));
     }
   }, [dueReviews, sessionReviews.length]);
+
+  const currentVocab = useMemo(() => {
+    if (sessionReviews.length > 0) {
+      return sessionReviews[currentIndex];
+    }
+    return null;
+  }, [sessionReviews, currentIndex]);
+
+  // Generate answer options when card changes
+  useEffect(() => {
+    if (!currentVocab || sessionReviews.length < 2) return;
+
+    const distractors = sessionReviews
+      .filter(v => v.id !== currentVocab.id)
+      .map(v => v.meaning);
+    
+    const uniqueDistractors = [...new Set(distractors)];
+    const shuffledDistractors = shuffleArray(uniqueDistractors).slice(0, 3);
+
+    const options = shuffleArray([...shuffledDistractors, currentVocab.meaning]);
+    setAnswerOptions(options);
+
+  }, [currentVocab, sessionReviews]);
+
+  // Timer logic
+  useEffect(() => {
+    if (!currentVocab || isAnswered) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => prev - 1);
+    }, 1000);
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      handleAnswerSelect(null); // Auto-submit when time is up
+    }
+
+    return () => clearInterval(timer);
+  }, [timeLeft, currentVocab, isAnswered]);
+
+  const moveToNext = useCallback(() => {
+    if (currentIndex === sessionReviews.length - 1) {
+      onComplete?.();
+    } else {
+      setCurrentIndex(prev => prev + 1);
+      setIsAnswered(false);
+      setSelectedAnswer(null);
+      setTimeLeft(TIME_LIMIT);
+    }
+  }, [currentIndex, sessionReviews.length, onComplete]);
+
+  const handleAnswerSelect = useCallback(async (selectedMeaning: string | null) => {
+    if (isAnswered) return;
+
+    setIsAnswered(true);
+    setIsSubmitting(true);
+    setSelectedAnswer(selectedMeaning);
+
+    const timeSpent = TIME_LIMIT - timeLeft;
+    const isCorrect = selectedMeaning === currentVocab?.meaning;
+
+    let quality: number;
+    if (!isCorrect || timeSpent > 7) {
+      quality = 0; // Khó
+    } else if (timeSpent > 4) {
+      quality = 3; // Trung bình
+    } else {
+      quality = 5; // Dễ
+    }
+
+    const status = isCorrect ? 'REMEMBERED' : 'NOT_REMEMBERED';
+
+    try {
+      if (currentVocab) {
+        await submitFeedback(currentVocab.id, { quality, timeSpent, status });
+      }
+    } catch (error) {
+      console.error('Failed to submit review:', error);
+    } finally {
+      setIsSubmitting(false);
+      // Wait a moment to show feedback before moving to the next card
+      setTimeout(() => {
+        moveToNext();
+      }, isCorrect ? 1000 : 2000); // Longer delay for incorrect answers
+    }
+  }, [isAnswered, timeLeft, currentVocab, submitFeedback, moveToNext]);
 
   if (isLoading) {
     return <ReviewSessionSkeleton />;
   }
 
-  if (sessionReviews.length === 0) {
+  if (!currentVocab) {
     return (
       <Card className="max-w-2xl mx-auto">
         <CardContent className="pt-6">
@@ -70,83 +161,20 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
     );
   }
 
-  const currentVocab = sessionReviews[currentIndex];
   const progress = ((currentIndex + 1) / sessionReviews.length) * 100;
-  const isLastCard = currentIndex === sessionReviews.length - 1;
-
-  const handleQualitySelect = async (quality: number) => {
-    if (isSubmitting) return;
-    
-    setIsSubmitting(true);
-    try {
-      const timeSpent = Math.round((new Date().getTime() - sessionStartTime.getTime()) / 1000);
-      
-      // Chuyển đổi quality thành status cho backend (3 level mới)
-      let status: 'UNKNOWN' | 'REMEMBERED' | 'NOT_REMEMBERED';
-      if (quality === 0) {
-        status = 'NOT_REMEMBERED'; // Khó - không nhớ
-      } else if (quality === 3) {
-        status = 'UNKNOWN'; // Trung bình - không chắc chắn
-      } else {
-        status = 'REMEMBERED'; // Dễ - nhớ rõ
-      }
-
-      submitFeedback(currentVocab.id, {
-        quality,
-        timeSpent,
-        status,
-      });
-
-      // Move to next card or complete session
-      if (isLastCard) {
-        onComplete?.();
-      } else {
-        setCurrentIndex(currentIndex + 1);
-        setShowAnswer(false);
-        setSessionStartTime(new Date());
-      }
-    } catch (error) {
-      console.error('Failed to submit review:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleNext = () => {
-    if (!showAnswer) {
-      setShowAnswer(true);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      setShowAnswer(false);
-      setSessionStartTime(new Date());
-    }
-  };
-
-  const playAudio = () => {
-    // Phát âm tiếng Nhật với Kanji/Kana ưu tiên
-    if ('speechSynthesis' in window) {
-      const textToSpeak = currentVocab.kanji || currentVocab.kana || currentVocab.word;
-      if (textToSpeak) {
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        utterance.lang = 'ja-JP';
-        speechSynthesis.speak(utterance);
-      }
-    }
-  };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      {/* Progress Bar */}
+    <div className="max-w-2xl mx-auto space-y-4">
+      {/* Progress Bar & Timer */}
       <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span>Tiến độ ôn tập</span>
-          <span>{currentIndex + 1} / {sessionReviews.length}</span>
+        <div className="flex justify-between text-sm font-medium">
+          <span>Tiến độ: {currentIndex + 1} / {sessionReviews.length}</span>
+          <span className="flex items-center">
+            <Clock className="h-4 w-4 mr-1.5" />
+            {timeLeft}s
+          </span>
         </div>
-        <Progress value={progress} className="h-2" />
+        <Progress value={(timeLeft / TIME_LIMIT) * 100} className="h-2 transition-all duration-1000 linear" />
       </div>
 
       {/* Main Card */}
@@ -154,135 +182,83 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
         <CardHeader>
           <div className="flex justify-between items-start">
             <div className="space-y-1">
-              <CardTitle>Ôn tập từ vựng</CardTitle>
+              <CardTitle>Nghĩa của từ này là gì?</CardTitle>
               <CardDescription>
-                {showAnswer ? 'Đánh giá mức độ nhớ của bạn' : 'Hãy cố gắng nhớ nghĩa của từ'}
+                Chọn đáp án đúng trong vòng {TIME_LIMIT} giây.
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">
-                <Clock className="h-3 w-3 mr-1" />
-                {currentVocab.interval} ngày
-              </Badge>
-            </div>
+            <Badge variant="outline">
+              <Clock className="h-3 w-3 mr-1" />
+              {currentVocab.interval} ngày
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Word Display */}
-          <div className="text-center space-y-4">
-            {/* Hiển thị Kanji/Kana ưu tiên */}
-            {(currentVocab.kanji || currentVocab.kana) && (
-              <div className="text-5xl font-bold text-primary">
-                {currentVocab.kanji || currentVocab.kana}
-              </div>
-            )}
-            {/* Hiển thị từ gốc nếu khác với Kanji/Kana */}
-            <div className={`font-semibold text-secondary ${
-              (currentVocab.kana) ? 'text-2xl' : 'text-4xl'
-            }`}>
-              {currentVocab.kana}
+          <div className="text-center space-y-2 min-h-[100px] flex flex-col justify-center">
+            <div className="text-5xl font-bold text-primary">
+              {currentVocab.kanji || currentVocab.kana}
             </div>
-            {currentVocab.pronunciation && (
-              <div className="text-lg text-muted-foreground">
-                {currentVocab.pronunciation}
+            {currentVocab.kana && (
+              <div className='text-2xl font-semibold text-secondary'>
+                {currentVocab.kana}
               </div>
             )}
-            {/* <Button
-              variant="ghost"
-              size="sm"
-              onClick={playAudio}
-              className="mx-auto"
-            >
-              <Volume2 className="h-4 w-4 mr-2" />
-              Phát âm
-            </Button> */}
           </div>
 
           {/* Answer Section */}
-          {showAnswer && (
-            <div className="space-y-4 animate-in fade-in duration-300">
-              <div className="border-t pt-4">
-                <div className="text-center space-y-2">
-                  <div className="text-2xl font-semibold text-green-600">
-                    {currentVocab.meaning}
-                  </div>
-                  {currentVocab.example && (
-                    <div className="text-sm text-muted-foreground italic">
-                      Ví dụ: {currentVocab.example}
-                    </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {answerOptions.map((option, index) => {
+              const isCorrect = option === currentVocab.meaning;
+              const isSelected = option === selectedAnswer;
+
+              let buttonVariant: "default" | "destructive" | "secondary" | "outline" = "outline";
+              if (isAnswered) {
+                if (isCorrect) {
+                  // Correct answer is now handled by className
+                } else if (isSelected) {
+                  buttonVariant = "destructive";
+                }
+              }
+
+              return (
+                <Button
+                  key={index}
+                  variant={buttonVariant}
+                  size="lg"
+                  onClick={() => handleAnswerSelect(option)}
+                  disabled={isAnswered}
+                  className={cn(
+                    "h-auto py-4 text-base justify-center text-center whitespace-normal",
+                    isAnswered && isCorrect && "bg-green-600 text-white hover:bg-green-700",
+                    isAnswered && !isCorrect && !isSelected && "opacity-50"
                   )}
-                </div>
-              </div>
+                >
+                  {option}
+                </Button>
+              );
+            })}
+          </div>
 
-              {/* Quality Selection */}
-              <div className="space-y-3">
-                <div className="text-sm font-medium text-center">
-                  Bạn nhớ từ này như thế nào?
-                </div>
-                <div className="grid md:grid-cols-3 gap-2 sm:grid-cols-1">
-                  {QUALITY_LEVELS.map((level) => (
-                    <Button
-                      key={level.value}
-                      variant={level.color as any}
-                      size="sm"
-                      onClick={() => handleQualitySelect(level.value)}
-                      disabled={isSubmitting}
-                      className={cn(
-                        'py-8',
-                        level.color === 'destructive' && 'bg-red-500 hover:bg-red-600',
-                        level.color === 'warning' && 'bg-yellow-500 hover:bg-yellow-600',
-                        level.color === 'secondary' && 'bg-gray-500 hover:bg-gray-600',
-                        level.color === 'success' && 'bg-green-500 hover:bg-green-600'
-                      )}
-                    >
-                      <div className="text-center">
-                        <div className="font-medium">{level.label}</div>
-                        <div className="text-xs opacity-90">{level.description}</div>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation */}
-          <div className="flex justify-between">
+          {/* Navigation & Info */}
+          <div className="flex justify-between items-center pt-4 border-t">
             <Button
               variant="outline"
-              onClick={handlePrevious}
-              disabled={currentIndex === 0 || isSubmitting}
+              onClick={onCancel}
+              disabled={isSubmitting}
             >
               <ChevronLeft className="h-4 w-4 mr-2" />
-              Trước
+              Dừng lại
             </Button>
-
-            {!showAnswer ? (
-              <Button onClick={handleNext}>
-                Hiện đáp án
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                onClick={() => setShowAnswer(false)}
-                disabled={isSubmitting}
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Ẩn đáp án
-              </Button>
-            )}
+            <div className="text-sm text-muted-foreground">
+              Lần ôn tập trước: {currentVocab.lastReviewDate 
+                ? new Date(currentVocab.lastReviewDate).toLocaleDateString('vi-VN')
+                : 'Chưa ôn tập'
+              }
+            </div>
           </div>
         </CardContent>
       </Card>
-
-      {/* Session Info */}
-      <div className="text-center text-sm text-muted-foreground">
-        Lần ôn tập trước: {currentVocab.lastReviewDate 
-          ? new Date(currentVocab.lastReviewDate).toLocaleDateString('vi-VN')
-          : 'Chưa ôn tập lần nào'
-        }
-      </div>
     </div>
   );
 }

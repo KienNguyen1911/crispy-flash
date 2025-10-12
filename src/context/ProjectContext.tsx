@@ -159,7 +159,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       title: projectData.name,
       description: projectData.description
     };
-    const updatedRaw = await apiClient(`/projects/${projectId}`, {
+    const updatedRaw = await apiClient(`/api/projects/${projectId}`, {
       method: "PATCH",
       body: JSON.stringify(body),
     });

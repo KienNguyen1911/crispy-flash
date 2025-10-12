@@ -82,3 +82,11 @@ export const srsApi = {
     });
   },
 };
+
+export const getProjectProgress = async (fetcher: Function, projectId: string) => {
+  return fetcher(`/api/analytics/project/${projectId}`);
+};
+
+export const getUserLearningStats = async (fetcher: Function) => {
+  return fetcher(`/api/analytics/user`);
+};

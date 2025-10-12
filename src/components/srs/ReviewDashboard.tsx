@@ -113,11 +113,17 @@ export function ReviewDashboard() {
             <div className="space-y-3">
               {dueReviews.slice(0, 5).map((vocab) => (
                 <div key={vocab.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="space-y-1">
+                  
+                  {/* 👈 Thay đổi ở đây: Thêm 'min-w-0' để đảm bảo flex item này có thể xuống dòng */}
+                  <div className="space-y-1 min-w-0"> 
                     <div className="font-medium">{vocab.word}</div>
-                    <div className="text-sm text-muted-foreground">{vocab.meaning}</div>
+                    
+                    {/* 👈 Thêm 'text-wrap' để nghĩa tự động xuống dòng */}
+                    <div className="text-sm text-muted-foreground text-wrap">{vocab.meaning}</div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  
+                  {/* 👈 Thêm 'flex-shrink-0' để nhóm Badge & Ngày tháng không bị co lại */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <Badge variant={vocab.interval > 21 ? 'default' : 'secondary'}>
                       {vocab.interval > 21 ? 'Lâu dài' : 'Ngắn hạn'}
                     </Badge>

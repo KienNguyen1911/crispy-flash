@@ -49,7 +49,7 @@ export default function TopicDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 space-y-4">
+      <div className="container mx-auto max-w-5xl p-8 space-y-4">
         <Skeleton className="h-8 w-1/4" />
         <Skeleton className="h-4 w-1/2" />
         <Separator />
@@ -70,7 +70,7 @@ export default function TopicDetailPage() {
 
   return (
     <>
-      <div className="py-8 px-4">
+      <div className="container mx-auto max-w-5xl py-8 px-4">
         <Card className="mb-8 p-6">
           <Breadcrumb className="mb-4">
             <BreadcrumbList>
