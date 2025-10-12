@@ -228,7 +228,7 @@ export function DataTable<TData, TValue>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className={!isDesktop ? "w-1/3" : undefined}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -270,7 +270,7 @@ export function DataTable<TData, TValue>({
                     className={rowClassName}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className={!isDesktop ? "w-1/3" : undefined}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
