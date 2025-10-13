@@ -1,0 +1,42 @@
+{
+  "name": "LinguaFlash",
+  "short_name": "LinguaFlash",
+  "description": "Ứng dụng học flashcard ngôn ngữ thông minh với AI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "scope": "/",
+  "categories": ["education", "productivity"],
+  "lang": "vi",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icons/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
+}

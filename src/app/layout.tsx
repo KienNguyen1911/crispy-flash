@@ -6,10 +6,31 @@ import { FloatingDockClient } from '@/components/ui/floating-dock-client';
 import PageLoader from '@/components/ui/PageLoader';
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { PWAInstall } from '@/components/PWAInstall';
+import { PWAiOSInstall } from '@/components/PWAiOSInstall';
+import { PWADesktopInstall } from '@/components/PWADesktopInstall';
 
 export const metadata: Metadata = {
   title: 'LinguaFlash',
   description: 'A flashcard learning system to master new languages.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'LinguaFlash',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
+    'apple-mobile-web-app-title': 'LinguaFlash',
+    'msapplication-TileColor': '#000000',
+    'msapplication-tap-highlight': 'no',
+    'theme-color': '#000000',
+  },
 };
 
 export default function RootLayout({
@@ -31,6 +52,13 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap"
           rel="stylesheet"
         />
+        {/* PWA Icons */}
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.svg" />
+        <link rel="icon" type="image/svg+xml" sizes="32x32" href="/icons/favicon-32x32.svg" />
+        <link rel="icon" type="image/svg+xml" sizes="16x16" href="/icons/favicon-16x16.svg" />
+        <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#000000" />
+        <meta name="msapplication-TileColor" content="#000000" />
+        <meta name="theme-color" content="#000000" />
       </head>
       <body className="font-body antialiased">
         <AppProviders>
@@ -40,6 +68,9 @@ export default function RootLayout({
             <FloatingDockClient />
           </div>
           <Toaster />
+          <PWAInstall />
+          <PWAiOSInstall />
+          <PWADesktopInstall />
         </AppProviders>
         <Analytics />
         <SpeedInsights />

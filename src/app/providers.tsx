@@ -7,6 +7,7 @@ import { type ReactNode } from 'react';
 import { SWRConfig } from 'swr';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/context/AuthContext'; // Import AuthProvider
+import { PWARegister } from '@/components/PWARegister';
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
@@ -26,7 +27,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
         >
           <ProjectProvider>
             <TopicProvider>
-              <VocabularyProvider>{children}</VocabularyProvider>
+              <VocabularyProvider>
+                <PWARegister />
+                {children}
+              </VocabularyProvider>
             </TopicProvider>
           </ProjectProvider>
         </SWRConfig>
