@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { TOAST_DURATION } from '@/lib/constants';
 
 interface ProgressSummaryProps {
   sessionProgress: { [key: string]: 'remembered' | 'not_remembered' };
@@ -61,14 +62,14 @@ export default function ProgressSummary({ sessionProgress, onRestart }: Progress
                         sessionStorage.setItem(storageKey, 'done');
                     }
 
-                    toast({ title: 'Session saved', description: `${data.updated} words updated.`, duration: 4000 });
+                    toast({ title: 'Session saved', description: `${data.updated} words updated.`, duration: TOAST_DURATION });
                 } catch (err: any) {
                     // Clear the inflight marker so the user can retry (e.g., by reloading)
                     if (typeof window !== 'undefined') {
                         sessionStorage.removeItem(storageKey);
                     }
                     console.error(err);
-                    toast({ title: 'Save failed', description: 'Could not save session results', variant: 'destructive', duration: 4000});
+                    toast({ title: 'Save failed', description: 'Could not save session results', variant: 'destructive', duration: TOAST_DURATION});
                 }
             }
             if (isAuthenticated) {

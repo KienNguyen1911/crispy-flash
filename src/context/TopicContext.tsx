@@ -8,6 +8,7 @@ import { apiUrl, apiClient } from "@/lib/api";
 import { useAuth } from "./AuthContext";
 import { useSWRConfig } from "swr";
 import { invalidateCache } from "@/lib/cache";
+import { TOAST_DURATION } from '@/lib/constants';
 
 interface TopicContextType {
   getTopicById: (projectId: string, topicId: string) => Promise<Topic | undefined>;
@@ -48,7 +49,7 @@ export function TopicProvider({ children }: { children: ReactNode }) {
         title: "Fetch failed",
         description: "Failed to fetch topic",
         variant: "destructive",
-        duration: 4000
+        duration: TOAST_DURATION
       });
       return undefined;
     }
@@ -77,7 +78,7 @@ export function TopicProvider({ children }: { children: ReactNode }) {
       toast({
         title: "Topic Created",
         description: `${created.title}`,
-        duration: 4000
+        duration: TOAST_DURATION
       });
     } catch (err) {
       console.error(err);
@@ -85,7 +86,7 @@ export function TopicProvider({ children }: { children: ReactNode }) {
         title: "Create failed",
         description: "Failed to create topic",
         variant: "destructive",
-        duration: 4000
+        duration: TOAST_DURATION
       });
     }
   };
@@ -112,14 +113,14 @@ export function TopicProvider({ children }: { children: ReactNode }) {
         );
       }
 
-      toast({ title: "Topic Updated", duration: 4000 });
+      toast({ title: "Topic Updated", duration: TOAST_DURATION });
     } catch (err) {
       console.error(err);
       toast({
         title: "Update failed",
         description: "Failed to update topic",
         variant: "destructive",
-        duration: 4000
+        duration: TOAST_DURATION
       });
     }
   };
@@ -133,14 +134,14 @@ export function TopicProvider({ children }: { children: ReactNode }) {
       // Invalidate the project cache to refresh topics
       await mutate(`/api/projects/${projectId}/topics`);
 
-      toast({ title: "Topic Deleted", variant: "destructive", duration: 4000 });
+      toast({ title: "Topic Deleted", variant: "destructive", duration: TOAST_DURATION });
     } catch (err) {
       console.error(err);
       toast({
         title: "Delete failed",
         description: "Could not delete topic",
         variant: "destructive",
-        duration: 4000
+        duration: TOAST_DURATION
       });
     }
   };

@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import type { Project } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api";
+import { TOAST_DURATION } from '@/lib/constants';
 
 interface ProjectContextType {
   projects: Project[];
@@ -138,7 +139,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         topics: []
       };
       setProjects((prev) => [...prev, created]);
-      toast({ title: "Project Created", description: `${created.name}`, duration: 4000 });
+      toast({ title: "Project Created", description: `${created.name}`, duration: TOAST_DURATION });
       return true;
     } catch (err: any) {
       console.error(err);
@@ -172,7 +173,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setProjects((prev) =>
       prev.map((p) => (p.id === projectId ? { ...p, ...updated } : p))
     );
-    toast({ title: "Project Updated", duration: 4000 });
+    toast({ title: "Project Updated", duration: TOAST_DURATION });
   };
 
   const deleteProject = async (projectId: string) => {
@@ -180,7 +181,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       method: "DELETE",
     });
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
-    toast({ title: "Project Deleted", variant: "destructive", duration: 4000 });
+    toast({ title: "Project Deleted", variant: "destructive", duration: TOAST_DURATION });
   };
 
   const value = {
