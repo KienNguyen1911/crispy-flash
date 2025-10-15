@@ -14,10 +14,10 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const EnhanceVocabularyEntryInputSchema = z.object({
-  kanji: z.string().describe('The Kanji character of the vocabulary entry.'),
-  hiraganaKatakana: z
+  word: z.string().describe('The word of the vocabulary entry.'),
+  pronunciation: z
     .string()
-    .describe('The Hiragana or Katakana reading of the vocabulary entry.'),
+    .describe('The pronunciation of the vocabulary entry.'),
   meaning: z.string().describe('The meaning of the vocabulary entry.'),
   image: z
     .string()
@@ -26,7 +26,7 @@ const EnhanceVocabularyEntryInputSchema = z.object({
       'An optional image of the vocabulary entry, as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.' // eslint-disable-line max-len
     ),
   type: z
-    .enum(['simple word', 'grouped by Kanji'])
+    .enum(['simple word', 'grouped by Word'])
     .describe('The type of vocabulary entry.'),
   usageExample: z
     .string()
@@ -67,8 +67,8 @@ const enhanceVocabularyEntryPrompt = ai.definePrompt({
 
   Given the following vocabulary entry, please provide an enhanced image and a usage example.  If the image or usage example is already provided, enhance it, otherwise generate a new one.
 
-  Kanji: {{{kanji}}}
-Hiragana/Katakana: {{{hiraganaKatakana}}}
+  Word: {{{word}}}
+Pronunciation: {{{pronunciation}}}
 Meaning: {{{meaning}}}
 Type: {{{type}}}
 Current Image: {{#if image}}{{media url=image}}{{else}}None{{/if}}

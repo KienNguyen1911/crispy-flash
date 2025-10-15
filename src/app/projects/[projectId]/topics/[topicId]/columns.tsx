@@ -50,13 +50,13 @@ const EditableCell = ({
 
 export const columns: ColumnDef<Vocabulary>[] = [
   {
-    accessorKey: "kanji",
-    header: "Kanji",
+    accessorKey: "word",
+    header: "Word",
     cell: EditableCell,
   },
   {
-    accessorKey: "kana",
-    header: "Kana",
+    accessorKey: "pronunciation",
+    header: "Pronunciation",
     cell: EditableCell,
   },
   {

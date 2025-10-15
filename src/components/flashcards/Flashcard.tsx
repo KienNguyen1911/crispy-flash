@@ -8,13 +8,13 @@ import { Card, CardContent } from '../ui/card';
 interface FlashcardProps {
   vocabulary: Vocabulary;
   initialFlipped?: boolean;
-  showFirst?: 'kanji' | 'meaning';
+  showFirst?: 'word' | 'meaning';
 }
 
 export default function Flashcard({
   vocabulary,
   initialFlipped,
-  showFirst = 'kanji',
+  showFirst = 'word',
 }: FlashcardProps) {
   const [isFlipped, setIsFlipped] = useState<boolean>(
     initialFlipped ?? (showFirst === 'meaning')
@@ -45,8 +45,8 @@ export default function Flashcard({
         <div className="absolute w-full h-full backface-hidden">
           <Card className="w-full h-full flex items-center justify-center">
             <CardContent className="p-6 text-center">
-              <p className="text-6xl font-headline mb-4">{vocabulary.kanji}</p>
-              <p className="text-2xl text-muted-foreground">{vocabulary.kana}</p>
+              <p className="text-6xl font-headline mb-4">{vocabulary.word}</p>
+              <p className="text-2xl text-muted-foreground">{vocabulary.pronunciation}</p>
             </CardContent>
           </Card>
         </div>

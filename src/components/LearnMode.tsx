@@ -190,14 +190,14 @@ const LearnMode = ({
             className="absolute w-full h-full bg-card rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
             style={{ backfaceVisibility: "hidden" }}
           >
-            {currentVocab.kanji && (
+            {currentVocab.word && (
               <h2 className="text-5xl font-bold mb-2 text-center">
-                {currentVocab.kanji}
+                {currentVocab.word}
               </h2>
             )}
-            {currentVocab.kana && (
+            {currentVocab.pronunciation && (
               <p className="text-xl text-muted-foreground">
-                {currentVocab.kana}
+                {currentVocab.pronunciation}
               </p>
             )}
             <Button
@@ -206,7 +206,7 @@ const LearnMode = ({
               className="absolute top-4 right-4"
               onClick={(e) => {
                 e.stopPropagation();
-                playAudio(currentVocab.kanji || currentVocab.kana || "");
+                playAudio(currentVocab.word || currentVocab.pronunciation || "");
               }}
             >
               <Volume2 className="h-6 w-6" />

@@ -136,7 +136,7 @@ const AnalyticsPage = () => {
               {recentActivity.map((activity, index) => (
                 <li key={index} className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold">{activity.kanji}</p>
+                    <p className="font-semibold">{activity.word}</p>
                     <p className="text-sm text-muted-foreground">
                       {activity.correct ? 'Correct' : 'Incorrect'} - {new Date(activity.reviewedAt).toLocaleDateString()}
                     </p>

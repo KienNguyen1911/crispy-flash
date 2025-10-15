@@ -106,14 +106,14 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
           .filter((local: Vocabulary) => {
             const original = originalVocab.find((o: Vocabulary) => o.id === local.id);
             return original && (
-              original.kanji !== local.kanji ||
-              original.kana !== local.kana ||
+              original.word !== local.word ||
+              original.pronunciation !== local.pronunciation ||
               original.meaning !== local.meaning
             );
           })
           .map((local: Vocabulary) => updateVocabulary(local.id, {
-            kanji: local.kanji,
-            kana: local.kana,
+            word: local.word,
+            pronunciation: local.pronunciation,
             meaning: local.meaning
           }));
 
@@ -176,8 +176,8 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
     .filter((v: Vocabulary) => {
       const term = searchTerm.toLowerCase();
       return (
-        v.kanji?.toLowerCase().includes(term) ||
-        v.kana?.toLowerCase().includes(term) ||
+        v.word?.toLowerCase().includes(term) ||
+        v.pronunciation?.toLowerCase().includes(term) ||
         v.meaning.toLowerCase().includes(term)
       );
     })
@@ -283,8 +283,8 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
         <Table className=''>
           <TableHeader>
             <TableRow>
-              <TableHead>Kanji</TableHead>
-              <TableHead>Kana</TableHead>
+              <TableHead>Word</TableHead>
+              <TableHead>Pronunciation</TableHead>
               <TableHead className="w-1/3 md:w-1/4">Meaning</TableHead>
               <TableHead className="hidden sm:table-cell">Status</TableHead>
               {isEditMode && <TableHead className="w-20">Actions</TableHead>}
@@ -301,23 +301,23 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
                   <TableCell className="font-medium">
                     {isEditMode ? (
                       <Input
-                        value={v.kanji || ''}
-                        onChange={(e) => updateLocalVocabulary(v.id, 'kanji', e.target.value)}
+                        value={v.word || ''}
+                        onChange={(e) => updateLocalVocabulary(v.id, 'word', e.target.value)}
                         className="h-8"
                       />
                     ) : (
-                      v.kanji
+                      v.word
                     )}
                   </TableCell>
                   <TableCell>
                     {isEditMode ? (
                       <Input
-                        value={v.kana || ''}
-                        onChange={(e) => updateLocalVocabulary(v.id, 'kana', e.target.value)}
+                        value={v.pronunciation || ''}
+                        onChange={(e) => updateLocalVocabulary(v.id, 'pronunciation', e.target.value)}
                         className="h-8"
                       />
                     ) : (
-                      v.kana
+                      v.pronunciation
                     )}
                   </TableCell>
                   <TableCell>

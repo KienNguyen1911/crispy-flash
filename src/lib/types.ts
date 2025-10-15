@@ -1,12 +1,15 @@
 export type Vocabulary = {
   id: string;
   topicId: string;
-  kanji: string;
-  kana: string;
+  word: string;
+  pronunciation: string;
   meaning: string;
   image?: string;
   usageExample?: string;
   status: 'unseen' | 'remembered' | 'not_remembered';
+  partOfSpeech?: string;
+  exampleSentences?: string[];
+  languageCode: string;
 };
 
 export type Topic = {

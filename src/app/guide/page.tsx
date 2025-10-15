@@ -29,7 +29,7 @@ export default function GuidePage() {
                   <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">2</div>
                   <div>
                     <h3 className="font-semibold text-lg">Create a Project</h3>
-                    <p className="text-muted-foreground">Organize your vocabulary learning by creating projects. For example: "N5 Vocabulary", "Business Japanese", or "Kanji Study".</p>
+                    <p className="text-muted-foreground">Organize your vocabulary learning by creating projects. For example: "N5 Vocabulary", "Business Japanese", or "Word Study".</p>
                   </div>
                 </div>
 
@@ -48,7 +48,7 @@ export default function GuidePage() {
                   <div>
                     <h3 className="font-semibold text-lg">Import Vocabulary</h3>
                     <p className="text-muted-foreground">Paste vocabulary data in a simple format. Example:<br/>
-                      <code className="bg-muted px-2 py-1 rounded text-sm">日 にち / ひ Ngày, mặt trời</code>
+                      <code className="bg-muted px-2 py-1 rounded text-sm">日,にち,ひ,Ngày, mặt trời</code>
                     </p>
                   </div>
                 </div>
@@ -57,7 +57,7 @@ export default function GuidePage() {
                   <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">5</div>
                   <div>
                     <h3 className="font-semibold text-lg">Start Learning</h3>
-                    <p className="text-muted-foreground">Begin flashcard sessions. Click cards to flip between Kanji/Hiragana and meaning. Mark words as "Remembered" or "Not Remembered".</p>
+                    <p className="text-muted-foreground">Begin flashcard sessions. Click cards to flip between Word/Pronunciation and meaning. Mark words as "Remembered" or "Not Remembered".</p>
                   </div>
                 </div>
 
@@ -117,8 +117,8 @@ export default function GuidePage() {
               <div className="space-y-2">
                 <h4 className="font-semibold">📝 Import Format</h4>
                 <p className="text-sm text-muted-foreground">Use this format for importing vocabulary:<br/>
-                  <code className="bg-muted px-2 py-1 rounded">Kanji Hiragana/Katakana Meaning</code><br/>
-                  Example: <code className="bg-muted px-2 py-1 rounded">日 にち / ひ Ngày, mặt trời</code>
+                  <code className="bg-muted px-2 py-1 rounded">Word,Pronunciation,Meaning</code><br/>
+                  Example: <code className="bg-muted px-2 py-1 rounded">日,にち,ひ,Ngày, mặt trời</code>
                 </p>
               </div>
 

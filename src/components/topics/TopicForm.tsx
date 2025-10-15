@@ -64,7 +64,7 @@ export function TopicForm({ topic, onSubmit, submitButtonText = 'Save' }: TopicF
             <FormItem>
               <FormLabel>Topic Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Basic Kanji" {...field} />
+                <Input placeholder="e.g., Basic Words" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

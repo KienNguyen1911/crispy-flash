@@ -44,7 +44,7 @@ import {
 
 type ParsedRow = string[];
 type ColumnMapping = {
-  [key: number]: "kanji" | "kana" | "meaning" | "skip";
+  [key: number]: "word" | "pronunciation" | "meaning" | "skip";
 };
 
 export default function VocabularyImportClient() {
@@ -72,8 +72,8 @@ export default function VocabularyImportClient() {
       const firstRow = data[0];
       const newMapping: ColumnMapping = {};
       firstRow.forEach((_, index) => {
-        if (index === 0) newMapping[index] = "kanji";
-        else if (index === 1) newMapping[index] = "kana";
+        if (index === 0) newMapping[index] = "word";
+        else if (index === 1) newMapping[index] = "pronunciation";
         else if (index === 2) newMapping[index] = "meaning";
         else newMapping[index] = "skip";
       });
@@ -147,9 +147,9 @@ export default function VocabularyImportClient() {
           .split("/")
           .map((s) => s.trim())
           .filter((s) => s !== "");
-        // Also split the first segment by tab or spaces to separate kanji and kana if needed
+        // Also split the first segment by tab or spaces to separate word and pronunciation if needed
         if (parts.length >= 2) {
-          // Try breaking first part by whitespace to get kanji and kana when line like "夕\tゆう / せき\tBuổi chiều"
+          // Try breaking first part by whitespace to get word and pronunciation when line like "夕\tゆう / せき\tBuổi chiều"
           const preParts = parts[0]
             .split(/\s+/)
             .map((s) => s.trim())
@@ -189,32 +189,32 @@ export default function VocabularyImportClient() {
 
   const handleColumnMapChange = (
     columnIndex: number,
-    value: "kanji" | "kana" | "meaning" | "skip"
+    value: "word" | "pronunciation" | "meaning" | "skip"
   ) => {
     setColumnMapping((prev) => ({ ...prev, [columnIndex]: value }));
   };
 
   const handleSave = async () => {
     setIsSaving(true);
-    const kanjiIndex = Object.keys(columnMapping).find(
-      (key) => columnMapping[Number(key)] === "kanji"
+    const wordIndex = Object.keys(columnMapping).find(
+      (key) => columnMapping[Number(key)] === "word"
     );
-    const kanaIndex = Object.keys(columnMapping).find(
-      (key) => columnMapping[Number(key)] === "kana"
+    const pronunciationIndex = Object.keys(columnMapping).find(
+      (key) => columnMapping[Number(key)] === "pronunciation"
     );
     const meaningIndex = Object.keys(columnMapping).find(
       (key) => columnMapping[Number(key)] === "meaning"
     );
 
     if (
-      kanjiIndex === undefined ||
-      kanaIndex === undefined ||
+      wordIndex === undefined ||
+      pronunciationIndex === undefined ||
       meaningIndex === undefined
     ) {
       toast({
         title: "Mapping Error",
         description:
-          "Please map 'Kanji', 'Kana', and 'Meaning' columns before saving.",
+          "Please map 'Word', 'Pronunciation', and 'Meaning' columns before saving.",
         variant: "destructive"
       });
       setIsSaving(false);
@@ -225,11 +225,11 @@ export default function VocabularyImportClient() {
     const vocabToSave: Omit<Vocabulary, "id" | "topicId" | "status">[] =
       parsedData
         .map((row) => ({
-          kanji: row[Number(kanjiIndex)],
-          kana: row[Number(kanaIndex)],
+          word: row[Number(wordIndex)],
+          pronunciation: row[Number(pronunciationIndex)],
           meaning: row[Number(meaningIndex)]
         }))
-        .filter((item) => item.kanji && item.kana && item.meaning);
+        .filter((item) => item.word && item.pronunciation && item.meaning);
 
     console.log(`Prepared ${vocabToSave.length} vocabulary items for saving`);
     addVocabulary(topicId, vocabToSave);
@@ -241,7 +241,7 @@ export default function VocabularyImportClient() {
     parsedData.length > 0
       ? Math.max(...parsedData.map((row) => row.length))
       : 0;
-  const columnOptions = ["kanji", "kana", "meaning", "skip"];
+  const columnOptions = ["word", "pronunciation", "meaning", "skip"];
 
   return (
     <div className="container mx-auto max-w-5xl py-8 px-4">
@@ -249,7 +249,7 @@ export default function VocabularyImportClient() {
         <CardHeader>
           <CardTitle className="font-headline">Import Vocabulary</CardTitle>
           <CardDescription>
-            Paste your vocabulary data below. Common formats are Kanji / Kana /
+            Paste your vocabulary data below. Common formats are Word / Pronunciation /
             Meaning.
           </CardDescription>
         </CardHeader>

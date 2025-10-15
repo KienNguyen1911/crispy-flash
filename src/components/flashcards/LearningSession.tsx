@@ -51,7 +51,7 @@ export function LearningSession({ initialTopic }: { initialTopic?: any } = {}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sessionProgress, setSessionProgress] = useState<{ [key: string]: 'remembered' | 'not_remembered' }>({});
   const [isFinished, setIsFinished] = useState(false);
-  const [showSide, setShowSide] = useState<'kanji' | 'meaning'>('kanji');
+  const [showSide, setShowSide] = useState<'word' | 'meaning'>('word');
 
   useEffect(() => {
     setIsClient(true);
@@ -192,11 +192,11 @@ export function LearningSession({ initialTopic }: { initialTopic?: any } = {}) {
       </Card>
 
       <div className="w-full mt-4 flex items-center justify-center gap-2">
-        <span className="text-sm font-medium">Kanji</span>
+        <span className="text-sm font-medium">Word</span>
         <Switch
           id="first-side"
           checked={showSide === 'meaning'}
-          onCheckedChange={(checked) => setShowSide(checked ? 'meaning' : 'kanji')}
+          onCheckedChange={(checked) => setShowSide(checked ? 'meaning' : 'word')}
         />
         <span className="text-sm font-medium">Meaning</span>
       </div>

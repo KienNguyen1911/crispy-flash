@@ -44,14 +44,13 @@ Functions:
 
 ## 2.3 Vocabulary
 
-Attributes: Kanji, Hiragana/Katakana, Meaning, Image, Type (1: simple
-word, 2: grouped by Kanji).
+Attributes: Word, Pronunciation, Meaning, Part of Speech, Example Sentences, Language Code, Image, Type (1: simple word, 2: grouped by Word).
 
 Functions:
 
 • Import Vocabulary - Paste text data into a textarea. Example:\
-日 にち / ひ Ngày, mặt trời\
-月 つき / がつ Mặt trăng, tháng
+日,にち / ひ,Ngày, mặt trời\
+月,つき / がつ,Mặt trăng, tháng
 
 • Preview Vocabulary Table - Display parsed data in a table format where
 users can map columns (e.g., Kanji, Hiragana/Katakana, Meaning).
@@ -65,8 +64,8 @@ column mapping.
 
 • List Vocabulary - Retrieve vocabulary under a topic.
 
-• Search/Filter Vocabulary - Allow searching by Kanji,
-Hiragana/Katakana, or Meaning.
+• Search/Filter Vocabulary - Allow searching by Word,
+Pronunciation, or Meaning.
 
 ## 2.4 Flashcard Learning
 
@@ -75,7 +74,7 @@ Functions:
 • Start Learning Session - Begin a flashcard session for a selected
 topic or project.
 
-• Flip Flashcard - Toggle between front (Kanji or Hiragana/Katakana) and
+• Flip Flashcard - Toggle between front (Word or Pronunciation) and
 back (Meaning, Image).
 
 • Mark as Remembered - Mark a vocabulary item as remembered.

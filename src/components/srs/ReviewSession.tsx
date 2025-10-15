@@ -197,11 +197,11 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
           {/* Word Display */}
           <div className="text-center space-y-2 min-h-[100px] flex flex-col justify-center">
             <div className="text-5xl font-bold text-primary">
-              {currentVocab.kanji || currentVocab.kana}
+              {currentVocab.word || currentVocab.pronunciation}
             </div>
-            {currentVocab.kana && (
+            {currentVocab.pronunciation && (
               <div className='text-2xl font-semibold text-secondary'>
-                {currentVocab.kana}
+                {currentVocab.pronunciation}
               </div>
             )}
           </div>
