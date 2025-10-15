@@ -44,7 +44,7 @@ import {
 
 type ParsedRow = string[];
 type ColumnMapping = {
-  [key: number]: "word" | "pronunciation" | "meaning" | "skip";
+  [key: number]: "word" | "pronunciation" | "meaning" | "part_of_speech" | "skip";
 };
 
 export default function VocabularyImportClient() {
@@ -75,6 +75,7 @@ export default function VocabularyImportClient() {
         if (index === 0) newMapping[index] = "word";
         else if (index === 1) newMapping[index] = "pronunciation";
         else if (index === 2) newMapping[index] = "meaning";
+        else if (index === 3) newMapping[index] = "part_of_speech";
         else newMapping[index] = "skip";
       });
       setColumnMapping(newMapping);
@@ -189,7 +190,7 @@ export default function VocabularyImportClient() {
 
   const handleColumnMapChange = (
     columnIndex: number,
-    value: "word" | "pronunciation" | "meaning" | "skip"
+    value: "word" | "pronunciation" | "meaning" | "part_of_speech" | "skip"
   ) => {
     setColumnMapping((prev) => ({ ...prev, [columnIndex]: value }));
   };
@@ -204,6 +205,9 @@ export default function VocabularyImportClient() {
     );
     const meaningIndex = Object.keys(columnMapping).find(
       (key) => columnMapping[Number(key)] === "meaning"
+    );
+    const partOfSpeechIndex = Object.keys(columnMapping).find(
+      (key) => columnMapping[Number(key)] === "part_of_speech"
     );
 
     if (
@@ -227,7 +231,8 @@ export default function VocabularyImportClient() {
         .map((row) => ({
           word: row[Number(wordIndex)],
           pronunciation: row[Number(pronunciationIndex)],
-          meaning: row[Number(meaningIndex)]
+          meaning: row[Number(meaningIndex)],
+          part_of_speech: partOfSpeechIndex ? row[Number(partOfSpeechIndex)] : undefined
         }))
         .filter((item) => item.word && item.pronunciation && item.meaning);
 
@@ -241,7 +246,7 @@ export default function VocabularyImportClient() {
     parsedData.length > 0
       ? Math.max(...parsedData.map((row) => row.length))
       : 0;
-  const columnOptions = ["word", "pronunciation", "meaning", "skip"];
+  const columnOptions = ["word", "pronunciation", "meaning", "part_of_speech", "skip"];
 
   return (
     <div className="container mx-auto max-w-5xl py-8 px-4">
@@ -250,7 +255,7 @@ export default function VocabularyImportClient() {
           <CardTitle className="font-headline">Import Vocabulary</CardTitle>
           <CardDescription>
             Paste your vocabulary data below. Common formats are Word / Pronunciation /
-            Meaning.
+            Meaning / Part of Speech (optional).
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -259,7 +264,7 @@ export default function VocabularyImportClient() {
             onChange={(e) => setText(e.target.value)}
             rows={10}
             placeholder={
-              "日  にち / ひ  Ngày, mặт trời\n月  つき / がつ  Mặт trăng, tháng"
+              "日  にち / ひ  Ngày, mặт trời  noun\n月  つき / がつ  Mặт trăng, tháng  noun"
             }
           />
         </CardContent>
@@ -305,7 +310,7 @@ export default function VocabularyImportClient() {
                                 value={opt}
                                 className="capitalize"
                               >
-                                {opt}
+                                {opt === "part_of_speech" ? "part of speech" : opt.replace("_", " ")}
                               </SelectItem>
                             ))}
                           </SelectContent>

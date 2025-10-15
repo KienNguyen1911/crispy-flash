@@ -7,7 +7,7 @@ export type Vocabulary = {
   image?: string;
   usageExample?: string;
   status: 'unseen' | 'remembered' | 'not_remembered';
-  partOfSpeech?: string;
+  part_of_speech?: string;
   exampleSentences?: string[];
   languageCode: string;
 };
