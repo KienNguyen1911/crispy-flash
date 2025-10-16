@@ -36,6 +36,7 @@ const LearnMode = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
+  const [showWordFirst, setShowWordFirst] = useState(true); // Thêm state này
 
   const currentVocab = useMemo(
     () => vocabularies[currentIndex],
@@ -119,6 +120,11 @@ const LearnMode = ({
     setVocabularies(JSON.parse(JSON.stringify(initialVocab)));
   };
 
+  const toggleShowMode = () => {
+    setShowWordFirst(!showWordFirst);
+    setIsFlipped(false); // Reset flip state khi đổi chế độ
+  };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (sessionCompleted) return;
@@ -178,6 +184,13 @@ const LearnMode = ({
       </Button>
 
       <div className="w-full max-w-md px-4" style={{ perspective: 1000 }}>
+        {/* Di chuyển số lượng lên phía trên card */}
+        <div className="flex justify-center mb-4">
+          <p className="text-sm text-muted-foreground">
+            {currentIndex + 1} / {vocabularies.length}
+          </p>
+        </div>
+
         <motion.div
           className="relative aspect-[3/2] w-full cursor-pointer"
           style={{ transformStyle: "preserve-3d" }}
@@ -185,35 +198,52 @@ const LearnMode = ({
           transition={{ duration: 0.4 }}
           onClick={() => setIsFlipped((f) => !f)}
         >
-          {/* Front of the card */}
+          {/* Front of the card - điều chỉnh theo chế độ */}
           <div
             className="absolute w-full h-full bg-card rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
             style={{ backfaceVisibility: "hidden" }}
           >
-            {currentVocab.word && (
-              <h2 className="text-5xl font-bold mb-2 text-center">
-                {currentVocab.word}
-              </h2>
+            {showWordFirst ? (
+              // Hiển thị word first
+              <>
+                {currentVocab.word && (
+                  <h2 className="text-5xl font-bold mb-2 text-center">
+                    {currentVocab.word}
+                  </h2>
+                )}
+                {currentVocab.pronunciation && (
+                  <p className="text-xl text-muted-foreground">
+                    {currentVocab.pronunciation}
+                  </p>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-4 right-4"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    playAudio(currentVocab.word || currentVocab.pronunciation || "");
+                  }}
+                >
+                  <Volume2 className="h-6 w-6" />
+                </Button>
+              </>
+            ) : (
+              // Hiển thị meaning first
+              <>
+                <p className="text-2xl font-semibold text-center">
+                  {currentVocab.meaning}
+                </p>
+                {currentVocab.usageExample && (
+                  <p className="text-lg text-muted-foreground mt-4 text-center italic">
+                    {currentVocab.usageExample}
+                  </p>
+                )}
+              </>
             )}
-            {currentVocab.pronunciation && (
-              <p className="text-xl text-muted-foreground">
-                {currentVocab.pronunciation}
-              </p>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4"
-              onClick={(e) => {
-                e.stopPropagation();
-                playAudio(currentVocab.word || currentVocab.pronunciation || "");
-              }}
-            >
-              <Volume2 className="h-6 w-6" />
-            </Button>
           </div>
 
-          {/* Back of the card */}
+          {/* Back of the card - điều chỉnh theo chế độ */}
           <div
             className="absolute w-full h-full bg-card rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
             style={{
@@ -221,9 +251,44 @@ const LearnMode = ({
               transform: "rotateY(180deg)"
             }}
           >
-            <p className="text-2xl font-semibold text-center">
-              {currentVocab.meaning}
-            </p>
+            {showWordFirst ? (
+              // Mặt sau khi hiển thị word first
+              <>
+                <p className="text-2xl font-semibold text-center">
+                  {currentVocab.meaning}
+                </p>
+                {currentVocab.usageExample && (
+                  <p className="text-lg text-muted-foreground mt-4 text-center italic">
+                    {currentVocab.usageExample}
+                  </p>
+                )}
+              </>
+            ) : (
+              // Mặt sau khi hiển thị meaning first
+              <>
+                {currentVocab.word && (
+                  <h2 className="text-5xl font-bold mb-2 text-center">
+                    {currentVocab.word}
+                  </h2>
+                )}
+                {currentVocab.pronunciation && (
+                  <p className="text-xl text-muted-foreground">
+                    {currentVocab.pronunciation}
+                  </p>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-4 right-4"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    playAudio(currentVocab.word || currentVocab.pronunciation || "");
+                  }}
+                >
+                  <Volume2 className="h-6 w-6" />
+                </Button>
+              </>
+            )}
           </div>
         </motion.div>
 
@@ -236,9 +301,14 @@ const LearnMode = ({
             <ChevronLeft className="mr-2 h-4 w-4" />
             Prev
           </Button>
-          <p className="text-sm text-muted-foreground">
-            {currentIndex + 1} / {vocabularies.length}
-          </p>
+          {/* Di chuyển button toggle xuống dưới cùng */}
+          <Button
+            onClick={toggleShowMode}
+            variant="outline"
+            size="lg"
+          >
+            {showWordFirst ? "Meaning First" : "Word First"}
+          </Button>
           <Button onClick={handleNext} variant="outline">
             {currentIndex === vocabularies.length - 1 ? "Finish" : "Next"}
             <ChevronRight className="ml-2 h-4 w-4" />
