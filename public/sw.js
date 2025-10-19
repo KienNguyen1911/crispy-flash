@@ -56,6 +56,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // Skip API requests - let them go through normally
+  if (event.request.url.includes('/api/')) {
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -82,12 +87,36 @@ self.addEventListener('fetch', (event) => {
             });
           
           return response;
-        }).catch(() => {
-          console.log('Service Worker: Network failed, returning offline page');
+        }).catch((error) => {
+          console.log('Service Worker: Network failed', error);
+          
           // Return offline page for navigation requests
           if (event.request.mode === 'navigate') {
             return caches.match('/offline');
           }
+          
+          // For API requests, return a proper error response
+          if (event.request.url.includes('/api/')) {
+            return new Response(
+              JSON.stringify({ message: 'Network error - offline or server unavailable' }),
+              {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              }
+            );
+          }
+          
+          // For other requests, return a basic error response
+          return new Response('Network error', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: {
+              'Content-Type': 'text/plain',
+            },
+          });
         });
       })
   );

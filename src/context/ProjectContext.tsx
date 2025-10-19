@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import type { Project } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { apiClient } from "@/lib/api";
+import { getProjects, createProject, updateProject, deleteProject } from "@/services/projects-api";
 import { TOAST_DURATION } from '@/lib/constants';
 
 interface ProjectContextType {
@@ -50,7 +50,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
     try {
       // Token is now handled by apiClient automatically
-      const data = await apiClient("/api/projects");
+      const data = await getProjects();
 
       // data is expected to be lightweight project items with counts
       const loadedProjects = data.map((p: any) => ({
@@ -72,13 +72,31 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
           duration: 5000,
         });
       }
-    } catch (err) {
-      console.error(err);
-      toast({
-        title: "Load error",
-        description: "Could not load projects from server.",
-        variant: "destructive"
-      });
+    } catch (err: any) {
+      console.error("Failed to load projects:", err);
+      
+      // Handle different error types
+      if (err.message?.includes('Network error') || err.message?.includes('Failed to fetch')) {
+        toast({
+          title: "Network error",
+          description: "Unable to connect to server. Please check your connection.",
+          variant: "destructive"
+        });
+      } else if (err.message?.includes('Unauthorized') || err.message?.includes('401')) {
+        toast({
+          title: "Authentication error",
+          description: "Your session has expired. Please log in again.",
+          variant: "destructive"
+        });
+        // Optionally redirect to login
+        // window.location.href = '/';
+      } else {
+        toast({
+          title: "Load error",
+          description: err.message || "Could not load projects from server.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -119,10 +137,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         title: (projectData as any).name,
         description: (projectData as any).description
       };
-      const createdRaw = await apiClient("/projects", {
-        method: "POST",
-        body: JSON.stringify(body),
-      }).catch((err) => {
+      const createdRaw = await createProject(body).catch((err: any) => {
         toast({
           title: "Create failed",
           description: err?.message || "Failed to create project",
@@ -160,10 +175,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       title: projectData.name,
       description: projectData.description
     };
-    const updatedRaw = await apiClient(`/api/projects/${projectId}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    });
+    const updatedRaw = await updateProject(projectId, body);
     const updated: Project = {
       id: updatedRaw.id,
       name: updatedRaw.title ?? updatedRaw.name ?? projectData.name ?? "",
@@ -177,9 +189,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteProject = async (projectId: string) => {
-    await apiClient(`/api/projects/${projectId}`, {
-      method: "DELETE",
-    });
+    await deleteProject(projectId);
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
     toast({ title: "Project Deleted", variant: "destructive", duration: TOAST_DURATION });
   };

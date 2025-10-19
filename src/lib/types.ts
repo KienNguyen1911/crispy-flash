@@ -26,3 +26,9 @@ export type Project = {
   description: string;
   topics: Topic[];
 };
+
+export type HeatmapData = {
+  day: string;
+  value: number;
+  level: 0 | 1 | 2 | 3 | 4;
+};

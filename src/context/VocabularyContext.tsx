@@ -4,7 +4,7 @@ import React, { createContext, ReactNode, useContext } from 'react';
 import type { Vocabulary } from '@/lib/types';
 import { ProjectContext } from '@/context/ProjectContext';
 import { useToast } from '@/hooks/use-toast';
-import { apiUrl, apiClient } from '@/lib/api';
+import { createVocabulary, updateVocabulary, deleteVocabulary, updateVocabularyStatus } from '@/services/vocabulary-api';
 import { useAuth } from './AuthContext';
 import { TOAST_DURATION } from '@/lib/constants';
 
@@ -31,10 +31,7 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
     try {
       const itemsArray = Array.isArray(vocabularyItems) ? vocabularyItems : [vocabularyItems];
       console.log(`Sending ${itemsArray.length} vocabulary items to API`);
-      const result = await apiClient('/api/vocabulary', {
-        method: 'POST',
-        body: JSON.stringify(itemsArray.map(item => ({ ...item, topicId }))),
-      });
+      const result = await createVocabulary(itemsArray.map(item => ({ ...item, topicId })));
       console.log('API response:', result);
       await reloadProjects();
       toast({ title: 'Vocabulary Saved', description: `${itemsArray.length} new word(s) added.`, duration: TOAST_DURATION });
@@ -46,10 +43,7 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
 
   const updateVocabulary = async (vocabId: string, vocabData: Partial<Vocabulary>) => {
     try {
-      await apiClient(`/api/vocabulary/${vocabId}`, {
-        method: 'PATCH',
-        body: JSON.stringify(vocabData),
-      });
+      await updateVocabulary(vocabId, vocabData);
       await reloadProjects();
       toast({ title: 'Vocabulary Updated', duration: TOAST_DURATION });
     } catch (err) {
@@ -60,9 +54,7 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
 
   const deleteVocabulary = async (vocabId: string) => {
     try {
-      await apiClient(`/api/vocabulary/${vocabId}`, {
-        method: 'DELETE',
-      });
+      await deleteVocabulary(vocabId);
       await reloadProjects();
       toast({ title: 'Vocabulary Deleted', variant: 'destructive', duration: TOAST_DURATION });
     } catch (err) {
@@ -73,10 +65,7 @@ export function VocabularyProvider({ children }: { children: ReactNode }) {
 
   const updateVocabularyStatus = async (vocabId: string, status: Vocabulary['status']) => {
     try {
-      await apiClient(`/api/vocabulary/${vocabId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status }),
-      });
+      await updateVocabularyStatus(vocabId, status);
       await reloadProjects();
     } catch (err) {
       console.error(err);

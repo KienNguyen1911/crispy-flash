@@ -4,10 +4,9 @@ import React, { createContext, ReactNode, useContext } from "react";
 import type { Topic } from "@/lib/types";
 import { ProjectContext } from "@/context/ProjectContext";
 import { useToast } from "@/hooks/use-toast";
-import { apiUrl, apiClient } from "@/lib/api";
+import { getTopicById, createTopic, updateTopic, deleteTopic } from "@/services/topics-api";
 import { useAuth } from "./AuthContext";
 import { useSWRConfig } from "swr";
-import { invalidateCache } from "@/lib/cache";
 import { TOAST_DURATION } from '@/lib/constants';
 
 interface TopicContextType {
@@ -39,9 +38,9 @@ export function TopicProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { mutate } = useSWRConfig();
 
-  const getTopicById = async (projectId: string, topicId: string) => {
+  const getTopicById = async (projectId: string, topicId: string): Promise<Topic | undefined> => {
     try {
-      const topic = await apiClient(`/topics/${topicId}`, {});
+      const topic = await getTopicById(topicId);
       return topic;
     } catch (err) {
       console.error(err);
@@ -60,20 +59,10 @@ export function TopicProvider({ children }: { children: ReactNode }) {
     topicData: Omit<Topic, "id" | "projectId" | "vocabulary">
   ) => {
     try {
-      const created = await apiClient(`/api/topics`, {
-        method: "POST",
-        body: JSON.stringify({ ...topicData, projectId })
-      });
+      const created = await createTopic({ ...topicData, projectId });
 
       // Invalidate the project cache to refresh topics
       await mutate(`/api/projects/${projectId}/topics`);
-      if (user) {
-        await invalidateCache(
-          `topics:${projectId}`,
-          `projects:list:${user.id}`,
-          `project:${projectId}`
-        );
-      }
 
       toast({
         title: "Topic Created",
@@ -97,21 +86,10 @@ export function TopicProvider({ children }: { children: ReactNode }) {
     topicData: Partial<Topic>
   ) => {
     try {
-      await apiClient(`/api/topics/${topicId}`, {
-        method: "PATCH",
-        body: JSON.stringify(topicData)
-      });
+      await updateTopic(topicId, topicData);
 
       // Invalidate the project cache to refresh topics
       await mutate(`/api/projects/${projectId}/topics`);
-      if (user) {
-        await invalidateCache(
-          `vocabulary:list:${topicId}`,
-          `topics:${projectId}`,
-          `projects:list:${user.id}`,
-          `project:${projectId}`
-        );
-      }
 
       toast({ title: "Topic Updated", duration: TOAST_DURATION });
     } catch (err) {
@@ -127,9 +105,7 @@ export function TopicProvider({ children }: { children: ReactNode }) {
 
   const deleteTopic = async (projectId: string, topicId: string) => {
     try {
-      await apiClient(`/api/topics/${topicId}`, {
-        method: "DELETE"
-      });
+      await deleteTopic(topicId);
 
       // Invalidate the project cache to refresh topics
       await mutate(`/api/projects/${projectId}/topics`);

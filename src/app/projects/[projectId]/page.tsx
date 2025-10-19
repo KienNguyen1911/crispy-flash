@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { invalidateCache } from "@/lib/cache";
 import Link from "next/link";
 
 export default function ProjectPage() {
@@ -71,7 +70,6 @@ export default function ProjectPage() {
   const refetchTopics = () => {
     // invalidate the topics cache to refresh topics
     // This will trigger a refetch of the topics data
-    invalidateCache(`projects:topics:${projectId}`);
     mutateTopics();
   };
 

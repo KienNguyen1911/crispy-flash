@@ -161,11 +161,10 @@ export default function Dashboard() {
           {projects.map((project: any) => (
             <div key={project.id}>
               <Card
-                variant="glass"
                 className="
-                relative h-full flex flex-col 
-                hover:shadow-lg hover:scale-105 hover:ring-2 hover:ring-primary/50 transition-all duration-300
-              "
+                  relative h-full flex flex-col 
+                  hover:shadow-lg hover:scale-105 hover:ring-primary/50 transition-all duration-300
+                "
               >
                 <CardHeader>
                   <div>

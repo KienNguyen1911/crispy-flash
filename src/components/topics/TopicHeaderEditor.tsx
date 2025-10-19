@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Check, X } from 'lucide-react';
 import { mutate } from 'swr';
-import { apiClient } from '@/lib/api';
+import { updateTopicHeader } from '@/services/topics-vocabularies-api';
 import { toast } from 'sonner';
 
 export default function TopicHeaderEditor({ projectId, topic }: { projectId: string; topic: { id: string; title: string; description?: string } }) {
@@ -24,14 +24,7 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
 
     setSaving(true);
     try {
-      const updatedTopic = await apiClient(
-        `/api/projects/${projectId}/topics/${topic.id}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, description }),
-        }
-      );
+      const updatedTopic = await updateTopicHeader(projectId, topic.id, { title, description });
       mutate(`/api/projects/${projectId}/topics/${topic.id}`, updatedTopic, false);
       toast.success('Topic updated successfully!');
       setEditing(false);

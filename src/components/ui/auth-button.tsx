@@ -68,11 +68,12 @@ export function AuthIcon() {
   }
 
   return (
-    <button
+    <Button
       onClick={handleClick}
-      className="h-full w-full flex items-center justify-center text-neutral-500 dark:text-neutral-300 hover:text-neutral-700 dark:hover:text-neutral-100 transition-colors"
+      variant="outline"
+      className="h-10 w-10 flex items-center justify-center"
     >
       {isAuthenticated ? <LogOut className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
-    </button>
+    </Button>
   );
 }

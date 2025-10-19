@@ -12,7 +12,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import { Vocabulary } from "@prisma/client";
-import { apiClient } from "@/lib/api";
+import { updateVocabularyBatchStatus } from "@/services/learn-mode-api";
 import { toast } from "sonner";
 
 interface LearnModeProps {
@@ -45,13 +45,7 @@ const LearnMode = ({
 
   const saveProgress = async (showToast = true) => {
     try {
-      await apiClient(`/api/vocabulary/batch/status`, {
-        method: "PUT",
-        body: JSON.stringify({
-          topicId: topicId,
-          vocabularies: vocabularies.map(({ id, status }) => ({ id, status }))
-        })
-      });
+      await updateVocabularyBatchStatus(topicId, vocabularies.map(({ id, status }) => ({ id, status })));
       if (showToast) {
         toast.success("Progress saved!");
       }

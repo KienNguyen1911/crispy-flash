@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import { srsApi } from '@/lib/api';
+import { srsApi } from '@/services/srs-api';
 import { VocabularyWithSrs, ReviewFeedbackDto, DueReviewCount } from '@/types/srs';
 
 export function useDueReviews() {

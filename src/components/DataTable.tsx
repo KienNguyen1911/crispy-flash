@@ -38,7 +38,7 @@ import { toast } from "sonner"
 
 import { BookOpenCheck, Pen, Plus, Trash2, Grid, Table as TableIcon, CheckCircle, XCircle, HelpCircle, Sparkles } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { apiClient } from "@/lib/api"
+import { deleteVocabularies, updateVocabularies } from "@/services/topics-vocabularies-api"
 import Link from "next/link"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -200,18 +200,11 @@ export function DataTable<TData, TValue>({
       });
 
       const deletePromise = deletedVocabularyIds.size > 0
-      ? apiClient(`/api/topics/${topicId}/vocabularies`, {
-          method: 'DELETE',
-          body: JSON.stringify({ ids: Array.from(deletedVocabularyIds) }),
-        })
+      ? deleteVocabularies(topicId, Array.from(deletedVocabularyIds))
       : Promise.resolve();
 
       const updatePromise = changedVocabularies.length > 0
-        ? apiClient(`/api/topics/${topicId}/vocabularies`,
-        {
-          method: 'PUT',
-          body: JSON.stringify({ vocabularies: changedVocabularies }),
-        })
+        ? updateVocabularies(topicId, changedVocabularies)
         : Promise.resolve();
 
       await Promise.all([deletePromise, updatePromise]);

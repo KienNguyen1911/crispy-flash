@@ -3,11 +3,8 @@
 import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { FloatingDock } from '@/components/ui/floating-dock';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { AuthIcon } from '@/components/ui/auth-button';
 import { BackButton } from '@/components/ui/back-button';
-import { DueReviewBadge } from '@/components/srs/DueReviewBadge';
-import { BookOpen, Home, FolderOpen, Brain, Bell } from 'lucide-react';
+import { BookOpen, Home, User, Hourglass } from 'lucide-react';
 
 export function FloatingDockClient() {
   const pathname = usePathname();
@@ -18,7 +15,7 @@ export function FloatingDockClient() {
     {
       title: "Guide",
       icon: (
-        <BookOpen className="h-full w-full text-primary" />
+        <BookOpen className="h-full w-full" />
       ),
       href: "/guide",
       isCurrentPage: pathname === "/guide",
@@ -26,7 +23,7 @@ export function FloatingDockClient() {
     {
       title: "Review",
       icon: (
-        <Bell className="h-full w-full" />
+        <Hourglass className="h-full w-full" />
       ),
       href: "/review",
       isCurrentPage: pathname === "/review",
@@ -34,21 +31,13 @@ export function FloatingDockClient() {
     {
       title: "Home",
       icon: (
-        <Home className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+        <Home className="h-full w-full" />
       ),
       href: "/",
       isCurrentPage: pathname === "/",
     },
     ...(isHomePage
-      ? [
-        //   {
-        //     title: "Projects",
-        //     icon: (
-        //       <FolderOpen className="h-full w-full text-neutral-500 dark:text-neutral-300" />
-        //     ),
-        //     href: "/projects",
-        //   },
-        ]
+      ? []
       : [
           {
             title: "Back",
@@ -58,18 +47,11 @@ export function FloatingDockClient() {
         ]
     ),
     {
-      title: "Toggle Theme",
+      title: "Profile",
       icon: (
-        <ThemeToggle />
+        <User />
       ),
-      href: "#",
-    },
-    {
-      title: "Account",
-      icon: (
-        <AuthIcon />
-      ),
-      href: "#",
+      href: "/profile",
     },
   ];
 
