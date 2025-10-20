@@ -63,6 +63,10 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
   useEffect(() => {
     if (!currentVocab || sessionReviews.length < 2) return;
 
+    // Reset answer state when card changes
+    setIsAnswered(false);
+    setSelectedAnswer(null);
+
     const distractors = sessionReviews
       .filter(v => v.id !== currentVocab.id)
       .map(v => v.meaning);
