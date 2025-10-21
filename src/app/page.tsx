@@ -171,7 +171,7 @@ export default function Dashboard() {
                     <CardTitle className="font-headline">
                       {project.name}
                     </CardTitle>
-                    <CardDescription>{project.description}</CardDescription>
+                    {/* <CardDescription>{project.description}</CardDescription> */}
                   </div>
                 </CardHeader>
 

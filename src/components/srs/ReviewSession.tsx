@@ -63,9 +63,10 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
   useEffect(() => {
     if (!currentVocab || sessionReviews.length < 2) return;
 
-    // Reset answer state when card changes
+    // Reset answer state when card changes to prevent mobile ghost clicks
     setIsAnswered(false);
     setSelectedAnswer(null);
+    setTimeLeft(TIME_LIMIT);
 
     const distractors = sessionReviews
       .filter(v => v.id !== currentVocab.id)

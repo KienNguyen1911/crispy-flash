@@ -4,7 +4,7 @@ import React, { createContext, ReactNode, useContext } from "react";
 import type { Topic } from "@/lib/types";
 import { ProjectContext } from "@/context/ProjectContext";
 import { useToast } from "@/hooks/use-toast";
-import { getTopicById, createTopic, updateTopic, deleteTopic } from "@/services/topics-api";
+import { getTopicById as getTopicByIdApi, createTopic, updateTopic, deleteTopic as deleteTopicApi } from "@/services/topics-api";
 import { useAuth } from "./AuthContext";
 import { useSWRConfig } from "swr";
 import { TOAST_DURATION } from '@/lib/constants';
@@ -40,7 +40,7 @@ export function TopicProvider({ children }: { children: ReactNode }) {
 
   const getTopicById = async (projectId: string, topicId: string): Promise<Topic | undefined> => {
     try {
-      const topic = await getTopicById(topicId);
+      const topic = await getTopicByIdApi(topicId);
       return topic;
     } catch (err) {
       console.error(err);
@@ -105,7 +105,7 @@ export function TopicProvider({ children }: { children: ReactNode }) {
 
   const deleteTopic = async (projectId: string, topicId: string) => {
     try {
-      await deleteTopic(topicId);
+      await deleteTopicApi(topicId);
 
       // Invalidate the project cache to refresh topics
       await mutate(`/api/projects/${projectId}/topics`);

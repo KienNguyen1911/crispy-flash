@@ -80,7 +80,6 @@ export default function TopicCardClient({
 
   return (
     <Card
-      variant="glass"
       ref={containerRef}
       className="relative h-full flex flex-col hover:shadow-lg hover:scale-105 transition-all duration-300"
     >
