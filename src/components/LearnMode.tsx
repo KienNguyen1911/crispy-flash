@@ -37,6 +37,7 @@ const LearnMode = ({
   const [isFlipped, setIsFlipped] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [showWordFirst, setShowWordFirst] = useState(true); // Thêm state này
+  const [showPronunciation, setShowPronunciation] = useState(true); // Thêm state cho pronunciation
 
   const currentVocab = useMemo(
     () => vocabularies[currentIndex],
@@ -117,6 +118,10 @@ const LearnMode = ({
   const toggleShowMode = () => {
     setShowWordFirst(!showWordFirst);
     setIsFlipped(false); // Reset flip state khi đổi chế độ
+  };
+
+  const togglePronunciation = () => {
+    setShowPronunciation(!showPronunciation);
   };
 
   useEffect(() => {
@@ -205,7 +210,7 @@ const LearnMode = ({
                     {currentVocab.word}
                   </h2>
                 )}
-                {currentVocab.pronunciation && (
+                {currentVocab.pronunciation && showPronunciation && (
                   <p className="text-xl text-muted-foreground">
                     {currentVocab.pronunciation}
                   </p>
@@ -265,7 +270,7 @@ const LearnMode = ({
                     {currentVocab.word}
                   </h2>
                 )}
-                {currentVocab.pronunciation && (
+                {currentVocab.pronunciation && showPronunciation && (
                   <p className="text-xl text-muted-foreground">
                     {currentVocab.pronunciation}
                   </p>
@@ -306,6 +311,17 @@ const LearnMode = ({
           <Button onClick={handleNext} variant="outline">
             {currentIndex === vocabularies.length - 1 ? "Finish" : "Next"}
             <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Thêm dòng nút toggle pronunciation */}
+        <div className="flex justify-center mt-4">
+          <Button
+            onClick={togglePronunciation}
+            variant={showPronunciation ? "default" : "outline"}
+            size="sm"
+          >
+            {showPronunciation ? "Hide" : "Show"} Pronunciation
           </Button>
         </div>
 
