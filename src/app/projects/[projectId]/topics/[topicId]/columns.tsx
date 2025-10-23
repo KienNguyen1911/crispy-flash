@@ -15,6 +15,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { CheckCircle, XCircle, HelpCircle, Sparkles } from "lucide-react"
+
+const getStatusIcon = (status: string) => {
+  const iconClass = "h-4 w-4";
+  switch (status) {
+    case "REMEMBERED": return <CheckCircle className={`${iconClass} text-green-600`} />;
+    case "NOT_REMEMBERED": return <XCircle className={`${iconClass} text-red-600`} />;
+    case "NEW": return <Sparkles className={`${iconClass} text-blue-600`} />;
+    default: return <HelpCircle className={`${iconClass} text-gray-600`} />;
+  }
+};
 
 const EditableCell = ({
   getValue,
@@ -66,20 +78,29 @@ export const columns: ColumnDef<Vocabulary>[] = [
   },
   {
     accessorKey: "status",
-    header: "Status",
+    header: () => (
+      <div className="flex justify-center w-full">
+        Status
+      </div>
+    ),
     cell: ({ row }) => {
       // @ts-ignore
       const status = row.getValue("status") as string
-      let variant: "default" | "secondary" | "destructive" | "outline" = "secondary";
-      if (status === "REMEMBERED") {
-        variant = "default"
-      } else if (status === "NOT_REMEMBERED") {
-        variant = "destructive"
-      } else if (status === "UNKNOWN") {
-        variant = "outline"
-      }
       
-      return <Badge variant={variant} className="capitalize">{status.toLowerCase().replace("_", " ")}</Badge>
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="cursor-help flex justify-center">
+                {getStatusIcon(status)}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{status?.replace('_', ' ') || 'Unknown'}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )
     },
     enableHiding: true,
     filterFn: (row, columnId, filterValue) => {
