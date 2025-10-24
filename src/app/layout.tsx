@@ -59,6 +59,7 @@ export default function RootLayout({
         <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#000000" />
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="theme-color" content="#000000" />
+        <meta name="google-site-verification" content="kpGH1OCFFQJ2nuwsikJU7gocp-x05eGTjD3yFI57eHU" />
       </head>
       <body className="font-body antialiased">
         <AppProviders>
