@@ -55,12 +55,15 @@ export default function ProjectPage() {
     : null;
 
   const topics = topicsRaw
-    ? topicsRaw.map((t: any) => ({
-        id: t.id,
-        title: t.title,
-        description: "",
-        vocabularyCount: t.wordsCount ?? 0
-      }))
+    ? topicsRaw
+        .map((t: any) => ({
+          id: t.id,
+          title: t.title,
+          description: "",
+          vocabularyCount: t.wordsCount ?? 0,
+          createdAt: t.created_at ?? new Date().toISOString()
+        }))
+        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     : [];
 
   // isLoading is true if either the project or topics are not yet loaded.
