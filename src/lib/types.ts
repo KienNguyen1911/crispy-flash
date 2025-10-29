@@ -18,6 +18,8 @@ export type Topic = {
   title: string;
   description: string;
   vocabulary: Vocabulary[];
+  contentGenerationStatus?: 'PENDING' | 'GENERATING' | 'COMPLETED' | 'FAILED';
+  contextualPracticeContent?: AIGeneratedContent;
 };
 
 export type Project = {
@@ -31,4 +33,22 @@ export type HeatmapData = {
   day: string;
   value: number;
   level: 0 | 1 | 2 | 3 | 4;
+};
+
+export type AIGeneratedQuestion = {
+  question: string;
+  answer: string;
+  options?: string[];
+};
+
+export type AIGeneratedContent = {
+  story: string;
+  targetWords: string[];
+  questions: AIGeneratedQuestion[];
+};
+
+export type ContentGenerationResponse = {
+  ok: boolean;
+  content?: AIGeneratedContent;
+  error?: string;
 };

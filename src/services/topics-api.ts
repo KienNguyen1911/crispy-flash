@@ -37,6 +37,14 @@ class TopicsApiService extends BaseApiService {
       })
     );
   }
+
+  async generateContent(topicId: string) {
+    return this.handleApiCall(() =>
+      this.apiClient(`/api/topics/${topicId}/generate-content`, {
+        method: 'POST',
+      })
+    );
+  }
 }
 
 // Create and export a singleton instance
@@ -50,3 +58,4 @@ export const getTopicById = (topicId: string) => topicsApiService.getTopicById(t
 export const createTopic = (topicData: { title: string; description: string; projectId: string }) => topicsApiService.createTopic(topicData);
 export const updateTopic = (topicId: string, topicData: Partial<{ title: string; description: string }>) => topicsApiService.updateTopic(topicId, topicData);
 export const deleteTopic = (topicId: string) => topicsApiService.deleteTopic(topicId);
+export const generateContent = (topicId: string) => topicsApiService.generateContent(topicId);
