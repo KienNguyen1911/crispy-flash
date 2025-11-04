@@ -3,22 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
+import dynamic from "next/dynamic";
 import { useAuthFetcher } from "@/hooks/useAuthFetcher";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpenCheck, Plus, Sparkles, Loader2 } from "lucide-react";
-import { DataTable } from "@/components/DataTable";
+import { Sparkles, Loader2 } from "lucide-react";
 import { columns } from "./columns";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import LearnMode from "@/components/LearnMode";
-import TopicHeaderEditor from "@/components/topics/TopicHeaderEditor";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import {
   Sheet,
@@ -30,6 +22,29 @@ import {
 import { generateContent } from "@/services/topics-api";
 import type { AIGeneratedContent } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+
+// Dynamic imports to split heavy client bundles
+const DataTable = dynamic(
+  () => import("@/components/DataTable").then((mod) => ({ default: mod.DataTable })),
+  {
+    loading: () => (
+      <div className="w-full">
+        <Skeleton className="h-10 w-1/3 mb-4" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    ),
+  }
+);
+
+const LearnMode = dynamic(() => import("@/components/LearnMode"), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 z-50 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>,
+});
+
+const TopicHeaderEditor = dynamic(() => import("@/components/topics/TopicHeaderEditor"), {
+  ssr: false,
+  loading: () => <div className="h-10" />,
+});
 
 export default function TopicDetailPage() {
   const params = useParams<{ projectId: string; topicId:string}>();

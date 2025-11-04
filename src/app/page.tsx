@@ -30,29 +30,78 @@ import {
 } from "@/components/ui/dialog";
 import DataLoader from "@/components/ui/DataLoader";
 import useSWR from "swr";
+import useSWRInfinite from "swr/infinite";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useAuthFetcher } from '@/hooks/useAuthFetcher';
 import { toast } from "sonner";
+import { useEffect, useRef } from "react";
 
 export default function Dashboard() {
   const { isAuthenticated, isLoading, login } = useAuth();
   const fetcher = useAuthFetcher();
 
-  const { data: projectsRaw, error: projectsError, mutate: mutateProjects } = useSWR(
-    isAuthenticated ? '/api/projects' : null,
-    fetcher
+  // Keep project creation/deletion working; list will be handled by SWRInfinite below
+  const { mutate: mutateProjectsLegacy } = useSWR(
+    null,
+    null
   );
 
-  const projects = projectsRaw
-    ? projectsRaw.map((p: any) => ({
-        id: p.id,
-        name: p.title ?? p.name ?? "",
-        description: p.description ?? "",
-        topicsCount: p.topicsCount ?? 0,
-        wordsCount: p.wordsCount ?? 0
-      }))
+  const PAGE_SIZE = 20;
+  const getKey = (pageIndex: number, previousPageData: any) => {
+    if (!isAuthenticated) return null;
+    if (previousPageData && !previousPageData.hasMore) return null;
+    const page = pageIndex + 1;
+    return `/api/projects?page=${page}&limit=${PAGE_SIZE}`;
+  };
+
+  const {
+    data: projectPages,
+    error: projectsError,
+    size,
+    setSize,
+    isValidating,
+    mutate: mutateProjectsPages
+  } = useSWRInfinite(getKey, fetcher);
+
+  const projects = projectPages
+    ? projectPages
+        .flatMap((p: any) => p.projects ?? [])
+        .map((proj: any) => ({
+          id: proj.id,
+          name: proj.title ?? proj.name ?? "",
+          description: proj.description ?? "",
+          topicsCount: proj.topicsCount ?? 0,
+          wordsCount: proj.wordsCount ?? 0
+        }))
     : [];
+
+  const lastPage = projectPages && projectPages.length > 0 ? projectPages[projectPages.length - 1] : null;
+  const hasMore = lastPage ? Boolean(lastPage.hasMore) : false;
+
+  // Ensure hooks are declared before any early returns
+  const isInitialLoading = !projectPages;
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!hasMore) return;
+    const elem = loadMoreRef.current;
+    if (!elem) return;
+
+    let blocked = false;
+    const observer = new IntersectionObserver((entries) => {
+      const first = entries[0];
+      if (first.isIntersecting && !blocked && !isValidating) {
+        blocked = true;
+        setSize((prev) => prev + 1).finally(() => {
+          blocked = false;
+        });
+      }
+    }, { root: null, rootMargin: "200px", threshold: 0.1 });
+
+    observer.observe(elem);
+    return () => observer.disconnect();
+  }, [hasMore, isValidating, setSize]);
 
   const addProject = async (projectData: any): Promise<boolean> => {
     try {
@@ -60,13 +109,12 @@ export default function Dashboard() {
         title: projectData.name,
         description: projectData.description || ""
       };
-      // No need to pass token, apiClient handles it
       await apiClient("/api/projects", {
         method: "POST",
         body: JSON.stringify(body)
       });
-      // Refresh the projects list after creation
-      mutateProjects();
+      // Revalidate from first page to include the new project at the top
+      await mutateProjectsPages();
       toast.success("Project created successfully");
       return true;
     } catch (err) {
@@ -77,12 +125,10 @@ export default function Dashboard() {
 
   const deleteProject = async (projectId: string) => {
     try {
-      // No need to pass token, apiClient handles it
       await apiClient(`/api/projects/${projectId}`, {
         method: "DELETE"
       });
-      mutateProjects(); // Refresh the projects list
-
+      await mutateProjectsPages();
       toast.success("Project deleted successfully");
     } catch (err) {
       console.error("Delete project error:", err);
@@ -114,7 +160,7 @@ export default function Dashboard() {
               Sign In with Google
             </Button>
             <p className="text-sm text-muted-foreground">
-              New to LinguaFlash? Check out our{" "}
+              New to LinguaFlash? Check out our {" "}
               <a href="/guide" className="text-primary hover:underline">
                 complete guide
               </a>{" "}
@@ -124,6 +170,10 @@ export default function Dashboard() {
         </Card>
       </div>
     );
+  }
+
+  if (isInitialLoading) {
+    return <DataLoader />;
   }
 
   return (
@@ -242,6 +292,19 @@ export default function Dashboard() {
           <p className="text-muted-foreground mt-2">
             Click &quot;New Project&quot; to get started.
           </p>
+        </div>
+      )}
+
+      {/* Infinite scroll sentinel and loading indicator */}
+      {hasMore && (
+        <div className="mt-8">
+          <div ref={loadMoreRef} className="h-10 w-full" />
+          {isValidating && (
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground" aria-live="polite">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+              Loading more...
+            </div>
+          )}
         </div>
       )}
     </div>
