@@ -1,4 +1,13 @@
-<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-  <rect width="180" height="180" fill="#000000" rx="30"/>
-  <text x="90" y="115" font-family="Arial, sans-serif" font-size="72" font-weight="bold" text-anchor="middle" fill="white">LF</text>
+<svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="500" height="500" rx="70" fill="url(#paint0_linear_1304_118)"/>
+<path d="M192.667 267.333C192.667 289.424 210.576 307.333 232.667 307.333H306.333V381C306.333 403.091 288.424 421 266.333 421H119C96.9086 421 79 403.091 79 381V233.667C79 211.576 96.9086 193.667 119 193.667H192.667V267.333ZM380 80C402.091 80.0002 420 97.9087 420 120V267.333C420 289.424 402.091 307.333 380 307.333H306.333V233.667C306.333 211.576 288.424 193.667 266.333 193.667H192.667V120C192.667 97.9086 210.576 80 232.667 80H380Z" fill="white"/>
+<defs>
+<linearGradient id="paint0_linear_1304_118" x1="0" y1="250" x2="500" y2="250" gradientUnits="userSpaceOnUse">
+<stop stop-color="#8EC5FC"/>
+<stop offset="0.25" stop-color="#8DD3FF"/>
+<stop offset="0.5" stop-color="#A1D8FF"/>
+<stop offset="0.75" stop-color="#C1D2FF"/>
+<stop offset="1" stop-color="#E0C3FF"/>
+</linearGradient>
+</defs>
 </svg>

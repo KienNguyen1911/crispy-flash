@@ -63,11 +63,6 @@ const LearnMode = ({
   };
 
   const handleClose = async () => {
-    const hasChanges =
-      JSON.stringify(vocabularies) !== JSON.stringify(initialVocab);
-    if (hasChanges) {
-      await saveProgress(false);
-    }
     onClose(vocabularies);
   };
 
@@ -155,7 +150,7 @@ const LearnMode = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="fixed inset-0 bg-gradient-to-br from-background via-muted to-primary/30 z-50 flex flex-col items-center justify-center text-foreground"
+        className="fixed bg-background inset-0 z-50 flex flex-col items-center justify-center text-foreground"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.8, y: 20 }}
