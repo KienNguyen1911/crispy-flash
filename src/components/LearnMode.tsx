@@ -9,7 +9,7 @@ import {
   X,
   Volume2,
   Check,
-  RotateCcw
+  RotateCcw,
 } from "lucide-react";
 import { Vocabulary } from "@prisma/client";
 import { updateVocabularyBatchStatus } from "@/services/learn-mode-api";
@@ -31,26 +31,28 @@ const LearnMode = ({
   mutateTopic,
 }: LearnModeProps) => {
   const [vocabularies, setVocabularies] = useState<Vocabulary[]>(() =>
-    JSON.parse(JSON.stringify(initialVocab))
+    JSON.parse(JSON.stringify(initialVocab)),
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
-  const [showWordFirst, setShowWordFirst] = useState(true); // Thêm state này
-  const [showPronunciation, setShowPronunciation] = useState(true); // Thêm state cho pronunciation
+  const [showWordFirst, setShowWordFirst] = useState(true);
+  const [showPronunciation, setShowPronunciation] = useState(true);
 
   const currentVocab = useMemo(
     () => vocabularies[currentIndex],
-    [vocabularies, currentIndex]
+    [vocabularies, currentIndex],
   );
 
   const saveProgress = async (showToast = true) => {
     try {
-      await updateVocabularyBatchStatus(topicId, vocabularies.map(({ id, status }) => ({ id, status })));
+      await updateVocabularyBatchStatus(
+        topicId,
+        vocabularies.map(({ id, status }) => ({ id, status })),
+      );
       if (showToast) {
         toast.success("Progress saved!");
       }
-      // Cập nhật lại topic để lấy dữ liệu mới nhất
       if (mutateTopic) {
         await mutateTopic();
       }
@@ -117,7 +119,7 @@ const LearnMode = ({
 
   const toggleShowMode = () => {
     setShowWordFirst(!showWordFirst);
-    setIsFlipped(false); // Reset flip state khi đổi chế độ
+    setIsFlipped(false);
   };
 
   const togglePronunciation = () => {
@@ -148,42 +150,99 @@ const LearnMode = ({
 
   if (sessionCompleted) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-background to-slate-100 dark:to-slate-900 z-50 flex flex-col items-center justify-center text-foreground">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 bg-gradient-to-br from-background via-muted to-primary/30 z-50 flex flex-col items-center justify-center text-foreground"
+      >
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{
+            duration: 0.4,
+            ease: [0.4, 0, 0.2, 1],
+          }}
           className="text-center"
         >
-          <Check className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Session Complete!</h2>
-          <p className="text-muted-foreground mb-6">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{
+              delay: 0.2,
+              duration: 0.5,
+              ease: [0.34, 1.56, 0.64, 1],
+            }}
+          >
+            <Check
+              className="w-16 h-16 mx-auto mb-4"
+              style={{ color: "hsl(var(--clr-success-a10))" }}
+            />
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.3 }}
+            className="text-2xl font-bold mb-2"
+          >
+            Session Complete!
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
+            className="text-muted-foreground mb-6"
+          >
             You have reviewed all the flashcards.
-          </p>
-          <div className="flex gap-4">
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.3 }}
+            className="flex gap-4"
+          >
             <Button onClick={handleRestart} variant="outline">
               <RotateCcw className="mr-2 h-4 w-4" />
               Restart
             </Button>
             <Button onClick={handleClose}>Close</Button>
-          </div>
+          </motion.div>
         </motion.div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-background to-amber-700 dark:to-violet-800 z-50 flex flex-col items-center justify-center text-foreground">
-      <Button
-        onClick={handleClose}
-        className="absolute top-4 right-4"
-        variant="ghost"
-        size="icon"
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center text-foreground"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.1, duration: 0.2 }}
       >
-        <X className="h-6 w-6" />
-      </Button>
+        <Button
+          onClick={handleClose}
+          className="absolute top-4 right-4"
+          variant="ghost"
+          size="icon"
+        >
+          <X className="h-6 w-6" />
+        </Button>
+      </motion.div>
 
-      <div className="w-full max-w-md px-4" style={{ perspective: 1000 }}>
-        {/* Di chuyển số lượng lên phía trên card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+        className="w-full max-w-md px-4"
+        style={{ perspective: 1000 }}
+      >
         <div className="flex justify-center mb-4">
           <p className="text-sm text-muted-foreground">
             {currentIndex + 1} / {vocabularies.length}
@@ -197,13 +256,11 @@ const LearnMode = ({
           transition={{ duration: 0.4 }}
           onClick={() => setIsFlipped((f) => !f)}
         >
-          {/* Front of the card - điều chỉnh theo chế độ */}
           <div
-            className="absolute w-full h-full bg-card rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
+            className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
             style={{ backfaceVisibility: "hidden" }}
           >
             {showWordFirst ? (
-              // Hiển thị word first
               <>
                 {currentVocab.word && (
                   <h2 className="text-5xl font-bold mb-2 text-center">
@@ -221,14 +278,15 @@ const LearnMode = ({
                   className="absolute top-4 right-4"
                   onClick={(e) => {
                     e.stopPropagation();
-                    playAudio(currentVocab.word || currentVocab.pronunciation || "");
+                    playAudio(
+                      currentVocab.word || currentVocab.pronunciation || "",
+                    );
                   }}
                 >
                   <Volume2 className="h-6 w-6" />
                 </Button>
               </>
             ) : (
-              // Hiển thị meaning first
               <>
                 <p className="text-2xl font-semibold text-center">
                   {currentVocab.meaning}
@@ -242,16 +300,14 @@ const LearnMode = ({
             )}
           </div>
 
-          {/* Back of the card - điều chỉnh theo chế độ */}
           <div
-            className="absolute w-full h-full bg-card rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
+            className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
             style={{
               backfaceVisibility: "hidden",
-              transform: "rotateY(180deg)"
+              transform: "rotateY(180deg)",
             }}
           >
             {showWordFirst ? (
-              // Mặt sau khi hiển thị word first
               <>
                 <p className="text-2xl font-semibold text-center">
                   {currentVocab.meaning}
@@ -263,7 +319,6 @@ const LearnMode = ({
                 )}
               </>
             ) : (
-              // Mặt sau khi hiển thị meaning first
               <>
                 {currentVocab.word && (
                   <h2 className="text-5xl font-bold mb-2 text-center">
@@ -281,7 +336,9 @@ const LearnMode = ({
                   className="absolute top-4 right-4"
                   onClick={(e) => {
                     e.stopPropagation();
-                    playAudio(currentVocab.word || currentVocab.pronunciation || "");
+                    playAudio(
+                      currentVocab.word || currentVocab.pronunciation || "",
+                    );
                   }}
                 >
                   <Volume2 className="h-6 w-6" />
@@ -291,7 +348,12 @@ const LearnMode = ({
           </div>
         </motion.div>
 
-        <div className="flex justify-between items-center mt-6">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.3 }}
+          className="flex justify-between items-center mt-6"
+        >
           <Button
             onClick={handlePrev}
             disabled={currentIndex === 0}
@@ -300,22 +362,21 @@ const LearnMode = ({
             <ChevronLeft className="mr-2 h-4 w-4" />
             Prev
           </Button>
-          {/* Di chuyển button toggle xuống dưới cùng */}
-          <Button
-            onClick={toggleShowMode}
-            variant="outline"
-            size="lg"
-          >
+          <Button onClick={toggleShowMode} variant="outline" size="lg">
             {showWordFirst ? "Meaning First" : "Word First"}
           </Button>
           <Button onClick={handleNext} variant="outline">
             {currentIndex === vocabularies.length - 1 ? "Finish" : "Next"}
             <ChevronRight className="ml-2 h-4 w-4" />
           </Button>
-        </div>
+        </motion.div>
 
-        {/* Thêm dòng nút toggle pronunciation */}
-        <div className="flex justify-center mt-4">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.3 }}
+          className="flex justify-center mt-4"
+        >
           <Button
             onClick={togglePronunciation}
             variant={showPronunciation ? "default" : "outline"}
@@ -323,9 +384,14 @@ const LearnMode = ({
           >
             {showPronunciation ? "Hide" : "Show"} Pronunciation
           </Button>
-        </div>
+        </motion.div>
 
-        <div className="mt-8 grid grid-cols-2 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.3 }}
+          className="mt-8 grid grid-cols-2 gap-4"
+        >
           <Button
             onClick={handleNotRemembered}
             variant="destructive"
@@ -336,13 +402,25 @@ const LearnMode = ({
           <Button
             onClick={handleRemembered}
             variant="default"
-            className="w-full bg-green-600 hover:bg-green-700"
+            className="w-full"
+            style={{
+              backgroundColor: "hsl(var(--clr-success-a0))",
+              color: "hsl(var(--clr-light))",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor =
+                "hsl(var(--clr-success-a10))")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor =
+                "hsl(var(--clr-success-a0))")
+            }
           >
             Remember
           </Button>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };
 

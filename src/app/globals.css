@@ -51,47 +51,93 @@
     }
 
     .dark {
-        --background: 80 13% 10%; /* #181C14 - xanh đen rất tối */
-        --foreground: 30 14% 88%; /* #ECDFCC - be kem sáng cho text */
-        --card: 60 5% 23%; /* #3C3D37 - xám xanh tối */
-        --card-foreground: 30 14% 88%; /* #ECDFCC - be kem sáng */
-        --popover: 60 5% 23%; /* #3C3D37 - xám xanh tối */
-        --popover-foreground: 30 14% 88%; /* #ECDFCC - be kem sáng */
-        --primary: 25 85% 52%;
-        --primary-foreground: 80 13% 10%;
-        --secondary: 80 9% 42%; /* #697565 - xám xanh trung bình */
-        --secondary-foreground: 30 14% 88%; /* #ECDFCC - be kem sáng */
-        --muted: 80 9% 42%; /* #697565 - xám xanh trung bình */
-        --muted-foreground: 30 14% 88%; /* #ECDFCC - be kem sáng */
-        --accent: 195 90% 47%;
-        --accent-foreground: 80 13% 10%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 0 85.7% 97.3%;
-        --border: 80 9% 38%; /* #697565 biến thể tối hơn */
-        --input: 60 5% 23%; /* #3C3D37 - xám xanh tối */
-        --ring: 25 85% 60%;
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
+        /* Base colors */
+        --clr-dark: 0 0% 0%;
+        --clr-light: 0 0% 100%;
 
-        /* App gradient (dark): tone xanh đen và xám olive */
+        /* Primary colors - Blue theme */
+        --clr-primary-a0: 219 60% 62%; /* #5f85db */
+        --clr-primary-a10: 219 62% 67%; /* #7492df */
+        --clr-primary-a20: 219 66% 72%; /* #879fe4 */
+        --clr-primary-a30: 219 69% 76%; /* #99ace8 */
+        --clr-primary-a40: 219 73% 80%; /* #abb9ec */
+        --clr-primary-a50: 219 76% 84%; /* #bcc7f0 */
+
+        /* Surface colors - Grey theme */
+        --clr-surface-a0: 210 6% 15%; /* #26282b */
+        --clr-surface-a10: 210 6% 24%; /* #3a3c3f */
+        --clr-surface-a20: 210 5% 32%; /* #505254 */
+        --clr-surface-a30: 210 4% 41%; /* #67686b */
+        --clr-surface-a40: 210 3% 50%; /* #7e8082 */
+        --clr-surface-a50: 210 3% 59%; /* #979899 */
+
+        /* Tonal surface colors */
+        --clr-surface-tonal-a0: 223 13% 21%; /* #2d303a */
+        --clr-surface-tonal-a10: 223 11% 28%; /* #41444d */
+        --clr-surface-tonal-a20: 223 9% 36%; /* #565961 */
+        --clr-surface-tonal-a30: 223 7% 44%; /* #6c6e76 */
+        --clr-surface-tonal-a40: 223 5% 53%; /* #83858b */
+        --clr-surface-tonal-a50: 223 4% 63%; /* #9b9ca2 */
+
+        /* Semantic colors */
+        --clr-success-a0: 162 63% 36%; /* #22946e */
+        --clr-success-a10: 162 63% 56%; /* #47d5a6 */
+        --clr-success-a20: 162 63% 76%; /* #9ae8ce */
+
+        --clr-warning-a0: 36 60% 41%; /* #a87a2a */
+        --clr-warning-a10: 36 60% 61%; /* #d7ac61 */
+        --clr-warning-a20: 36 60% 81%; /* #ecd7b2 */
+
+        --clr-danger-a0: 0 65% 37%; /* #9c2121 */
+        --clr-danger-a10: 0 65% 57%; /* #d94a4a */
+        --clr-danger-a20: 0 65% 77%; /* #eb9e9e */
+
+        --clr-info-a0: 214 62% 34%; /* #21498a */
+        --clr-info-a10: 214 62% 54%; /* #4077d1 */
+        --clr-info-a20: 214 62% 74%; /* #92b2e5 */
+
+        /* Shadcn/UI mappings */
+        --background: 210 6% 15%; /* surface-a0 */
+        --foreground: 0 0% 100%; /* light */
+        --card: 210 6% 24%; /* surface-a10 */
+        --card-foreground: 0 0% 100%;
+        --popover: 223 13% 21%; /* surface-tonal-a0 */
+        --popover-foreground: 0 0% 100%;
+        --primary: 219 60% 62%; /* primary-a0 */
+        --primary-foreground: 0 0% 100%;
+        --secondary: 210 5% 32%; /* surface-a20 */
+        --secondary-foreground: 0 0% 100%;
+        --muted: 223 13% 21%; /* surface-tonal-a0 */
+        --muted-foreground: 223 4% 63%; /* surface-tonal-a50 */
+        --accent: 219 62% 67%; /* primary-a10 */
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 65% 37%; /* danger-a0 */
+        --destructive-foreground: 0 0% 100%;
+        --border: 210 5% 32%; /* surface-a20 */
+        --input: 223 13% 21%; /* surface-tonal-a0 */
+        --ring: 219 60% 62%; /* primary-a0 */
+        --chart-1: 219 60% 62%; /* primary */
+        --chart-2: 162 63% 56%; /* success */
+        --chart-3: 36 60% 61%; /* warning */
+        --chart-4: 0 65% 57%; /* danger */
+        --chart-5: 214 62% 54%; /* info */
+
+        /* App gradient (dark): blue and grey tones */
         --app-gradient:
             radial-gradient(
                 1200px circle at 15% 10%,
-                hsl(80 13% 12% / 0.9),
+                hsl(223 13% 18% / 0.9),
                 transparent 38%
             ),
             radial-gradient(
                 1200px circle at 85% 15%,
-                hsl(80 9% 35% / 0.8),
+                hsl(219 60% 25% / 0.6),
                 transparent 42%
             );
 
         /* Glassmorphism variables (dark) */
-        --glass-bg: rgba(24, 28, 20, 0.45); /* #181C14 với opacity */
-        --glass-border: rgba(236, 223, 204, 0.2); /* #ECDFCC với opacity */
+        --glass-bg: rgba(38, 40, 43, 0.45); /* surface-a0 với opacity */
+        --glass-border: rgba(95, 133, 219, 0.2); /* primary-a0 với opacity */
         --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.35);
         --glass-backdrop-blur: 14px;
     }
