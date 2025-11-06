@@ -3,40 +3,40 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, X } from "lucide-react";
-import { TopicForm } from "@/components/topics/TopicForm";
-import { useContext } from "react";
-import { TopicContext } from "@/context/TopicContext";
+import { ProjectForm } from "@/components/projects/ProjectForm";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function TopicCreate({
-  projectId,
-  onTopicCreated,
+export default function ProjectCreate({
+  onProjectCreated,
+  onSubmit,
 }: {
-  projectId: string;
-  onTopicCreated?: () => void;
+  onProjectCreated?: () => void;
+  onSubmit: (data: any) => Promise<boolean>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const { addTopic } = useContext(TopicContext);
   const router = useRouter();
 
   const handleSubmit = async (data: any) => {
-    await addTopic(projectId, data);
-    onTopicCreated?.();
-    setIsOpen(false);
-    // refresh server-rendered data so the new topic appears immediately
-    try {
-      router.refresh();
-    } catch (e) {
-      /* noop */
+    const success = await onSubmit(data);
+    if (success) {
+      onProjectCreated?.();
+      setIsOpen(false);
+      // refresh server-rendered data so the new project appears immediately
+      try {
+        router.refresh();
+      } catch (e) {
+        /* noop */
+      }
     }
+    return success;
   };
 
   return (
     <>
       <Button onClick={() => setIsOpen(true)}>
         <PlusCircle className="mr-2 h-4 w-4" />
-        New Topic
+        Add Project
       </Button>
 
       <AnimatePresence mode="wait">
@@ -69,10 +69,10 @@ export default function TopicCreate({
                 <div className="flex items-center justify-between border-b border-border p-6">
                   <div>
                     <h2 className="text-xl font-semibold">
-                      Create a New Topic
+                      Create a New Project
                     </h2>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Add a new topic to organize your vocabulary
+                      Add a new project to organize your vocabulary learning
                     </p>
                   </div>
                   <Button
@@ -87,9 +87,9 @@ export default function TopicCreate({
 
                 {/* Content */}
                 <div className="p-6 max-h-[70vh] overflow-y-auto">
-                  <TopicForm
+                  <ProjectForm
                     onSubmit={handleSubmit}
-                    submitButtonText="Create Topic"
+                    submitButtonText="Create Project"
                     onClose={() => setIsOpen(false)}
                   />
                 </div>

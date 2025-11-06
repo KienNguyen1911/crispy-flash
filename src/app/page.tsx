@@ -8,7 +8,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -17,23 +17,16 @@ import {
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
-import { ProjectForm } from "@/components/projects/ProjectForm";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
+import ProjectCreate from "@/components/projects/ProjectCreate";
 import DataLoader from "@/components/ui/DataLoader";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
-import { useAuthFetcher } from '@/hooks/useAuthFetcher';
+import { useAuthFetcher } from "@/hooks/useAuthFetcher";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
 
@@ -42,10 +35,7 @@ export default function Dashboard() {
   const fetcher = useAuthFetcher();
 
   // Keep project creation/deletion working; list will be handled by SWRInfinite below
-  const { mutate: mutateProjectsLegacy } = useSWR(
-    null,
-    null
-  );
+  const { mutate: mutateProjectsLegacy } = useSWR(null, null);
 
   const PAGE_SIZE = 20;
   const getKey = (pageIndex: number, previousPageData: any) => {
@@ -61,7 +51,7 @@ export default function Dashboard() {
     size,
     setSize,
     isValidating,
-    mutate: mutateProjectsPages
+    mutate: mutateProjectsPages,
   } = useSWRInfinite(getKey, fetcher);
 
   const projects = projectPages
@@ -72,11 +62,14 @@ export default function Dashboard() {
           name: proj.title ?? proj.name ?? "",
           description: proj.description ?? "",
           topicsCount: proj.topicsCount ?? 0,
-          wordsCount: proj.wordsCount ?? 0
+          wordsCount: proj.wordsCount ?? 0,
         }))
     : [];
 
-  const lastPage = projectPages && projectPages.length > 0 ? projectPages[projectPages.length - 1] : null;
+  const lastPage =
+    projectPages && projectPages.length > 0
+      ? projectPages[projectPages.length - 1]
+      : null;
   const hasMore = lastPage ? Boolean(lastPage.hasMore) : false;
 
   // Ensure hooks are declared before any early returns
@@ -89,15 +82,18 @@ export default function Dashboard() {
     if (!elem) return;
 
     let blocked = false;
-    const observer = new IntersectionObserver((entries) => {
-      const first = entries[0];
-      if (first.isIntersecting && !blocked && !isValidating) {
-        blocked = true;
-        setSize((prev) => prev + 1).finally(() => {
-          blocked = false;
-        });
-      }
-    }, { root: null, rootMargin: "200px", threshold: 0.1 });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && !blocked && !isValidating) {
+          blocked = true;
+          setSize((prev) => prev + 1).finally(() => {
+            blocked = false;
+          });
+        }
+      },
+      { root: null, rootMargin: "200px", threshold: 0.1 },
+    );
 
     observer.observe(elem);
     return () => observer.disconnect();
@@ -107,11 +103,11 @@ export default function Dashboard() {
     try {
       const body = {
         title: projectData.name,
-        description: projectData.description || ""
+        description: projectData.description || "",
       };
       await apiClient("/api/projects", {
         method: "POST",
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
       // Revalidate from first page to include the new project at the top
       await mutateProjectsPages();
@@ -126,7 +122,7 @@ export default function Dashboard() {
   const deleteProject = async (projectId: string) => {
     try {
       await apiClient(`/api/projects/${projectId}`, {
-        method: "DELETE"
+        method: "DELETE",
       });
       await mutateProjectsPages();
       toast.success("Project deleted successfully");
@@ -160,7 +156,7 @@ export default function Dashboard() {
               Sign In with Google
             </Button>
             <p className="text-sm text-muted-foreground">
-              New to LinguaFlash? Check out our {" "}
+              New to LinguaFlash? Check out our{" "}
               <a href="/guide" className="text-primary hover:underline">
                 complete guide
               </a>{" "}
@@ -178,33 +174,29 @@ export default function Dashboard() {
 
   return (
     <div className="container mx-auto max-w-5xl py-8 px-4">
-      <Card className="mb-8 p-6">
+      <Card className="p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold font-headline">My Projects</h1>
+            <h1 className="text-3xl font-bold font-headline">
+              Master Vocabulary!
+            </h1>
             <p className="text-muted-foreground">
-              Organize your vocabulary learning into projects.
+              Flashcards only unlock maximum recall power when they are
+              organized. Start systematizing your vocabulary today!
             </p>
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                New Project
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create a New Project</DialogTitle>
-              </DialogHeader>
-              <ProjectForm
-                onSubmit={addProject}
-                submitButtonText="Create Project"
-              />
-            </DialogContent>
-          </Dialog>
         </div>
       </Card>
+
+      <div className="flex items-center justify-between py-6">
+        <h2 className="text-2xl font-bold font-headline text-foreground">
+          All Projects
+        </h2>
+        <ProjectCreate
+          onSubmit={addProject}
+          onProjectCreated={() => mutateProjectsPages()}
+        />
+      </div>
 
       {projects.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -212,7 +204,7 @@ export default function Dashboard() {
             <div key={project.id}>
               <Card
                 className="
-                  relative h-full flex flex-col 
+                  relative h-full flex flex-col
                   hover:shadow-lg hover:scale-105 hover:ring-primary/50 transition-all duration-300
                 "
               >
@@ -255,7 +247,9 @@ export default function Dashboard() {
                       </p>
                       <div className="mt-4 flex justify-center gap-2">
                         <AlertDialogCancel asChild>
-                          <Button variant="outline" className="mt-0">Cancel</Button>
+                          <Button variant="outline" className="mt-0">
+                            Cancel
+                          </Button>
                         </AlertDialogCancel>
                         <AlertDialogAction asChild>
                           <Button
@@ -294,13 +288,15 @@ export default function Dashboard() {
           </p>
         </div>
       )}
-
       {/* Infinite scroll sentinel and loading indicator */}
       {hasMore && (
         <div className="mt-8">
           <div ref={loadMoreRef} className="h-10 w-full" />
           {isValidating && (
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground" aria-live="polite">
+            <div
+              className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
+              aria-live="polite"
+            >
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
               Loading more...
             </div>

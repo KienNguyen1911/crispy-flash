@@ -1,18 +1,20 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useDueReviews, useReviewSession } from '@/hooks/use-srs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { 
-  ChevronLeft, 
-  Brain,
-  Clock
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { VocabularyWithSrs } from '@/lib/api';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useDueReviews, useReviewSession } from "@/hooks/use-srs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { ChevronLeft, Brain, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { VocabularyWithSrs } from "@/lib/api";
 
 interface ReviewSessionProps {
   onComplete?: () => void;
@@ -34,11 +36,11 @@ function shuffleArray<T>(array: T[]): T[] {
 export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
   const { dueReviews, isLoading } = useDueReviews();
   const { submitFeedback } = useReviewSession();
-  
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sessionReviews, setSessionReviews] = useState<VocabularyWithSrs[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // New state for multiple choice & timer
   const [answerOptions, setAnswerOptions] = useState<string[]>([]);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -69,15 +71,17 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
     setTimeLeft(TIME_LIMIT);
 
     const distractors = sessionReviews
-      .filter(v => v.id !== currentVocab.id)
-      .map(v => v.meaning);
-    
+      .filter((v) => v.id !== currentVocab.id)
+      .map((v) => v.meaning);
+
     const uniqueDistractors = [...new Set(distractors)];
     const shuffledDistractors = shuffleArray(uniqueDistractors).slice(0, 3);
 
-    const options = shuffleArray([...shuffledDistractors, currentVocab.meaning]);
+    const options = shuffleArray([
+      ...shuffledDistractors,
+      currentVocab.meaning,
+    ]);
     setAnswerOptions(options);
-
   }, [currentVocab, sessionReviews]);
 
   // Timer logic
@@ -85,7 +89,7 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
     if (!currentVocab || isAnswered) return;
 
     const timer = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
+      setTimeLeft((prev) => prev - 1);
     }, 1000);
 
     if (timeLeft <= 0) {
@@ -100,48 +104,54 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
     if (currentIndex === sessionReviews.length - 1) {
       onComplete?.();
     } else {
-      setCurrentIndex(prev => prev + 1);
+      setCurrentIndex((prev) => prev + 1);
       setIsAnswered(false);
       setSelectedAnswer(null);
       setTimeLeft(TIME_LIMIT);
     }
   }, [currentIndex, sessionReviews.length, onComplete]);
 
-  const handleAnswerSelect = useCallback(async (selectedMeaning: string | null) => {
-    if (isAnswered) return;
+  const handleAnswerSelect = useCallback(
+    async (selectedMeaning: string | null) => {
+      if (isAnswered) return;
 
-    setIsAnswered(true);
-    setIsSubmitting(true);
-    setSelectedAnswer(selectedMeaning);
+      setIsAnswered(true);
+      setIsSubmitting(true);
+      setSelectedAnswer(selectedMeaning);
 
-    const timeSpent = TIME_LIMIT - timeLeft;
-    const isCorrect = selectedMeaning === currentVocab?.meaning;
+      const timeSpent = TIME_LIMIT - timeLeft;
+      const isCorrect = selectedMeaning === currentVocab?.meaning;
 
-    let quality: number;
-    if (!isCorrect || timeSpent > 7) {
-      quality = 0; // Khó
-    } else if (timeSpent > 4) {
-      quality = 3; // Trung bình
-    } else {
-      quality = 5; // Dễ
-    }
-
-    const status = isCorrect ? 'REMEMBERED' : 'NOT_REMEMBERED';
-
-    try {
-      if (currentVocab) {
-        await submitFeedback(currentVocab.id, { quality, timeSpent, status });
+      let quality: number;
+      if (!isCorrect || timeSpent > 7) {
+        quality = 0; // Hard
+      } else if (timeSpent > 4) {
+        quality = 3; // Medium
+      } else {
+        quality = 5; // Easy
       }
-    } catch (error) {
-      console.error('Failed to submit review:', error);
-    } finally {
-      setIsSubmitting(false);
-      // Wait a moment to show feedback before moving to the next card
-      setTimeout(() => {
-        moveToNext();
-      }, isCorrect ? 1000 : 2000); // Longer delay for incorrect answers
-    }
-  }, [isAnswered, timeLeft, currentVocab, submitFeedback, moveToNext]);
+
+      const status = isCorrect ? "REMEMBERED" : "NOT_REMEMBERED";
+
+      try {
+        if (currentVocab) {
+          await submitFeedback(currentVocab.id, { quality, timeSpent, status });
+        }
+      } catch (error) {
+        console.error("Failed to submit review:", error);
+      } finally {
+        setIsSubmitting(false);
+        // Wait a moment to show feedback before moving to the next card
+        setTimeout(
+          () => {
+            moveToNext();
+          },
+          isCorrect ? 1000 : 2000,
+        ); // Longer delay for incorrect answers
+      }
+    },
+    [isAnswered, timeLeft, currentVocab, submitFeedback, moveToNext],
+  );
 
   if (isLoading) {
     return <ReviewSessionSkeleton />;
@@ -154,12 +164,12 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
           <div className="text-center space-y-4">
             <Brain className="h-12 w-12 mx-auto text-muted-foreground" />
             <div>
-              <h3 className="text-lg font-semibold">Không có từ nào cần ôn tập</h3>
+              <h3 className="text-lg font-semibold">No words to review</h3>
               <p className="text-sm text-muted-foreground">
-                Hãy quay lại sau khi học thêm từ mới!
+                Come back after learning more words!
               </p>
             </div>
-            <Button onClick={onCancel}>Quay lại</Button>
+            <Button onClick={onCancel}>Go Back</Button>
           </div>
         </CardContent>
       </Card>
@@ -173,13 +183,18 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
       {/* Progress Bar & Timer */}
       <div className="space-y-2">
         <div className="flex justify-between text-sm font-medium">
-          <span>Tiến độ: {currentIndex + 1} / {sessionReviews.length}</span>
+          <span>
+            Progress: {currentIndex + 1} / {sessionReviews.length}
+          </span>
           <span className="flex items-center">
             <Clock className="h-4 w-4 mr-1.5" />
             {timeLeft}s
           </span>
         </div>
-        <Progress value={(timeLeft / TIME_LIMIT) * 100} className="h-2 transition-all duration-1000 linear" />
+        <Progress
+          value={(timeLeft / TIME_LIMIT) * 100}
+          className="h-2 transition-all duration-1000 linear"
+        />
       </div>
 
       {/* Main Card */}
@@ -187,14 +202,14 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
         <CardHeader>
           <div className="flex justify-between items-start">
             <div className="space-y-1">
-              <CardTitle>Nghĩa của từ này là gì?</CardTitle>
+              <CardTitle>What is the meaning of this word?</CardTitle>
               <CardDescription>
-                Chọn đáp án đúng trong vòng {TIME_LIMIT} giây.
+                Select the correct answer within {TIME_LIMIT} seconds.
               </CardDescription>
             </div>
             <Badge variant="outline">
               <Clock className="h-3 w-3 mr-1" />
-              {currentVocab.interval} ngày
+              {currentVocab.interval} days
             </Badge>
           </div>
         </CardHeader>
@@ -205,7 +220,7 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
               {currentVocab.word || currentVocab.pronunciation}
             </div>
             {currentVocab.pronunciation && (
-              <div className='text-2xl font-semibold text-secondary'>
+              <div className="text-2xl font-semibold text-secondary">
                 {currentVocab.pronunciation}
               </div>
             )}
@@ -217,7 +232,11 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
               const isCorrect = option === currentVocab.meaning;
               const isSelected = option === selectedAnswer;
 
-              let buttonVariant: "default" | "destructive" | "secondary" | "outline" = "outline";
+              let buttonVariant:
+                | "default"
+                | "destructive"
+                | "secondary"
+                | "outline" = "outline";
               if (isAnswered) {
                 if (isCorrect) {
                   // Correct answer is now handled by className
@@ -235,8 +254,10 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
                   disabled={isAnswered}
                   className={cn(
                     "h-auto py-4 text-base justify-center text-center whitespace-normal",
-                    isAnswered && isCorrect && "bg-green-600 text-white hover:bg-green-700",
-                    isAnswered && !isCorrect && !isSelected && "opacity-50"
+                    isAnswered &&
+                      isCorrect &&
+                      "bg-green-600 text-white hover:bg-green-700",
+                    isAnswered && !isCorrect && !isSelected && "opacity-50",
                   )}
                 >
                   {option}
@@ -256,10 +277,12 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
               Dừng lại
             </Button>
             <div className="text-sm text-muted-foreground">
-              Lần ôn tập trước: {currentVocab.lastReviewDate 
-                ? new Date(currentVocab.lastReviewDate).toLocaleDateString('vi-VN')
-                : 'Chưa ôn tập'
-              }
+              Lần ôn tập trước:{" "}
+              {currentVocab.lastReviewDate
+                ? new Date(currentVocab.lastReviewDate).toLocaleDateString(
+                    "vi-VN",
+                  )
+                : "Chưa ôn tập"}
             </div>
           </div>
         </CardContent>
@@ -278,7 +301,7 @@ function ReviewSessionSkeleton() {
         </div>
         <div className="h-2 bg-gray-200 rounded animate-pulse" />
       </div>
-      
+
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ReviewDashboard } from '@/components/srs/ReviewDashboard';
-import { ReviewSession } from '@/components/srs/ReviewSession';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Brain } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { ReviewDashboard } from "@/components/srs/ReviewDashboard";
+import { ReviewSession } from "@/components/srs/ReviewSession";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Brain } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function ReviewPage() {
   const router = useRouter();
@@ -30,13 +30,11 @@ export default function ReviewPage() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Brain className="h-6 w-6 text-blue-600" />
-              <h1 className="text-2xl font-bold">Ôn tập thông minh</h1>
+              <h1 className="text-2xl font-bold">Smart Review</h1>
             </div>
           </div>
           {!isInSession && (
-            <Button onClick={handleStartSession}>
-              Bắt đầu ôn tập
-            </Button>
+            <Button onClick={handleStartSession}>Start Review</Button>
           )}
         </div>
       </div>

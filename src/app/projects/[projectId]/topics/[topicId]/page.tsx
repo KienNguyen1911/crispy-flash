@@ -163,7 +163,7 @@ export default function TopicDetailPage() {
     if (shouldPoll) {
       const pollInterval = setInterval(async () => {
         await mutateTopic();
-      }, 2000); // Poll every 2 seconds
+      }, 5000); // Poll every 5 seconds
 
       return () => clearInterval(pollInterval);
     }

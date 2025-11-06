@@ -1,16 +1,25 @@
-'use client';
+"use client";
 
-import { useDueReviews, useDueReviewCount } from '@/hooks/use-srs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Clock, AlertCircle, CheckCircle } from 'lucide-react';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { useDueReviews, useDueReviewCount } from "@/hooks/use-srs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Clock, AlertCircle, CheckCircle } from "lucide-react";
+import { format } from "date-fns";
 
 export function ReviewDashboard() {
   const { dueReviews, isLoading, isError } = useDueReviews();
-  const { count, dueToday, overdue, isLoading: countLoading } = useDueReviewCount();
+  const {
+    count,
+    dueToday,
+    overdue,
+    isLoading: countLoading,
+  } = useDueReviewCount();
 
   if (isLoading || countLoading) {
     return <ReviewDashboardSkeleton />;
@@ -22,7 +31,7 @@ export function ReviewDashboard() {
         <CardContent className="pt-6">
           <div className="flex items-center gap-2 text-red-600">
             <AlertCircle className="h-5 w-5" />
-            <span>Có lỗi xảy ra khi tải dữ liệu ôn tập</span>
+            <span>Error loading review data</span>
           </div>
         </CardContent>
       </Card>
@@ -37,39 +46,39 @@ export function ReviewDashboard() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng số cần ôn tập</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Reviews</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{count}</div>
             <p className="text-xs text-muted-foreground">
-              {overdue > 0 && `${overdue} từ quá hạn`}
+              {overdue > 0 && `${overdue} overdue`}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ôn tập hôm nay</CardTitle>
+            <CardTitle className="text-sm font-medium">Review Today</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{dueToday}</div>
             <p className="text-xs text-muted-foreground">
-              Cần ôn tập trong hôm nay
+              Due for review today
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Từ quá hạn</CardTitle>
+            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
             <AlertCircle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">{overdue}</div>
             <p className="text-xs text-muted-foreground">
-              Cần ôn tập ngay lập tức
+              Need immediate review
             </p>
           </CardContent>
         </Card>
@@ -78,22 +87,24 @@ export function ReviewDashboard() {
       {/* Action Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Ôn tập thông minh</CardTitle>
+          <CardTitle>Smart Review</CardTitle>
           <CardDescription>
-            Hệ thống SRS sẽ giúp bạn nhớ từ vựng lâu hơn với thuật toán SuperMemo 2
+            The SRS system helps you remember vocabulary longer with SuperMemo 2
+            algorithm
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-sm font-medium">
-                {hasDueReviews ? 'Bạn có từ cần ôn tập' : 'Không có từ nào cần ôn tập'}
+                {hasDueReviews
+                  ? "You have words to review"
+                  : "No words to review"}
               </p>
               <p className="text-xs text-muted-foreground">
-                {hasDueReviews 
-                  ? `Bắt đầu ôn tập ${count} từ ngay bây giờ`
-                  : 'Hãy học thêm từ mới để có từ cần ôn tập'
-                }
+                {hasDueReviews
+                  ? `Start reviewing ${count} words now`
+                  : "Learn more words to have reviews"}
               </p>
             </div>
           </div>
@@ -104,38 +115,42 @@ export function ReviewDashboard() {
       {hasDueReviews && (
         <Card>
           <CardHeader>
-            <CardTitle>Danh sách từ cần ôn tập</CardTitle>
-            <CardDescription>
-              Các từ sắp đến hạn hoặc đã quá hạn ôn tập
-            </CardDescription>
+            <CardTitle>Review List</CardTitle>
+            <CardDescription>Words due or overdue for review</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {dueReviews.slice(0, 5).map((vocab) => (
-                <div key={vocab.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  
+                <div
+                  key={vocab.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
                   {/* 👈 Thay đổi ở đây: Thêm 'min-w-0' để đảm bảo flex item này có thể xuống dòng */}
-                  <div className="space-y-1 min-w-0"> 
+                  <div className="space-y-1 min-w-0">
                     <div className="font-medium">{vocab.word}</div>
-                    
+
                     {/* 👈 Thêm 'text-wrap' để nghĩa tự động xuống dòng */}
-                    <div className="text-sm text-muted-foreground text-wrap">{vocab.meaning}</div>
+                    <div className="text-sm text-muted-foreground text-wrap">
+                      {vocab.meaning}
+                    </div>
                   </div>
-                  
+
                   {/* 👈 Thêm 'flex-shrink-0' để nhóm Badge & Ngày tháng không bị co lại */}
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <Badge variant={vocab.interval > 21 ? 'default' : 'secondary'}>
-                      {vocab.interval > 21 ? 'Lâu dài' : 'Ngắn hạn'}
+                    <Badge
+                      variant={vocab.interval > 21 ? "default" : "secondary"}
+                    >
+                      {vocab.interval > 21 ? "Long-term" : "Short-term"}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      {format(new Date(vocab.nextReviewDate), 'dd/MM', { locale: vi })}
+                      {format(new Date(vocab.nextReviewDate), "MM/dd")}
                     </span>
                   </div>
                 </div>
               ))}
               {dueReviews.length > 5 && (
                 <div className="text-center text-sm text-muted-foreground">
-                  Và {dueReviews.length - 5} từ khác...
+                  And {dueReviews.length - 5} more words...
                 </div>
               )}
             </div>

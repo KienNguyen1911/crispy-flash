@@ -1,4 +1,4 @@
-"use client"
+"use client";
 /**
  * Note: Use position fixed according to your needs
  * Desktop navbar is better positioned at the bottom
@@ -23,18 +23,27 @@ export const FloatingDock = ({
   items,
   desktopClassName,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string; isCurrentPage?: boolean }[];
+  items: {
+    title: string;
+    icon: React.ReactNode;
+    href: string;
+    isCurrentPage?: boolean;
+  }[];
   desktopClassName?: string;
 }) => {
   return <FloatingDockDesktop items={items} className={desktopClassName} />;
 };
 
-
 const FloatingDockDesktop = ({
   items,
   className,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string; isCurrentPage?: boolean }[];
+  items: {
+    title: string;
+    icon: React.ReactNode;
+    href: string;
+    isCurrentPage?: boolean;
+  }[];
   className?: string;
 }) => {
   const [isMobile, setIsMobile] = useState(false);
@@ -42,12 +51,12 @@ const FloatingDockDesktop = ({
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+      setIsMobile(window.innerWidth < 768 || "ontouchstart" in window);
     };
 
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   return (
@@ -55,7 +64,7 @@ const FloatingDockDesktop = ({
       onMouseMove={!isMobile ? (e) => mouseX.set(e.pageX) : undefined}
       onMouseLeave={!isMobile ? () => mouseX.set(Infinity) : undefined}
       className={cn(
-        "fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 mx-auto h-16 items-end gap-4 rounded-2xl bg-gray-50 px-4 pb-3 flex dark:bg-neutral-900",
+        "fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 mx-auto h-16 items-end gap-4 rounded-2xl bg-gray-50 px-4 pb-3 flex dark:bg-neutral-900",
         className,
       )}
     >
@@ -98,10 +107,22 @@ function IconContainer({
   });
 
   // Disable animations on mobile
-  let widthTransform = useTransform(distance, [-150, 0, 150], isMobile ? [40, 40, 40] : [40, 80, 40]);
-  let heightTransform = useTransform(distance, [-150, 0, 150], isMobile ? [40, 40, 40] : [40, 80, 40]);
+  let widthTransform = useTransform(
+    distance,
+    [-150, 0, 150],
+    isMobile ? [40, 40, 40] : [40, 80, 40],
+  );
+  let heightTransform = useTransform(
+    distance,
+    [-150, 0, 150],
+    isMobile ? [40, 40, 40] : [40, 80, 40],
+  );
 
-  let widthTransformIcon = useTransform(distance, [-150, 0, 150], isMobile ? [20, 20, 20] : [20, 40, 20]);
+  let widthTransformIcon = useTransform(
+    distance,
+    [-150, 0, 150],
+    isMobile ? [20, 20, 20] : [20, 40, 20],
+  );
   let heightTransformIcon = useTransform(
     distance,
     [-150, 0, 150],
@@ -167,9 +188,5 @@ function IconContainer({
     return content;
   }
 
-  return (
-    <Link href={href}>
-      {content}
-    </Link>
-  );
+  return <Link href={href}>{content}</Link>;
 }

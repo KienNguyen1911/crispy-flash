@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -12,15 +12,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import type { Topic } from '@/lib/types';
-import { DialogClose } from '../ui/dialog';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import type { Topic } from "@/lib/types";
 
 const formSchema = z.object({
-  title: z.string().min(1, 'Topic title is required.'),
-  description: z.string().min(1, 'Description is required.'),
+  title: z
+    .string()
+    .min(1, "Topic title is required.")
+    .max(100, "Title is too long."),
+  description: z.string().max(500, "Description is too long.").nullable(),
 });
 
 type TopicFormValues = z.infer<typeof formSchema>;
@@ -28,30 +30,44 @@ type TopicFormValues = z.infer<typeof formSchema>;
 interface TopicFormProps {
   topic?: Topic;
   // Use the validated form shape for onSubmit so title/description are always present.
-  onSubmit: (data: TopicFormValues | (TopicFormValues & { id: string })) => void;
+  onSubmit: (
+    data: TopicFormValues | (TopicFormValues & { id: string }),
+  ) => void;
   submitButtonText?: string;
+  onClose?: () => void;
 }
 
-export function TopicForm({ topic, onSubmit, submitButtonText = 'Save' }: TopicFormProps) {
+export function TopicForm({
+  topic,
+  onSubmit,
+  submitButtonText = "Save",
+  onClose,
+}: TopicFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const form = useForm<TopicFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: topic?.title ?? '',
-      description: topic?.description ?? '',
+      title: topic?.title ?? "",
+      description: topic?.description ?? "",
     },
   });
 
-  const handleSubmit = (data: TopicFormValues) => {
+  const handleSubmit = async (data: TopicFormValues) => {
     setIsSubmitting(true);
-    if (topic) {
-        onSubmit({ ...data, id: topic.id });
-    } else {
-        onSubmit(data);
+    try {
+      if (topic) {
+        await onSubmit({ ...data, id: topic.id });
+      } else {
+        await onSubmit(data);
+      }
+      form.reset();
+      onClose?.();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
-    document.getElementById('closeDialog')?.click();
   };
 
   return (
@@ -84,12 +100,9 @@ export function TopicForm({ topic, onSubmit, submitButtonText = 'Save' }: TopicF
           )}
         />
         <div className="flex justify-center gap-2">
-            <DialogClose asChild>
-                <Button id="closeDialog" variant="ghost">Cancel</Button>
-            </DialogClose>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : submitButtonText}
-            </Button>
+          <Button className="w-full" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : submitButtonText}
+          </Button>
         </div>
       </form>
     </Form>
