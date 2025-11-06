@@ -30,6 +30,8 @@ import { generateContent } from "@/services/topics-api";
 import type { AIGeneratedContent } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatePresence, motion } from "framer-motion";
+import GenerateStoryDialog from "@/components/GenerateStoryDialog";
+import StoryDisplay from "@/components/StoryDisplay";
 
 // Dynamic imports to split heavy client bundles
 const DataTable = dynamic(
@@ -69,6 +71,7 @@ export default function TopicDetailPage() {
   const [isLearnMode, setIsLearnMode] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [generatedContent, setGeneratedContent] =
     useState<AIGeneratedContent | null>(null);
   const fetcher = useAuthFetcher();
@@ -91,7 +94,7 @@ export default function TopicDetailPage() {
   const isLoading = isProjectLoading || isTopicLoading;
   const hasVocabulary = topic?.vocabulary && topic.vocabulary.length > 0;
 
-  const handleGenerateContent = useCallback(async () => {
+  const handleGenerateContent = useCallback(() => {
     if (!hasVocabulary) {
       toast({
         title: "No vocabulary",
@@ -122,37 +125,49 @@ export default function TopicDetailPage() {
       return;
     }
 
-    setIsGenerating(true);
-    try {
-      const response = await generateContent(topicId);
-
-      if (!response.ok) {
-        throw new Error("Failed to trigger content generation");
-      }
-
-      toast({
-        title: "Generating content...",
-        description: "Please wait while we create your story.",
-      });
-    } catch (error) {
-      console.error("Content generation error:", error);
-      setIsGenerating(false);
-      toast({
-        title: "Generation failed",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to trigger content generation. Please try again.",
-        variant: "destructive",
-      });
-    }
+    // Open dialog to get settings
+    setIsDialogOpen(true);
   }, [
     hasVocabulary,
-    topicId,
     topic?.contentGenerationStatus,
     topic?.contextualPracticeContent,
     toast,
   ]);
+
+  const handleGenerateWithSettings = useCallback(
+    async (
+      language: "english" | "vietnamese",
+      difficulty: "easy" | "medium" | "hard",
+    ) => {
+      setIsDialogOpen(false);
+      setIsGenerating(true);
+
+      try {
+        const response = await generateContent(topicId, language, difficulty);
+
+        if (!response.ok) {
+          throw new Error("Failed to trigger content generation");
+        }
+
+        toast({
+          title: "Generating content...",
+          description: "Please wait while we create your story.",
+        });
+      } catch (error) {
+        console.error("Content generation error:", error);
+        setIsGenerating(false);
+        toast({
+          title: "Generation failed",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to trigger content generation. Please try again.",
+          variant: "destructive",
+        });
+      }
+    },
+    [topicId, toast],
+  );
 
   // Poll topic data when generating (from local state or DB status)
   useEffect(() => {
@@ -163,7 +178,7 @@ export default function TopicDetailPage() {
     if (shouldPoll) {
       const pollInterval = setInterval(async () => {
         await mutateTopic();
-      }, 5000); // Poll every 5 seconds
+      }, 10000); // Poll every 5 seconds
 
       return () => clearInterval(pollInterval);
     }
@@ -317,89 +332,40 @@ export default function TopicDetailPage() {
       </AnimatePresence>
 
       <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
-              Generated Story
+              Generated Stories
             </SheetTitle>
             <SheetDescription>
-              A short story using your vocabulary words
+              Multiple short stories using your vocabulary words
             </SheetDescription>
           </SheetHeader>
 
-          {generatedContent && (
-            <div className="mt-6 space-y-6">
-              {/* Story Section */}
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold">Story</h3>
-                <div className="rounded-lg border bg-muted/50 p-4">
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {generatedContent.story}
-                  </p>
-                </div>
+          <div className="mt-6">
+            {generatedContent ? (
+              <>
+                <StoryDisplay
+                  stories={generatedContent.stories}
+                  vocabularyList={topic.vocabulary || []}
+                />
+              </>
+            ) : (
+              <div className="p-8 text-center text-muted-foreground">
+                <p>No content generated yet</p>
               </div>
-
-              {/* Target Words Section */}
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold">Vocabulary Used</h3>
-                <div className="flex flex-wrap gap-2">
-                  {generatedContent.targetWords.map((word, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium"
-                    >
-                      {word}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Questions Section */}
-              {generatedContent.questions &&
-                generatedContent.questions.length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-lg font-semibold">
-                      Practice Questions
-                    </h3>
-                    <div className="space-y-4">
-                      {generatedContent.questions.map((q, index) => (
-                        <div
-                          key={index}
-                          className="rounded-lg border p-4 space-y-2"
-                        >
-                          <p className="font-medium text-sm">
-                            {index + 1}. {q.question}
-                          </p>
-                          {q.options && q.options.length > 0 && (
-                            <ul className="ml-4 space-y-1">
-                              {q.options.map((option, optIndex) => (
-                                <li
-                                  key={optIndex}
-                                  className="text-sm text-muted-foreground"
-                                >
-                                  {String.fromCharCode(65 + optIndex)}. {option}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                          <details className="mt-2">
-                            <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
-                              Show answer
-                            </summary>
-                            <p className="mt-2 text-sm text-green-600 dark:text-green-400">
-                              {q.answer}
-                            </p>
-                          </details>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-            </div>
-          )}
+            )}
+          </div>
         </SheetContent>
       </Sheet>
+
+      <GenerateStoryDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onGenerate={handleGenerateWithSettings}
+        isGenerating={isGenerating}
+      />
     </>
   );
 }
