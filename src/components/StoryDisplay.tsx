@@ -117,25 +117,6 @@ export default function StoryDisplay({
 
   return (
     <div className="space-y-6">
-      {/* Language Toggle */}
-      {/*<div className="flex items-center justify-between p-4 rounded-lg border-2 border-primary/20 bg-primary/5 shadow-sm">
-        <div className="flex items-center gap-2">
-          <Languages className="h-5 w-5 text-primary" />
-          <span className="text-sm font-semibold text-foreground">
-            {showTranslation ? "Showing: Translation" : "Showing: Original"}
-          </span>
-        </div>
-        <Button
-          variant="default"
-          size="default"
-          onClick={() => setShowTranslation(!showTranslation)}
-          className="font-medium"
-        >
-          <Languages className="mr-2 h-4 w-4" />
-          {showTranslation ? "Show Original" : "Show Translation"}
-        </Button>
-      </div>*/}
-
       {stories.map((story, storyIndex) => (
         <Card key={storyIndex} className="p-6 space-y-4">
           {/* Story Title */}

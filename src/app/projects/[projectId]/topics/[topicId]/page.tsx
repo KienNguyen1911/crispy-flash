@@ -29,9 +29,10 @@ import {
 import { generateContent } from "@/services/topics-api";
 import type { AIGeneratedContent } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { AnimatePresence, motion } from "framer-motion";
+
 import GenerateStoryDialog from "@/components/GenerateStoryDialog";
 import StoryDisplay from "@/components/StoryDisplay";
+import { AnimatePresence, motion } from "motion/react";
 
 // Dynamic imports to split heavy client bundles
 const DataTable = dynamic(

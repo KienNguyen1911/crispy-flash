@@ -30,6 +30,12 @@
         --chart-4: 43 74% 66%;
         --chart-5: 27 87% 67%;
 
+        /* Button semantic colors (light) */
+        --success: 162 63% 41%;
+        --success-foreground: 0 0% 100%;
+        --warning: 36 100% 50%;
+        --warning-foreground: 0 0% 100%;
+
         /* App gradient (light): warm-peach to soft-blue */
         --app-gradient:
             radial-gradient(
@@ -100,6 +106,12 @@
         --clr-info-a0: 214 62% 34%;
         --clr-info-a10: 214 62% 54%;
         --clr-info-a20: 214 62% 74%;
+
+        /* Button semantic colors */
+        --success: 162 63% 36%;
+        --success-foreground: 0 0% 100%;
+        --warning: 36 60% 41%;
+        --warning-foreground: 0 0% 100%;
 
         /* Shadcn/UI mappings */
         --background: var(--clr-surface-a0); /* #000000 - Black */

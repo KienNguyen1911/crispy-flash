@@ -10,6 +10,9 @@ import {
   Volume2,
   Check,
   RotateCcw,
+  XCircle,
+  CheckCircle,
+  Redo2,
 } from "lucide-react";
 import { Vocabulary } from "@prisma/client";
 import { updateVocabularyBatchStatus } from "@/services/learn-mode-api";
@@ -35,13 +38,109 @@ const LearnMode = ({
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isFlipping, setIsFlipping] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [showWordFirst, setShowWordFirst] = useState(true);
   const [showPronunciation, setShowPronunciation] = useState(true);
+  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(
+    null,
+  );
+  const [previousIndex, setPreviousIndex] = useState<number | null>(null);
 
   const currentVocab = useMemo(
     () => vocabularies[currentIndex],
     [vocabularies, currentIndex],
+  );
+
+  const renderCard = (vocab: Vocabulary) => (
+    <>
+      <div
+        className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
+        style={{ backfaceVisibility: "hidden" }}
+      >
+        {showWordFirst ? (
+          <>
+            {vocab.word && (
+              <h2 className="text-5xl font-bold mb-2 text-center">
+                {vocab.word}
+              </h2>
+            )}
+            {vocab.pronunciation && showPronunciation && (
+              <p className="text-xl text-muted-foreground">
+                {vocab.pronunciation}
+              </p>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4"
+              onClick={(e) => {
+                e.stopPropagation();
+                playAudio(vocab.word || vocab.pronunciation || "");
+              }}
+            >
+              <Volume2 className="h-6 w-6" />
+            </Button>
+          </>
+        ) : (
+          <>
+            <p className="text-2xl font-semibold text-center">
+              {vocab.meaning}
+            </p>
+            {vocab.usageExample && (
+              <p className="text-lg text-muted-foreground mt-4 text-center italic">
+                {vocab.usageExample}
+              </p>
+            )}
+          </>
+        )}
+      </div>
+
+      <div
+        className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
+        style={{
+          backfaceVisibility: "hidden",
+          transform: "rotateY(180deg)",
+        }}
+      >
+        {showWordFirst ? (
+          <>
+            <p className="text-2xl font-semibold text-center">
+              {vocab.meaning}
+            </p>
+            {vocab.usageExample && (
+              <p className="text-lg text-muted-foreground mt-4 text-center italic">
+                {vocab.usageExample}
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            {vocab.word && (
+              <h2 className="text-5xl font-bold mb-2 text-center">
+                {vocab.word}
+              </h2>
+            )}
+            {vocab.pronunciation && showPronunciation && (
+              <p className="text-xl text-muted-foreground">
+                {vocab.pronunciation}
+              </p>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4"
+              onClick={(e) => {
+                e.stopPropagation();
+                playAudio(vocab.word || vocab.pronunciation || "");
+              }}
+            >
+              <Volume2 className="h-6 w-6" />
+            </Button>
+          </>
+        )}
+      </div>
+    </>
   );
 
   const saveProgress = async (showToast = true) => {
@@ -92,17 +191,53 @@ const LearnMode = ({
   };
 
   const handleRemembered = () => {
+    if (swipeDirection) return;
+
     const newVocabs = [...vocabularies];
     newVocabs[currentIndex].status = "REMEMBERED";
     setVocabularies(newVocabs);
-    handleNext();
+
+    setPreviousIndex(currentIndex);
+    setSwipeDirection("right");
+    setIsFlipped(false);
+
+    if (currentIndex < vocabularies.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setTimeout(() => {
+        setSwipeDirection(null);
+        setPreviousIndex(null);
+      }, 400);
+    } else {
+      setTimeout(() => {
+        setSessionCompleted(true);
+        saveProgress(true);
+      }, 400);
+    }
   };
 
   const handleNotRemembered = () => {
+    if (swipeDirection) return;
+
     const newVocabs = [...vocabularies];
     newVocabs[currentIndex].status = "NOT_REMEMBERED";
     setVocabularies(newVocabs);
-    handleNext();
+
+    setPreviousIndex(currentIndex);
+    setSwipeDirection("left");
+    setIsFlipped(false);
+
+    if (currentIndex < vocabularies.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setTimeout(() => {
+        setSwipeDirection(null);
+        setPreviousIndex(null);
+      }, 400);
+    } else {
+      setTimeout(() => {
+        setSessionCompleted(true);
+        saveProgress(true);
+      }, 400);
+    }
   };
 
   const handleRestart = () => {
@@ -151,6 +286,11 @@ const LearnMode = ({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
         className="fixed bg-background inset-0 z-50 flex flex-col items-center justify-center text-foreground"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, hsl(var(--foreground) / 0.1) 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+        }}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -215,6 +355,11 @@ const LearnMode = ({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
       className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center text-foreground"
+      style={{
+        backgroundImage:
+          "radial-gradient(circle, hsl(var(--foreground) / 0.1) 1px, transparent 1px)",
+        backgroundSize: "20px 20px",
+      }}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
@@ -244,137 +389,112 @@ const LearnMode = ({
           </p>
         </div>
 
-        <motion.div
-          className="relative aspect-[3/2] w-full cursor-pointer"
-          style={{ transformStyle: "preserve-3d" }}
-          animate={{ rotateY: isFlipped ? 180 : 0 }}
-          transition={{ duration: 0.4 }}
-          onClick={() => setIsFlipped((f) => !f)}
-        >
-          <div
-            className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
-            style={{ backfaceVisibility: "hidden" }}
-          >
-            {showWordFirst ? (
-              <>
-                {currentVocab.word && (
-                  <h2 className="text-5xl font-bold mb-2 text-center">
-                    {currentVocab.word}
-                  </h2>
-                )}
-                {currentVocab.pronunciation && showPronunciation && (
-                  <p className="text-xl text-muted-foreground">
-                    {currentVocab.pronunciation}
-                  </p>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-4 right-4"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    playAudio(
-                      currentVocab.word || currentVocab.pronunciation || "",
-                    );
-                  }}
-                >
-                  <Volume2 className="h-6 w-6" />
-                </Button>
-              </>
-            ) : (
-              <>
-                <p className="text-2xl font-semibold text-center">
-                  {currentVocab.meaning}
-                </p>
-                {currentVocab.usageExample && (
-                  <p className="text-lg text-muted-foreground mt-4 text-center italic">
-                    {currentVocab.usageExample}
-                  </p>
-                )}
-              </>
-            )}
-          </div>
+        <div className="relative aspect-[3/2] w-full">
+          {/* Background cards (stack effect) */}
+          {[2, 1].map((offset) => {
+            const cardIndex = currentIndex + offset;
+            if (cardIndex >= vocabularies.length) return null;
 
-          <div
-            className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
-            style={{
-              backfaceVisibility: "hidden",
-              transform: "rotateY(180deg)",
+            const adjustedOffset = swipeDirection ? offset - 1 : offset;
+
+            return (
+              <motion.div
+                key={cardIndex}
+                className="absolute w-full h-full bg-card border border-border rounded-lg"
+                animate={{
+                  top: `${adjustedOffset * 8}px`,
+                  scale: 1 - adjustedOffset * 0.03,
+                  opacity: adjustedOffset <= 1 ? 1 - adjustedOffset * 0.3 : 0,
+                }}
+                transition={{ duration: 0.3 }}
+                style={{
+                  left: 0,
+                  zIndex: -offset,
+                  pointerEvents: "none",
+                  boxShadow:
+                    "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                }}
+              />
+            );
+          })}
+
+          {/* Previous card (swiping out) */}
+          {previousIndex !== null && (
+            <motion.div
+              key={`prev-${previousIndex}`}
+              className="absolute w-full h-full cursor-pointer"
+              style={{ transformStyle: "preserve-3d", zIndex: 11 }}
+              initial={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
+              animate={{
+                x: swipeDirection === "left" ? -1000 : 1000,
+                y: 100,
+                rotate: swipeDirection === "left" ? -15 : 15,
+                opacity: 0,
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              {renderCard(vocabularies[previousIndex])}
+            </motion.div>
+          )}
+
+          {/* Current card */}
+          <motion.div
+            key={currentIndex}
+            className="absolute w-full h-full cursor-pointer"
+            style={{ transformStyle: "preserve-3d", zIndex: 10 }}
+            initial={
+              swipeDirection
+                ? { scale: 0.97, opacity: 0.7, top: 8 }
+                : { scale: 1, opacity: 1 }
+            }
+            animate={{
+              rotateY: isFlipped ? 180 : 0,
+              scale: isFlipping ? 1.08 : 1,
+              opacity: 1,
+              top: 0,
+            }}
+            transition={{
+              duration: swipeDirection ? 0.3 : 0.4,
+              scale: {
+                duration: 0.15,
+                ease: "easeOut",
+              },
+              rotateY: {
+                duration: 0.4,
+                ease: "easeInOut",
+              },
+            }}
+            onClick={() => {
+              if (swipeDirection) return;
+              setIsFlipping(true);
+              setTimeout(() => {
+                setIsFlipped((f) => !f);
+                setTimeout(() => {
+                  setIsFlipping(false);
+                }, 200);
+              }, 150);
             }}
           >
-            {showWordFirst ? (
-              <>
-                <p className="text-2xl font-semibold text-center">
-                  {currentVocab.meaning}
-                </p>
-                {currentVocab.usageExample && (
-                  <p className="text-lg text-muted-foreground mt-4 text-center italic">
-                    {currentVocab.usageExample}
-                  </p>
-                )}
-              </>
-            ) : (
-              <>
-                {currentVocab.word && (
-                  <h2 className="text-5xl font-bold mb-2 text-center">
-                    {currentVocab.word}
-                  </h2>
-                )}
-                {currentVocab.pronunciation && showPronunciation && (
-                  <p className="text-xl text-muted-foreground">
-                    {currentVocab.pronunciation}
-                  </p>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-4 right-4"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    playAudio(
-                      currentVocab.word || currentVocab.pronunciation || "",
-                    );
-                  }}
-                >
-                  <Volume2 className="h-6 w-6" />
-                </Button>
-              </>
-            )}
-          </div>
-        </motion.div>
+            {renderCard(currentVocab)}
+          </motion.div>
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.3 }}
-          className="flex justify-between items-center mt-6"
+          className="flex justify-center items-center gap-4 mt-6"
         >
           <Button
-            onClick={handlePrev}
-            disabled={currentIndex === 0}
-            variant="outline"
+            onClick={toggleShowMode}
+            variant={showWordFirst ? "warning" : "outline"}
+            size="sm"
           >
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Prev
-          </Button>
-          <Button onClick={toggleShowMode} variant="outline" size="lg">
             {showWordFirst ? "Meaning First" : "Word First"}
           </Button>
-          <Button onClick={handleNext} variant="outline">
-            {currentIndex === vocabularies.length - 1 ? "Finish" : "Next"}
-            <ChevronRight className="ml-2 h-4 w-4" />
-          </Button>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.3 }}
-          className="flex justify-center mt-4"
-        >
           <Button
             onClick={togglePronunciation}
-            variant={showPronunciation ? "default" : "outline"}
+            variant={showPronunciation ? "warning" : "outline"}
             size="sm"
           >
             {showPronunciation ? "Hide" : "Show"} Pronunciation
@@ -384,36 +504,42 @@ const LearnMode = ({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.3 }}
-          className="mt-8 grid grid-cols-2 gap-4"
+          transition={{ delay: 0.3, duration: 0.3 }}
+          className="mt-20 flex justify-center items-center gap-6"
         >
           <Button
             onClick={handleNotRemembered}
             variant="destructive"
-            className="w-full"
+            size="icon"
+            className="w-20 h-20 rounded-full transition-transform hover:scale-110"
           >
-            Don't Remember
+            <X style={{ width: "2rem", height: "2rem" }} />
+          </Button>
+          <Button
+            onClick={handlePrev}
+            disabled={currentIndex === 0}
+            variant="outline"
+            size="icon"
+            className="w-16 h-16 rounded-full transition-transform hover:scale-110"
+          >
+            <Redo2 className="mr-1 h-4 w-4" />
           </Button>
           <Button
             onClick={handleRemembered}
-            variant="default"
-            className="w-full"
-            style={{
-              backgroundColor: "hsl(var(--clr-success-a0))",
-              color: "hsl(var(--clr-light))",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.backgroundColor =
-                "hsl(var(--clr-success-a10))")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.backgroundColor =
-                "hsl(var(--clr-success-a0))")
-            }
+            variant="success"
+            size="icon"
+            className="w-20 h-20 rounded-full transition-transform hover:scale-110"
           >
-            Remember
+            <Check style={{ width: "2rem", height: "2rem" }} />
           </Button>
         </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.3 }}
+          className="mt-4 flex justify-center"
+        ></motion.div>
       </motion.div>
     </motion.div>
   );
