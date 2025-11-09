@@ -313,9 +313,9 @@ export default function TopicDetailPage() {
       <AnimatePresence mode="wait">
         {isLearnMode && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 1, y: "100%" }}
+            animate={{ opacity: 1, y: "0%" }}
+            exit={{ opacity: 0, y: "100%" }}
             transition={{
               duration: 0.3,
               ease: [0.4, 0, 0.2, 1],

@@ -389,7 +389,7 @@ const LearnMode = ({
           </p>
         </div>
 
-        <div className="relative aspect-[3/2] w-full">
+        <div className="relative aspect-[3/3] w-full">
           {/* Background cards (stack effect) */}
           {[2, 1].map((offset) => {
             const cardIndex = currentIndex + offset;
@@ -402,9 +402,9 @@ const LearnMode = ({
                 key={cardIndex}
                 className="absolute w-full h-full bg-card border border-border rounded-lg"
                 animate={{
-                  top: `${adjustedOffset * 8}px`,
-                  scale: 1 - adjustedOffset * 0.03,
-                  opacity: adjustedOffset <= 1 ? 1 - adjustedOffset * 0.3 : 0,
+                  top: `${adjustedOffset * 20}px`,
+                  scale: 1 - adjustedOffset * 0.06,
+                  opacity: adjustedOffset <= 1 ? 1 - adjustedOffset * 0.25 : 0,
                 }}
                 transition={{ duration: 0.3 }}
                 style={{
@@ -520,9 +520,9 @@ const LearnMode = ({
             disabled={currentIndex === 0}
             variant="outline"
             size="icon"
-            className="w-16 h-16 rounded-full transition-transform hover:scale-110"
+            className="w-16 h-16 rounded-full transition-transform hover:scale-110 bg-primary"
           >
-            <Redo2 className="mr-1 h-4 w-4" />
+            <Redo2 style={{ width: "1.5rem", height: "1.5rem" }} />
           </Button>
           <Button
             onClick={handleRemembered}

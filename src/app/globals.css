@@ -189,4 +189,7 @@
     .backface-hidden {
         backface-visibility: hidden;
     }
+    .border {
+        border-width: 2px;
+    }
 }

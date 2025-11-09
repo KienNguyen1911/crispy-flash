@@ -53,7 +53,7 @@ Functions:
 月,つき / がつ,Mặt trăng, tháng
 
 • Preview Vocabulary Table - Display parsed data in a table format where
-users can map columns (e.g., Kanji, Hiragana/Katakana, Meaning).
+users can map columns (e.g., Word, Pronunciation, Meaning).
 
 • Save Vocabulary - Store selected vocabulary into the system after
 column mapping.
