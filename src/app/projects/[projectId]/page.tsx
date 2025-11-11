@@ -75,7 +75,24 @@ export default function ProjectPage() {
           vocabularyCount: t.wordsCount ?? 0,
           createdAt: t.createdAt ?? new Date().toISOString()
         }))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     : [];
+
+  // Group topics by date
+  const groupedTopics = topics.reduce((groups: Record<string, any[]>, topic) => {
+    const date = new Date(topic.createdAt);
+    const formattedDate = date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    if (!groups[formattedDate]) {
+      groups[formattedDate] = [];
+    }
+    groups[formattedDate].push(topic);
+    return groups;
+  }, {});
 
   const lastPage = topicPages && topicPages.length > 0 ? topicPages[topicPages.length - 1] : null;
   const hasMore = lastPage ? Boolean(lastPage.hasMore) : false;
@@ -157,21 +174,37 @@ export default function ProjectPage() {
         </div>
       </div>
 
-      {topics.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {topics.map((topic: any) => (
-            <div key={topic.id} className="transition-opacity duration-300">
-              <TopicCardClient
-                projectId={projectId}
-                topic={topic}
-                onTopicUpdated={refetchTopics}
-                onTopicDeleted={refetchTopics}
-              />
+      {Object.keys(groupedTopics).length > 0 ? (
+        <div className="space-y-8">
+          {Object.entries(groupedTopics).map(([date, dateTopics]) => (
+            <div key={date} className="space-y-4">
+              <h3 className="text-lg font-medium text-muted-foreground">{date}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {dateTopics.map((topic: any) => (
+                  <div key={topic.id} className="transition-opacity duration-300">
+                    <TopicCardClient
+                      projectId={projectId}
+                      topic={topic}
+                      onTopicUpdated={refetchTopics}
+                      onTopicDeleted={refetchTopics}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 border-2 border-dashed rounded-lg">
+        <div
+          className="
+            text-center py-20 
+            rounded-lg 
+            bg-black/40 
+            backdrop-blur-md 
+            border
+            shadow-lg
+          "
+        >
           <h2 className="text-xl font-semibold">No Topics Yet</h2>
           <p className="text-muted-foreground mt-2">
             Create a topic to start adding vocabulary.

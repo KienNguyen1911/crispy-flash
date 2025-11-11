@@ -16,6 +16,9 @@ export default {
       },
     },
     extend: {
+      fontSize: {
+        sm: ['1rem', { lineHeight: '1.5rem' }],
+      },
       fontFamily: {
         body: ["Noto Sans", "sans-serif"],
         headline: ["Noto Sans JP", "Noto Sans", "sans-serif"], // Noto Sans JP là phiên bản tiếng Nhật

@@ -258,17 +258,17 @@ export default function VocabularyImportClient() {
             Meaning / Part of Speech (optional).
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <Textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={10}
-            placeholder={
-              "日  にち / ひ  Ngày, mặт trời  noun\n月  つき / がつ  Mặт trăng, tháng  noun"
-            }
-          />
-        </CardContent>
-        <CardFooter className="flex justify-between">
+      </Card>
+      <Textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={10}
+        placeholder={
+          "日  にち / ひ  Ngày, mặt trời  noun\n月  つき / がつ  Mặt trăng, tháng  noun"
+        }
+        className="mb-4 mt-4"
+      />
+        <div className="flex justify-between">
           <Button onClick={handlePreview}>Preview Data</Button>
           <Button
             onClick={handleSave}
@@ -277,9 +277,7 @@ export default function VocabularyImportClient() {
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isSaving ? "Saving..." : "Save Vocabulary"}
           </Button>
-        </CardFooter>
-      </Card>
-
+        </div>
       {/* Separator */}
       <div className="mt-4"></div>
 
