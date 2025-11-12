@@ -122,7 +122,7 @@
         --popover-foreground: var(--clr-light);
         --primary: var(--clr-primary-a0);
         --primary-foreground: var(--clr-light);
-        --secondary: var(--clr-surface-a20); /* #141414 */
+        --secondary: var(--clr-surface-a50); /* #141414 */
         --secondary-foreground: var(--clr-light);
         --muted: var(--clr-surface-tonal-a0);
         --muted-foreground: var(--clr-surface-a90);
