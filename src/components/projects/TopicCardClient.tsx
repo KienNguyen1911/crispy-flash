@@ -22,6 +22,7 @@ import {
 import { Trash2 } from "lucide-react";
 import { Check, X } from "lucide-react";
 import { TopicContext } from "@/context/TopicContext";
+import { Progress } from "@/components/ui/progress";
 
 export default function TopicCardClient({
   projectId,
@@ -115,8 +116,12 @@ export default function TopicCardClient({
 
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          {topic.vocabularyCount} word(s)
+          {topic.vocabularyCount } word(s), {topic.learnedCount} learned
         </p>
+        <Progress
+          value={(topic.learnedCount / topic.vocabularyCount) * 100}
+          className="mt-2"
+        />
       </CardContent>
 
       {/* Delete button top-right */}

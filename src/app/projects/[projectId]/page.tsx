@@ -73,6 +73,7 @@ export default function ProjectPage() {
           title: t.title,
           description: "",
           vocabularyCount: t.wordsCount ?? 0,
+          learnedCount: t.learnedCount ?? 0,
           createdAt: t.createdAt ?? new Date().toISOString()
         }))
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
