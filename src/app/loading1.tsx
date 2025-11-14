@@ -10,7 +10,7 @@
 //         </svg>
 //         <div>
 //           <p className="text-lg font-medium">Loading...</p>
-//           <p className="text-sm text-muted-foreground">Fetching content — this may take a moment.</p>
+//           <p className="text-sm md:text-base text-muted-foreground">Fetching content — this may take a moment.</p>
 //         </div>
 //       </div>
 //     </div>

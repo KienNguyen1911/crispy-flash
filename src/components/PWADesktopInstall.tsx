@@ -48,7 +48,7 @@ export function PWADesktopInstall() {
           ×
         </Button>
       </div>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+      <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mb-3">
         Cài đặt ứng dụng để truy cập nhanh và học offline
       </p>
       <div className="space-y-2">

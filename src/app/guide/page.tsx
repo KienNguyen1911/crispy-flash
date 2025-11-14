@@ -48,7 +48,7 @@ export default function GuidePage() {
                   <div>
                     <h3 className="font-semibold text-lg">Import Vocabulary</h3>
                     <p className="text-muted-foreground">Paste vocabulary data in a simple format. Example:<br/>
-                      <code className="bg-muted px-2 py-1 rounded text-sm">日,にち,ひ,Ngày, mặt trời</code>
+                      <code className="bg-muted px-2 py-1 rounded text-sm md:text-base">日,にち,ひ,Ngày, mặt trời</code>
                     </p>
                   </div>
                 </div>
@@ -85,7 +85,7 @@ export default function GuidePage() {
                   📚
                 </div>
                 <h3 className="font-semibold">Organized Learning</h3>
-                <p className="text-sm text-muted-foreground">Structure your vocabulary into projects and topics for better organization.</p>
+                <p className="text-sm md:text-base text-muted-foreground">Structure your vocabulary into projects and topics for better organization.</p>
               </div>
 
               <div className="text-center space-y-2">
@@ -93,7 +93,7 @@ export default function GuidePage() {
                   🧠
                 </div>
                 <h3 className="font-semibold">Smart Flashcards</h3>
-                <p className="text-sm text-muted-foreground">Interactive flashcards with progress tracking and review filtering.</p>
+                <p className="text-sm md:text-base text-muted-foreground">Interactive flashcards with progress tracking and review filtering.</p>
               </div>
 
               <div className="text-center space-y-2">
@@ -101,7 +101,7 @@ export default function GuidePage() {
                   📊
                 </div>
                 <h3 className="font-semibold">Progress Analytics</h3>
-                <p className="text-sm text-muted-foreground">Track your learning progress with detailed statistics and insights.</p>
+                <p className="text-sm md:text-base text-muted-foreground">Track your learning progress with detailed statistics and insights.</p>
               </div>
             </div>
           </CardContent>
@@ -116,7 +116,7 @@ export default function GuidePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <h4 className="font-semibold">📝 Import Format</h4>
-                <p className="text-sm text-muted-foreground">Use this format for importing vocabulary:<br/>
+                <p className="text-sm md:text-base text-muted-foreground">Use this format for importing vocabulary:<br/>
                   <code className="bg-muted px-2 py-1 rounded">Word,Pronunciation,Meaning</code><br/>
                   Example: <code className="bg-muted px-2 py-1 rounded">日,にち,ひ,Ngày, mặt trời</code>
                 </p>
@@ -124,17 +124,17 @@ export default function GuidePage() {
 
               <div className="space-y-2">
                 <h4 className="font-semibold">🎯 Study Strategy</h4>
-                <p className="text-sm text-muted-foreground">Start with small topics (10-20 words). Review "Not Remembered" words frequently. Use spaced repetition for better retention.</p>
+                <p className="text-sm md:text-base text-muted-foreground">Start with small topics (10-20 words). Review "Not Remembered" words frequently. Use spaced repetition for better retention.</p>
               </div>
 
               <div className="space-y-2">
                 <h4 className="font-semibold">🔄 Review Sessions</h4>
-                <p className="text-sm text-muted-foreground">Regular short sessions (15-30 minutes) are more effective than long cramming sessions.</p>
+                <p className="text-sm md:text-base text-muted-foreground">Regular short sessions (15-30 minutes) are more effective than long cramming sessions.</p>
               </div>
 
               <div className="space-y-2">
                 <h4 className="font-semibold">📈 Progress Tracking</h4>
-                <p className="text-sm text-muted-foreground">Your progress is automatically saved. Focus on difficult words and celebrate small victories!</p>
+                <p className="text-sm md:text-base text-muted-foreground">Your progress is automatically saved. Focus on difficult words and celebrate small victories!</p>
               </div>
             </div>
           </CardContent>

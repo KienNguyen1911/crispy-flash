@@ -54,7 +54,7 @@ const LearningHeatMap: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-[200px] text-sm text-muted-foreground">
+      <div className="flex items-center justify-center h-[200px] text-sm md:text-base text-muted-foreground">
         Failed to load heatmap data
       </div>
     );

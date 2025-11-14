@@ -34,7 +34,7 @@ const ActivityStatistics: React.FC = () => {
               </div>
             </>
           ) : userError ? (
-            <div className="text-sm text-destructive">Failed to load user info</div>
+            <div className="text-sm md:text-base text-destructive">Failed to load user info</div>
           ) : user ? (
             <>
               <Avatar className="h-16 w-16">
@@ -44,7 +44,7 @@ const ActivityStatistics: React.FC = () => {
               <div className="flex-1">
                 <CardTitle className="text-2xl">{user.name}</CardTitle>
                 <p className="text-muted-foreground">{user.email}</p>
-                <p className="text-sm font-medium text-primary">
+                <p className="text-sm md:text-base font-medium text-primary">
                   {user.subscription.status} - Expires on {user.subscription.expiryDate}
                 </p>
               </div>
@@ -74,13 +74,13 @@ const ActivityStatistics: React.FC = () => {
             {statsLoading ? (
               <Skeleton className="h-8 w-32" />
             ) : statsError ? (
-              <p className="text-sm text-destructive">Failed to load stats</p>
+              <p className="text-sm md:text-base text-destructive">Failed to load stats</p>
             ) : (
               <>
                 <p className="text-2xl font-bold">
                   {stats?.totalReviews || 0} reviews
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm md:text-base text-muted-foreground">
                   {stats?.correctReviews || 0} correct, {stats?.incorrectReviews || 0} incorrect
                 </p>
                 <Progress value={stats?.reviewAccuracy || 0} className="mt-2" />
@@ -96,7 +96,7 @@ const ActivityStatistics: React.FC = () => {
             {statsLoading ? (
               <Skeleton className="h-12 w-16" />
             ) : statsError ? (
-              <p className="text-sm text-destructive">Failed to load stats</p>
+              <p className="text-sm md:text-base text-destructive">Failed to load stats</p>
             ) : (
               <p className="text-4xl font-bold">🔥 {stats?.weeklyStreak || 0}</p>
             )}
@@ -110,7 +110,7 @@ const ActivityStatistics: React.FC = () => {
             {statsLoading ? (
               <Skeleton className="h-12 w-16" />
             ) : statsError ? (
-              <p className="text-sm text-destructive">Failed to load stats</p>
+              <p className="text-sm md:text-base text-destructive">Failed to load stats</p>
             ) : (
               <p className="text-4xl font-bold">{stats?.reviewAccuracy ? `${stats.reviewAccuracy}%` : '0%'}</p>
             )}

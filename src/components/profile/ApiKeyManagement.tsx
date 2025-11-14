@@ -62,7 +62,7 @@ const ApiKeyManagement = () => {
         </div>
 
         <Button onClick={handleSaveApiKey}>Save/Update Key</Button>
-        <p className="text-sm text-muted-foreground mt-2">{apiKeyStatus}</p>
+        <p className="text-sm md:text-base text-muted-foreground mt-2">{apiKeyStatus}</p>
 
         <div className="mt-4">
           <h3 className="font-semibold">AI-Powered Features:</h3>

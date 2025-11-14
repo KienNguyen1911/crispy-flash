@@ -71,7 +71,7 @@ export default function ProjectCreate({
                     <h2 className="text-xl font-semibold">
                       Create a New Project
                     </h2>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm md:text-base text-muted-foreground mt-1">
                       Add a new project to organize your vocabulary learning
                     </p>
                   </div>

@@ -180,6 +180,9 @@
         background-attachment: fixed;
         background-size: cover;
     }
+
+    /* if layout is desktop, set text-sm md:text-base is 1rem. text-sm md:text-base of mobile layout is still keep*/
+    
 }
 
 @layer utilities {

@@ -18,7 +18,7 @@ export function AuthButton() {
   if (isAuthenticated && user) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm md:text-base text-muted-foreground">
           {user.name || user.email}
         </span>
         <Button

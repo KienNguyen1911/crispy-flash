@@ -284,7 +284,7 @@ export default function VocabularyImportClient() {
       {showPreview && (
         <div className="rounded-md border space-y-4">
           {parsedData.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center pb-4">No data to preview.</p>
+            <p className="text-sm md:text-base text-muted-foreground text-center pb-4">No data to preview.</p>
           ) : (
             <>
               <Table>
@@ -333,7 +333,7 @@ export default function VocabularyImportClient() {
               </Table>
 
               {parsedData.length > 5 && (
-                <p className="text-sm text-muted-foreground text-center">
+                <p className="text-sm md:text-base text-muted-foreground text-center">
                   ... and {parsedData.length - 5} more rows.
                 </p>
               )}

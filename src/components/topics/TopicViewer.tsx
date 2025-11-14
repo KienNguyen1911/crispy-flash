@@ -214,7 +214,7 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
     <div className="container mx-auto max-w-5xl py-8 px-4">
       {/* Breadcrumb and Header */}
       <Card className="mb-8 p-6" ref={containerRef}>
-        <nav className="mb-4 text-sm text-muted-foreground">
+        <nav className="mb-4 text-sm md:text-base text-muted-foreground">
           <Link href="/">Projects</Link> / <Link href={`/projects/${projectId}`}>{projectName}</Link> / <span className="font-semibold">{topic.title}</span>
         </nav>
 

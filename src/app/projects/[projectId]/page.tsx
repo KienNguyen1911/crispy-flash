@@ -218,7 +218,7 @@ export default function ProjectPage() {
         <div className="mt-8">
           <div ref={loadMoreRef} className="h-10 w-full" />
           {isLoadingMore && (
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground" aria-live="polite">
+            <div className="flex items-center justify-center gap-2 text-sm md:text-base text-muted-foreground" aria-live="polite">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
               Loading more...
             </div>

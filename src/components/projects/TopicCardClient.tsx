@@ -102,7 +102,7 @@ export default function TopicCardClient({
           )}
           {editing ? (
             <textarea
-              className="text-sm text-muted-foreground w-full mt-1 bg-transparent outline-none"
+              className="text-sm md:text-base text-muted-foreground w-full mt-1 bg-transparent outline-none"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -115,7 +115,7 @@ export default function TopicCardClient({
       </CardHeader>
 
       <CardContent>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm md:text-base text-muted-foreground">
           {topic.vocabularyCount } word(s), {topic.learnedCount} learned
         </p>
         <Progress

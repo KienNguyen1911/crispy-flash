@@ -155,7 +155,7 @@ export default function Dashboard() {
               <PlusCircle className="mr-2 h-5 w-5" />
               Sign In with Google
             </Button>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm md:text-base text-muted-foreground">
               New to LinguaFlash? Check out our{" "}
               <a href="/guide" className="text-primary hover:underline">
                 complete guide
@@ -218,7 +218,7 @@ export default function Dashboard() {
                 </CardHeader>
 
                 <CardContent className="flex-grow">
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm md:text-base text-muted-foreground">
                     <p>{(project as any).topicsCount ?? 0} topic(s)</p>
                     <p>{(project as any).wordsCount ?? 0} word(s)</p>
                   </div>
@@ -294,7 +294,7 @@ export default function Dashboard() {
           <div ref={loadMoreRef} className="h-10 w-full" />
           {isValidating && (
             <div
-              className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
+              className="flex items-center justify-center gap-2 text-sm md:text-base text-muted-foreground"
               aria-live="polite"
             >
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />

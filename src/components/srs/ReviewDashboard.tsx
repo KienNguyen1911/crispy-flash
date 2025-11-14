@@ -46,7 +46,7 @@ export function ReviewDashboard() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Reviews</CardTitle>
+            <CardTitle className="text-sm md:text-base font-medium">Total Reviews</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -59,7 +59,7 @@ export function ReviewDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Review Today</CardTitle>
+            <CardTitle className="text-sm md:text-base font-medium">Review Today</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -72,7 +72,7 @@ export function ReviewDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+            <CardTitle className="text-sm md:text-base font-medium">Overdue</CardTitle>
             <AlertCircle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
@@ -96,7 +96,7 @@ export function ReviewDashboard() {
         <CardContent>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-sm font-medium">
+              <p className="text-sm md:text-base font-medium">
                 {hasDueReviews
                   ? "You have words to review"
                   : "No words to review"}
@@ -130,7 +130,7 @@ export function ReviewDashboard() {
                     <div className="font-medium">{vocab.word}</div>
 
                     {/* 👈 Thêm 'text-wrap' để nghĩa tự động xuống dòng */}
-                    <div className="text-sm text-muted-foreground text-wrap">
+                    <div className="text-sm md:text-base text-muted-foreground text-wrap">
                       {vocab.meaning}
                     </div>
                   </div>
@@ -149,7 +149,7 @@ export function ReviewDashboard() {
                 </div>
               ))}
               {dueReviews.length > 5 && (
-                <div className="text-center text-sm text-muted-foreground">
+                <div className="text-center text-sm md:text-base text-muted-foreground">
                   And {dueReviews.length - 5} more words...
                 </div>
               )}

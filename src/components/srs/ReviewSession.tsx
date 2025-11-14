@@ -165,7 +165,7 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
             <Brain className="h-12 w-12 mx-auto text-muted-foreground" />
             <div>
               <h3 className="text-lg font-semibold">No words to review</h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 Come back after learning more words!
               </p>
             </div>
@@ -182,7 +182,7 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
     <div className="max-w-2xl mx-auto space-y-4">
       {/* Progress Bar & Timer */}
       <div className="space-y-2">
-        <div className="flex justify-between text-sm font-medium">
+        <div className="flex justify-between text-sm md:text-base font-medium">
           <span>
             Progress: {currentIndex + 1} / {sessionReviews.length}
           </span>
@@ -274,15 +274,15 @@ export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
               disabled={isSubmitting}
             >
               <ChevronLeft className="h-4 w-4 mr-2" />
-              Dừng lại
+              Stop
             </Button>
-            <div className="text-sm text-muted-foreground">
-              Lần ôn tập trước:{" "}
+            <div className="text-sm md:text-base text-muted-foreground">
+              Last Review:{" "}
               {currentVocab.lastReviewDate
                 ? new Date(currentVocab.lastReviewDate).toLocaleDateString(
                     "vi-VN",
                   )
-                : "Chưa ôn tập"}
+                : "No review"}
             </div>
           </div>
         </CardContent>

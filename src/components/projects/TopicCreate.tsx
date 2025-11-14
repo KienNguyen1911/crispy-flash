@@ -71,7 +71,7 @@ export default function TopicCreate({
                     <h2 className="text-xl font-semibold">
                       Create a New Topic
                     </h2>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm md:text-base text-muted-foreground mt-1">
                       Add a new topic to organize your vocabulary
                     </p>
                   </div>

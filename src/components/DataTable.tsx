@@ -355,7 +355,7 @@ export function DataTable<TData, TValue>({
           <h3 className="text-lg font-semibold text-foreground mb-1">
             No vocabulary found
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm md:text-base text-muted-foreground">
             Try adjusting your filters or add new vocabulary
           </p>
         </div>
@@ -384,7 +384,7 @@ export function DataTable<TData, TValue>({
                           {item.word}
                         </h3>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm text-muted-foreground italic break-words">
+                          <p className="text-sm md:text-base text-muted-foreground italic break-words">
                             {item.pronunciation}
                           </p>
                           {item.part_of_speech && (
@@ -413,7 +413,7 @@ export function DataTable<TData, TValue>({
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-sm text-foreground leading-relaxed">
+                    <p className="text-sm md:text-base text-foreground leading-relaxed">
                       {item.meaning}
                     </p>
                   </CardContent>

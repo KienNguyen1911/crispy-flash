@@ -89,7 +89,7 @@ export default function StoryDisplay({
                   )}
                 </div>
                 <Separator />
-                <p className="text-sm text-foreground">
+                <p className="text-sm md:text-base text-foreground">
                   {vocabDetails.meaning}
                 </p>
                 {vocabDetails.usageExample && (
@@ -138,7 +138,7 @@ export default function StoryDisplay({
 
           {/* Story Content with Highlighted Words */}
           <div className="rounded-lg border bg-muted/50 p-4">
-            <p className="text-sm leading-relaxed">
+            <p className="text-sm md:text-base leading-relaxed">
               {showTranslation
                 ? story.translatedContent
                 : highlightVocabulary(story.content, story.targetWords)}
@@ -152,7 +152,7 @@ export default function StoryDisplay({
                 View translation
               </summary>
               <div className="mt-2 p-3 rounded-md bg-muted/30 border">
-                <p className="text-sm leading-relaxed text-muted-foreground">
+                <p className="text-sm md:text-base leading-relaxed text-muted-foreground">
                   {story.translatedContent}
                 </p>
               </div>
@@ -181,11 +181,11 @@ export default function StoryDisplay({
 
       {/* Overall Summary */}
       <Card className="p-4 bg-primary/5 border-primary/20">
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-sm md:text-base">
           <span className="font-medium">Total Stories:</span>
           <span className="text-muted-foreground">{stories.length}</span>
         </div>
-        <div className="flex items-center justify-between text-sm mt-2">
+        <div className="flex items-center justify-between text-sm md:text-base mt-2">
           <span className="font-medium">Total Vocabulary Used:</span>
           <span className="text-muted-foreground">
             {new Set(stories.flatMap((s) => s.targetWords)).size} words

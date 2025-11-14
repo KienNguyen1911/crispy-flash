@@ -50,7 +50,7 @@ export function PWAiOSInstall() {
           <X className="h-4 w-4" />
         </button>
       </div>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+      <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mb-3">
         Để cài đặt ứng dụng, hãy nhấn nút chia sẻ 
         <Share2 className="inline h-4 w-4 mx-1" /> 
         và chọn "Thêm vào màn hình chính"

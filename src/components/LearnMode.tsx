@@ -384,7 +384,7 @@ const LearnMode = ({
         style={{ perspective: 1000 }}
       >
         <div className="flex justify-center mb-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm md:text-base text-muted-foreground">
             {currentIndex + 1} / {vocabularies.length}
           </p>
         </div>

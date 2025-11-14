@@ -70,7 +70,7 @@ const AnalyticsPage = () => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{learnedVocabularies} / {totalVocabularies}</p>
-            <p className="text-sm text-muted-foreground">Vocabularies Learned</p>
+            <p className="text-sm md:text-base text-muted-foreground">Vocabularies Learned</p>
             <Progress value={learningProgress} className="mt-2" />
           </CardContent>
         </Card>
@@ -80,7 +80,7 @@ const AnalyticsPage = () => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{srsProgress.toFixed(2)}%</p>
-            <p className="text-sm text-muted-foreground">Overall SRS Mastery</p>
+            <p className="text-sm md:text-base text-muted-foreground">Overall SRS Mastery</p>
             <Progress value={srsProgress} className="mt-2" />
           </CardContent>
         </Card>
@@ -90,7 +90,7 @@ const AnalyticsPage = () => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{reviewAccuracy.toFixed(2)}%</p>
-            <p className="text-sm text-muted-foreground">{correctReviews} / {totalReviews} Correct</p>
+            <p className="text-sm md:text-base text-muted-foreground">{correctReviews} / {totalReviews} Correct</p>
             <Progress value={reviewAccuracy} className="mt-2" />
           </CardContent>
         </Card>
@@ -126,7 +126,7 @@ const AnalyticsPage = () => {
         </Card>
       </div>
 
-      <div>
+      {/* <div>
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
@@ -137,11 +137,11 @@ const AnalyticsPage = () => {
                 <li key={index} className="flex items-center justify-between">
                   <div>
                     <p className="font-semibold">{activity.word}</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm md:text-base text-muted-foreground">
                       {activity.correct ? 'Correct' : 'Incorrect'} - {new Date(activity.reviewedAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className={`text-sm font-medium ${activity.correct ? 'text-green-500' : 'text-red-500'}`}>
+                  <div className={`text-sm md:text-base font-medium ${activity.correct ? 'text-green-500' : 'text-red-500'}`}>
                     Easiness: {activity.easinessFactor.toFixed(2)}
                   </div>
                 </li>
@@ -149,7 +149,7 @@ const AnalyticsPage = () => {
             </ul>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
     </div>
   );
 };
