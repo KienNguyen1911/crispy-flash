@@ -3,16 +3,52 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import LearningHeatMap from "./LearningHeatMap";
-import { useUserLearningStats, useUserInfo } from "@/hooks/use-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import { AuthIcon } from "../ui/auth-button";
 
-const ActivityStatistics: React.FC = () => {
-  const { user, loading: userLoading, error: userError } = useUserInfo();
-  const { stats, loading: statsLoading, error: statsError } = useUserLearningStats();
+interface UserInfo {
+  id: string;
+  email: string;
+  name: string;
+  avatar: string;
+  subscription: {
+    status: string;
+    expiryDate: string | null;
+  };
+  memberSince: string;
+}
+
+interface UserLearningStats {
+  totalReviews: number;
+  correctReviews: number;
+  incorrectReviews: number;
+  reviewAccuracy: number;
+  dailyReviewCounts: Array<{
+    date: string;
+    count: number;
+  }>;
+  weeklyStreak: number;
+}
+
+interface ActivityStatisticsProps {
+  userInfo: {
+    user: UserInfo | null;
+    loading: boolean;
+    error: string | null;
+  };
+  learningStats: {
+    stats: UserLearningStats | null;
+    loading: boolean;
+    error: string | null;
+  };
+}
+
+const ActivityStatistics: React.FC<ActivityStatisticsProps> = ({ userInfo, learningStats }) => {
+  const { user, loading: userLoading, error: userError } = userInfo;
+  const { stats, loading: statsLoading, error: statsError } = learningStats;
   const { theme, setTheme } = useTheme();
   
   // Mock data for vocabulary progress (will be replaced when we have vocabulary API)
@@ -122,7 +158,7 @@ const ActivityStatistics: React.FC = () => {
         <CardHeader>
           <CardTitle>Learning Heatmap</CardTitle>
         </CardHeader>
-        <CardContent className="h-64">
+        <CardContent className="h-full">
           <LearningHeatMap />
         </CardContent>
       </Card>

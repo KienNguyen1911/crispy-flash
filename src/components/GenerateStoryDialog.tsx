@@ -115,13 +115,6 @@ export default function GenerateStoryDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isGenerating}
-          >
-            Cancel
-          </Button>
           <Button onClick={handleGenerate} disabled={isGenerating}>
             {isGenerating ? (
               <>

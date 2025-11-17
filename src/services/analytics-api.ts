@@ -17,7 +17,9 @@ class AnalyticsApiService extends BaseApiService {
   }
 
   async getUserHeatmapData(): Promise<HeatmapData[]> {
-    return this.handleApiCall(() => this.apiClient<HeatmapData[]>('/api/analytics/user/heatmap'));
+    return this.handleApiCall(() => this.apiClient<HeatmapData[]>('/api/analytics/user/heatmap', {
+      cache: 'no-store',
+    }));
   }
 
   async getUserInfo() {

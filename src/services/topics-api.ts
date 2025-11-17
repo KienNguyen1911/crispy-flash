@@ -56,6 +56,17 @@ class TopicsApiService extends BaseApiService {
       }),
     );
   }
+
+  async getGenerationStatus(topicId: string, jobId: string) {
+    return this.handleApiCall(() =>
+      this.apiClient(
+        `/api/topics/${topicId}/generation-status/${jobId}`,
+        {
+          method: "GET",
+        },
+      ),
+    );
+  }
 }
 
 // Create and export a singleton instance
@@ -83,3 +94,6 @@ export const generateContent = (
   language: "english" | "vietnamese",
   difficulty: "easy" | "medium" | "hard",
 ) => topicsApiService.generateContent(topicId, language, difficulty);
+
+export const getGenerationStatus = (topicId: string, jobId: string) =>
+  topicsApiService.getGenerationStatus(topicId, jobId);

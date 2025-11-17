@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import useSWR from "swr";
 import dynamic from "next/dynamic";
 import { useAuthFetcher } from "@/hooks/useAuthFetcher";
+import { useGenerationWebSocket } from "@/hooks/useGenerationWebSocket";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2 } from "lucide-react";
@@ -75,6 +76,7 @@ export default function TopicDetailPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [generatedContent, setGeneratedContent] =
     useState<AIGeneratedContent | null>(null);
+  const [shouldListenWebSocket, setShouldListenWebSocket] = useState(false);
   const fetcher = useAuthFetcher();
   const { toast } = useToast();
   const { projectId, topicId } = params;
@@ -146,7 +148,7 @@ export default function TopicDetailPage() {
       try {
         const response = await generateContent(topicId, language, difficulty);
 
-        if (!response.ok) {
+        if (!response.ok || !response.jobId) {
           throw new Error("Failed to trigger content generation");
         }
 
@@ -154,6 +156,9 @@ export default function TopicDetailPage() {
           title: "Generating content...",
           description: "Please wait while we create your story.",
         });
+
+        // Enable WebSocket listener
+        setShouldListenWebSocket(true);
       } catch (error) {
         console.error("Content generation error:", error);
         setIsGenerating(false);
@@ -170,57 +175,30 @@ export default function TopicDetailPage() {
     [topicId, toast],
   );
 
-  // Poll topic data when generating (from local state or DB status)
-  useEffect(() => {
-    const shouldPoll =
-      (isGenerating || topic?.contentGenerationStatus === "GENERATING") &&
-      topic;
-
-    if (shouldPoll) {
-      const pollInterval = setInterval(async () => {
-        await mutateTopic();
-      }, 10000); // Poll every 5 seconds
-
-      return () => clearInterval(pollInterval);
-    }
-  }, [isGenerating, topic?.contentGenerationStatus, mutateTopic, topic]);
-
-  // Sync local state with DB status on mount/update
-  useEffect(() => {
-    if (topic?.contentGenerationStatus === "GENERATING" && !isGenerating) {
-      setIsGenerating(true);
-    }
-  }, [topic?.contentGenerationStatus, isGenerating]);
-
-  // Check for content generation completion
-  useEffect(() => {
-    if (topic?.contentGenerationStatus === "COMPLETED" && isGenerating) {
+  // WebSocket listener for real-time generation updates
+  useGenerationWebSocket(
+    shouldListenWebSocket && project?.ownerId ? project.ownerId : undefined,
+    topicId,
+    async (content) => {
+      // On complete
       setIsGenerating(false);
-
-      if (topic.contextualPracticeContent) {
-        setGeneratedContent(
-          topic.contextualPracticeContent as AIGeneratedContent,
-        );
-        setIsDrawerOpen(true);
-        toast({
-          title: "Content generated!",
-          description: "Your short story has been created successfully.",
-        });
-      }
-    } else if (topic?.contentGenerationStatus === "FAILED" && isGenerating) {
+      setShouldListenWebSocket(false);
+      await mutateTopic();
+      setGeneratedContent(content as AIGeneratedContent);
+      setIsDrawerOpen(true);
+    },
+    (error) => {
+      // On error
       setIsGenerating(false);
+      setShouldListenWebSocket(false);
       toast({
         title: "Generation failed",
-        description: "Failed to generate content. Please try again.",
+        description: error,
         variant: "destructive",
       });
-    }
-  }, [
-    topic?.contentGenerationStatus,
-    topic?.contextualPracticeContent,
-    isGenerating,
-    toast,
-  ]);
+    },
+  );
+
 
   if (isLoading) {
     return (
