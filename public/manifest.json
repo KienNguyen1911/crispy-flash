@@ -27,13 +27,67 @@
   ],
   "screenshots": [
     {
-      "src": "/screenshots/desktop.png",
+      "src": "/screenshots/desktop/desktop-projects.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide"
     },
     {
-      "src": "/screenshots/mobile.png",
+      "src": "/screenshots/desktop/desktop-topics.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/desktop/desktop-vocabs-table.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/desktop/desktop-vocabs-cards.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/desktop/desktop-vocabs-learn.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+
+    {
+      "_comment": "Mobile",
+      "src": "/screenshots/mobile/mobile-projects.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "_comment": "Mobile",
+      "src": "/screenshots/mobile/mobile-topics.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "_comment": "Mobile",
+      "src": "/screenshots/mobile/mobile-table.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "_comment": "Mobile",
+      "src": "/screenshots/mobile/mobile-vocabs-cards.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "_comment": "Mobile",
+      "src": "/screenshots/mobile/mobile-vocabs-learn.png",
       "sizes": "390x844",
       "type": "image/png",
       "form_factor": "narrow"
