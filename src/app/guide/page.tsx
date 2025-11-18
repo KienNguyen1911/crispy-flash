@@ -5,7 +5,7 @@ export default function GuidePage() {
     <div className="container mx-auto max-w-6xl py-8 px-4">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold font-headline mb-4">🚀 How to Use LinguaFlash</h1>
+        <h1 className="text-4xl font-bold font-headline mb-4">🚀 How to Use Lingofy</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Follow these simple steps to start learning Japanese vocabulary effectively
         </p>

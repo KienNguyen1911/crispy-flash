@@ -104,7 +104,7 @@ export default function PWATest() {
                 <>
                   <p>✅ Ứng dụng có thể cài đặt!</p>
                   <p>• Trên mobile: Popup cài đặt sẽ tự động xuất hiện</p>
-                  <p>• Trên desktop: Vào menu trình duyệt → "Cài đặt LinguaFlash"</p>
+                  <p>• Trên desktop: Vào menu trình duyệt → "Cài đặt Lingofy"</p>
                 </>
               ) : (
                 <>

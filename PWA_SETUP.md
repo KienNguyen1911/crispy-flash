@@ -1,4 +1,4 @@
-# PWA Setup for LinguaFlash
+# PWA Setup for Lingofy
 
 ## Tính năng PWA đã được cài đặt
 
@@ -53,7 +53,7 @@
      - Popup cài đặt sẽ tự động xuất hiện ở góc dưới phải
      - Nếu không thấy popup, kiểm tra console để debug
    - **Desktop**: Mở trang web trên desktop
-     - Nhấn nút ba chấm (⋮) trong trình duyệt → tìm "Cài đặt LinguaFlash"
+     - Nhấn nút ba chấm (⋮) trong trình duyệt → tìm "Cài đặt Lingofy"
      - Hoặc sẽ có popup hướng dẫn cài đặt thủ công
 
 ## Cấu hình thêm (tùy chọn)

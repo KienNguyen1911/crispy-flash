@@ -42,7 +42,7 @@ export function PWAiOSInstall() {
   return (
     <div className="fixed bottom-4 right-4 z-50 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border max-w-sm">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="font-semibold text-gray-900 dark:text-white">Cài đặt LinguaFlash</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-white">Cài đặt Lingofy</h3>
         <button
           onClick={handleClose}
           className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"

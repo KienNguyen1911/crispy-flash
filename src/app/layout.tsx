@@ -11,13 +11,13 @@ import { PWAiOSInstall } from '@/components/PWAiOSInstall';
 import { PWADesktopInstall } from '@/components/PWADesktopInstall';
 
 export const metadata: Metadata = {
-  title: 'LinguaFlash',
+  title: 'Lingofy',
   description: 'A flashcard learning system to master new languages.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'LinguaFlash',
+    title: 'Lingofy',
   },
   formatDetection: {
     telephone: false,
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'default',
-    'apple-mobile-web-app-title': 'LinguaFlash',
+    'apple-mobile-web-app-title': 'Lingofy',
     'msapplication-TileColor': '#000000',
     'msapplication-tap-highlight': 'no',
     'theme-color': '#000000',

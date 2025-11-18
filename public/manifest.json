@@ -1,6 +1,6 @@
 {
-  "name": "LinguaFlash",
-  "short_name": "LinguaFlash",
+  "name": "Lingofy",
+  "short_name": "Lingofy",
   "description": "Ứng dụng học flashcard ngôn ngữ thông minh với AI",
   "start_url": "/",
   "display": "standalone",

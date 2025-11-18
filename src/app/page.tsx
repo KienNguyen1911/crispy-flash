@@ -142,7 +142,7 @@ export default function Dashboard() {
         <Card className="mb-8 p-6" variant="glass">
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-bold font-headline mb-4">
-              Welcome to LinguaFlash
+              Welcome to Lingofy
             </CardTitle>
             <CardDescription className="text-lg">
               Master Japanese vocabulary with intelligent flashcards. Organize,
@@ -156,7 +156,7 @@ export default function Dashboard() {
               Sign In with Google
             </Button>
             <p className="text-sm md:text-base text-muted-foreground">
-              New to LinguaFlash? Check out our{" "}
+              New to Lingofy? Check out our{" "}
               <a href="/guide" className="text-primary hover:underline">
                 complete guide
               </a>{" "}

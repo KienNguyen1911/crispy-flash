@@ -28,7 +28,7 @@ export function PWADesktopInstall() {
 
   const handleManualInstall = () => {
     // For desktop, show instructions for manual installation
-    alert('Để cài đặt LinguaFlash trên desktop:\n\n1. Chrome/Edge: Nhấn nút ba chấm (⋮) ở góc trên phải → "Cài đặt ứng dụng"\n2. Firefox: Không hỗ trợ cài đặt PWA\n3. Safari Mac: Không hỗ trợ cài đặt PWA\n\nHoặc tìm "Cài đặt LinguaFlash" trong menu của trình duyệt.');
+    alert('Để cài đặt Lingofy trên desktop:\n\n1. Chrome/Edge: Nhấn nút ba chấm (⋮) ở góc trên phải → "Cài đặt ứng dụng"\n2. Firefox: Không hỗ trợ cài đặt PWA\n3. Safari Mac: Không hỗ trợ cài đặt PWA\n\nHoặc tìm "Cài đặt Lingofy" trong menu của trình duyệt.');
   };
 
   if (isInstalled || !showManualInstall) {
@@ -38,7 +38,7 @@ export function PWADesktopInstall() {
   return (
     <div className="fixed bottom-4 right-4 z-50 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border max-w-sm">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="font-semibold text-gray-900 dark:text-white">Cài đặt LinguaFlash</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-white">Cài đặt Lingofy</h3>
         <Button
           variant="ghost"
           size="sm"
@@ -62,7 +62,7 @@ export function PWADesktopInstall() {
           Hướng dẫn cài đặt
         </Button>
         <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          Hoặc tìm "Cài đặt LinguaFlash" trong menu trình duyệt
+          Hoặc tìm "Cài đặt Lingofy" trong menu trình duyệt
         </div>
       </div>
     </div>
