@@ -2,11 +2,14 @@ import { useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 interface GenerationEvent {
-  status: 'completed' | 'failed' | 'generating';
+  status: 'completed' | 'failed' | 'generating' | 'retrying';
   topicId: string;
   content?: any;
   error?: string;
   progress?: number;
+  attempt?: number;
+  maxAttempts?: number;
+  message?: string;
   timestamp: string;
 }
 
@@ -16,6 +19,7 @@ export function useGenerationWebSocket(
   onComplete: (content: any) => void,
   onError: (error: string) => void,
   onProgress?: (progress: number) => void,
+  onRetry?: (attempt: number, maxAttempts: number, message: string) => void,
 ) {
   useEffect(() => {
     if (!userId) return;
@@ -50,6 +54,11 @@ export function useGenerationWebSocket(
       onProgress?.(data.progress || 0);
     });
 
+    socket.on('generation-retry', (data: GenerationEvent) => {
+      console.log('[WebSocket] Generation retrying:', data);
+      onRetry?.(data.attempt || 0, data.maxAttempts || 0, data.message || 'AI đang quá tải, vui lòng đợi…');
+    });
+
     socket.on('disconnect', () => {
       console.log('[WebSocket] Disconnected');
     });
@@ -62,5 +71,5 @@ export function useGenerationWebSocket(
       socket.emit('unsubscribe-generation', { topicId, userId });
       socket.disconnect();
     };
-  }, [userId, topicId, onComplete, onError, onProgress]);
+  }, [userId, topicId, onComplete, onError, onProgress, onRetry]);
 }
