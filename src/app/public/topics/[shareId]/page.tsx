@@ -16,13 +16,15 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import LearnModePublic from "@/components/LearnModePublic";
 
 export default function PublicTopicPage() {
   const params = useParams<{ shareId: string }>();
   const { shareId } = params;
   const [copied, setCopied] = useState(false);
+  const [isLearnModeOpen, setIsLearnModeOpen] = useState(false);
 
   // Use public fetcher (no auth required)
   const fetcher = async (url: string) => {
@@ -95,24 +97,36 @@ export default function PublicTopicPage() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopyLink}
-            className="gap-2"
-          >
-            {copied ? (
-              <>
-                <Check className="h-4 w-4" />
-                Copied
-              </>
-            ) : (
-              <>
-                <Copy className="h-4 w-4" />
-                Copy Link
-              </>
+          <div className="flex gap-2">
+            {topic.vocabulary && topic.vocabulary.length > 0 && (
+              <Button
+                size="sm"
+                onClick={() => setIsLearnModeOpen(true)}
+                className="gap-2"
+              >
+                <BookOpen className="h-4 w-4" />
+                Learn Mode
+              </Button>
             )}
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopyLink}
+              className="gap-2"
+            >
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copy Link
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         <div className="mb-6">
@@ -182,6 +196,14 @@ export default function PublicTopicPage() {
             </div>
           )}
         </div>
+
+        {isLearnModeOpen && topic.vocabulary && (
+          <LearnModePublic
+            topicTitle={topic.title}
+            vocabulary={topic.vocabulary}
+            onClose={() => setIsLearnModeOpen(false)}
+          />
+        )}
     </div>
   );
 }
