@@ -12,14 +12,18 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, AlertCircle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 
-export function ReviewDashboard() {
-  const { dueReviews, isLoading, isError } = useDueReviews();
+interface ReviewDashboardProps {
+  projectId?: string;
+}
+
+export function ReviewDashboard({ projectId }: ReviewDashboardProps) {
+  const { dueReviews, isLoading, isError } = useDueReviews(projectId);
   const {
     count,
     dueToday,
     overdue,
     isLoading: countLoading,
-  } = useDueReviewCount();
+  } = useDueReviewCount(projectId);
 
   if (isLoading || countLoading) {
     return <ReviewDashboardSkeleton />;

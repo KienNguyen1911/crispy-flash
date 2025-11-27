@@ -2,10 +2,10 @@ import useSWR from 'swr';
 import { srsApi } from '@/services/srs-api';
 import { VocabularyWithSrs, ReviewFeedbackDto, DueReviewCount } from '@/types/srs';
 
-export function useDueReviews() {
+export function useDueReviews(projectId?: string) {
   const { data, error, mutate } = useSWR<VocabularyWithSrs[]>(
-    '/api/vocabulary/review/due',
-    srsApi.getDueReviews,
+    projectId ? `/api/vocabulary/review/due?projectId=${projectId}` : '/api/vocabulary/review/due',
+    () => srsApi.getDueReviews(projectId),
     {
       refreshInterval: 60000, // Refresh every minute
       revalidateOnFocus: false,
@@ -21,10 +21,10 @@ export function useDueReviews() {
   };
 }
 
-export function useDueReviewCount() {
+export function useDueReviewCount(projectId?: string) {
   const { data, error, mutate } = useSWR<DueReviewCount>(
-    '/api/vocabulary/review/due/count',
-    srsApi.getDueReviewCount,
+    projectId ? `/api/vocabulary/review/due/count?projectId=${projectId}` : '/api/vocabulary/review/due/count',
+    () => srsApi.getDueReviewCount(projectId),
     {
       refreshInterval: 60000, // Refresh every minute
       revalidateOnFocus: false,

@@ -11,12 +11,18 @@ import { apiClient } from '@/lib/api';
 class SrsApiService extends BaseApiService {
 
   // SRS API Functions
-  async getDueReviews(): Promise<VocabularyWithSrs[]> {
-    return this.handleApiCall(() => this.apiClient<VocabularyWithSrs[]>('/api/vocabulary/review/due'));
+  async getDueReviews(projectId?: string): Promise<VocabularyWithSrs[]> {
+    const url = projectId 
+      ? `/api/vocabulary/review/due?projectId=${projectId}`
+      : '/api/vocabulary/review/due';
+    return this.handleApiCall(() => this.apiClient<VocabularyWithSrs[]>(url));
   }
 
-  async getDueReviewCount(): Promise<DueReviewCount> {
-    return this.handleApiCall(() => this.apiClient<DueReviewCount>('/api/vocabulary/review/due/count'));
+  async getDueReviewCount(projectId?: string): Promise<DueReviewCount> {
+    const url = projectId 
+      ? `/api/vocabulary/review/due/count?projectId=${projectId}`
+      : '/api/vocabulary/review/due/count';
+    return this.handleApiCall(() => this.apiClient<DueReviewCount>(url));
   }
 
   async submitReviewFeedback(vocabId: string, feedback: ReviewFeedbackDto): Promise<VocabularyWithSrs> {
@@ -45,8 +51,8 @@ export { srsApiService };
 
 // Export individual functions for backward compatibility
 export const srsApi = {
-  getDueReviews: () => srsApiService.getDueReviews(),
-  getDueReviewCount: () => srsApiService.getDueReviewCount(),
+  getDueReviews: (projectId?: string) => srsApiService.getDueReviews(projectId),
+  getDueReviewCount: (projectId?: string) => srsApiService.getDueReviewCount(projectId),
   submitReviewFeedback: (vocabId: string, feedback: ReviewFeedbackDto) => srsApiService.submitReviewFeedback(vocabId, feedback),
   initializeSrsData: (vocabId: string) => srsApiService.initializeSrsData(vocabId),
 };

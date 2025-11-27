@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { VocabularyWithSrs } from "@/lib/api";
 
 interface ReviewSessionProps {
+  projectId?: string;
   onComplete?: () => void;
   onCancel?: () => void;
 }
@@ -33,8 +34,8 @@ function shuffleArray<T>(array: T[]): T[] {
   return newArray;
 }
 
-export function ReviewSession({ onComplete, onCancel }: ReviewSessionProps) {
-  const { dueReviews, isLoading } = useDueReviews();
+export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSessionProps) {
+  const { dueReviews, isLoading } = useDueReviews(projectId);
   const { submitFeedback } = useReviewSession();
 
   const [currentIndex, setCurrentIndex] = useState(0);
