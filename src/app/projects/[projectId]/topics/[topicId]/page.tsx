@@ -33,7 +33,9 @@ import { useToast } from "@/hooks/use-toast";
 
 import GenerateStoryDialog from "@/components/GenerateStoryDialog";
 import StoryDisplay from "@/components/StoryDisplay";
+import ShareTopicDialog from "@/components/ShareTopicDialog";
 import { AnimatePresence, motion } from "motion/react";
+import { Share2 } from "lucide-react";
 
 // Dynamic imports to split heavy client bundles
 const DataTable = dynamic(
@@ -74,6 +76,7 @@ export default function TopicDetailPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [generatedContent, setGeneratedContent] =
     useState<AIGeneratedContent | null>(null);
   const [shouldListenWebSocket, setShouldListenWebSocket] = useState(false);
@@ -243,7 +246,15 @@ export default function TopicDetailPage() {
 
           <TopicHeaderEditor projectId={projectId} topic={topic} />
 
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 flex justify-end gap-2">
+            <Button
+              onClick={() => setIsShareDialogOpen(true)}
+              variant="outline"
+              className="gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Share
+            </Button>
             <Button
               onClick={handleGenerateContent}
               disabled={
@@ -344,6 +355,13 @@ export default function TopicDetailPage() {
         onOpenChange={setIsDialogOpen}
         onGenerate={handleGenerateWithSettings}
         isGenerating={isGenerating}
+      />
+
+      <ShareTopicDialog
+        topicId={topicId}
+        topicTitle={topic.title}
+        isOpen={isShareDialogOpen}
+        onOpenChange={setIsShareDialogOpen}
       />
     </>
   );
