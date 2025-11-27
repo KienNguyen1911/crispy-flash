@@ -57,6 +57,15 @@ class TopicsApiService extends BaseApiService {
     );
   }
 
+  async moveTopic(topicId: string, targetProjectId: string) {
+    return this.handleApiCall(() =>
+      this.apiClient(`/api/topics/${topicId}/move`, {
+        method: "POST",
+        body: JSON.stringify({ targetProjectId }),
+      }),
+    );
+  }
+
   async getGenerationStatus(topicId: string, jobId: string) {
     return this.handleApiCall(() =>
       this.apiClient(
@@ -94,6 +103,8 @@ export const generateContent = (
   language: "english" | "vietnamese",
   difficulty: "easy" | "medium" | "hard",
 ) => topicsApiService.generateContent(topicId, language, difficulty);
+export const moveTopic = (topicId: string, targetProjectId: string) =>
+  topicsApiService.moveTopic(topicId, targetProjectId);
 
 export const getGenerationStatus = (topicId: string, jobId: string) =>
   topicsApiService.getGenerationStatus(topicId, jobId);

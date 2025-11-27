@@ -21,18 +21,29 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { Project } from "@/lib/types";
+import MoveTopicDialog from "@/components/projects/MoveTopicDialog";
 
 export default function ProjectPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const { isAuthenticated } = useAuth();
   const fetcher = useAuthFetcher();
+  const [movingTopic, setMovingTopic] = useState<{ id: string; title: string } | null>(null);
 
   const { data: projectRaw, error: projectError } = useSWR(
     isAuthenticated && projectId ? `/api/projects/${projectId}` : null,
     fetcher
   );
+
+  // Fetch all projects for the move dialog
+  const { data: projectsData } = useSWR(
+    isAuthenticated ? `/api/projects` : null,
+    fetcher
+  );
+
+  const projects: Project[] = projectsData ?? [];
 
   // Handle 404 errors
   if (projectError?.status === 404) {
@@ -188,6 +199,9 @@ export default function ProjectPage() {
                       topic={topic}
                       onTopicUpdated={refetchTopics}
                       onTopicDeleted={refetchTopics}
+                      onMoveClick={(topicId, topicTitle) =>
+                        setMovingTopic({ id: topicId, title: topicTitle })
+                      }
                     />
                   </div>
                 ))}
@@ -224,6 +238,25 @@ export default function ProjectPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Move Topic Dialog */}
+      {movingTopic && (
+        <MoveTopicDialog
+          topicId={movingTopic.id}
+          topicTitle={movingTopic.title}
+          currentProjectId={projectId}
+          projects={projects}
+          onTopicMoved={() => {
+            setMovingTopic(null);
+            refetchTopics();
+          }}
+          onOpenChange={(open) => {
+            if (!open) {
+              setMovingTopic(null);
+            }
+          }}
+        />
       )}
     </div>
   );

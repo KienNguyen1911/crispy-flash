@@ -24,7 +24,7 @@ export type Topic = {
 
 export type Project = {
   id: string;
-  name: string;
+  title: string;
   description: string;
   topics: Topic[];
 };

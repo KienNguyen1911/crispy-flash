@@ -2,6 +2,7 @@
 
 import React, { useContext, useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import type { Project } from "@/lib/types";
 import {
   Card,
   CardContent,
@@ -19,7 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, ArrowRight } from "lucide-react";
 import { Check, X } from "lucide-react";
 import { TopicContext } from "@/context/TopicContext";
 import { Progress } from "@/components/ui/progress";
@@ -28,12 +29,14 @@ export default function TopicCardClient({
   projectId,
   topic,
   onTopicUpdated,
-  onTopicDeleted
+  onTopicDeleted,
+  onMoveClick
 }: {
   projectId: string;
   topic: any;
   onTopicUpdated?: () => void;
   onTopicDeleted?: () => void;
+  onMoveClick?: (topicId: string, topicTitle: string) => void;
 }) {
   const { deleteTopic } = useContext(TopicContext);
   const { updateTopic } = useContext(TopicContext) as any;
@@ -125,7 +128,15 @@ export default function TopicCardClient({
       </CardContent>
 
       {/* Delete button top-right */}
-      <div className="absolute top-2 right-2 z-20 flex items-center">
+      <div className="absolute top-2 right-2 z-20 flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground"
+          onClick={() => onMoveClick?.(topic.id, topic.title)}
+        >
+          <ArrowRight className="h-4 w-4" />
+        </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="ghost" size="sm" className="text-destructive">
