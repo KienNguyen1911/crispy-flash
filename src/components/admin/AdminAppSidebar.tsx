@@ -12,7 +12,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { LayoutDashboard, Users, CreditCard, BarChart3, Settings, Shield, Home } from "lucide-react"
+import { LayoutDashboard, Users, CreditCard, ScrollText, Shield, Home } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -33,19 +33,14 @@ const items = [
     icon: CreditCard,
   },
   {
-    title: "Analytics",
-    url: "/dashboard/analytics",
-    icon: BarChart3,
-  },
-  {
     title: "Subscriptions",
     url: "/dashboard/subscriptions",
     icon: CreditCard,
   },
   {
-    title: "Settings",
-    url: "/dashboard/settings",
-    icon: Settings,
+    title: "Logs",
+    url: "/dashboard/logs",
+    icon: ScrollText,
   },
 ]
 
