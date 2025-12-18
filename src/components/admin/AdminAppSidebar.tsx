@@ -12,7 +12,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { LayoutDashboard, Users, CreditCard, BarChart3, Settings, Shield } from "lucide-react"
+import { LayoutDashboard, Users, CreditCard, BarChart3, Settings, Shield, Home } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -58,7 +58,7 @@ export function AdminAppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/admin">
+              <Link href="/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <Shield className="size-4" />
                 </div>
@@ -91,7 +91,16 @@ export function AdminAppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-         {/* Footer content if needed */}
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link href="/">
+                <Home className="h-4 w-4" />
+                <span>Back to App</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   )

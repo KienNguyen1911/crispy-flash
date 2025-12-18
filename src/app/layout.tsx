@@ -3,6 +3,7 @@ import './globals.css';
 import { AppProviders } from './providers';
 import { Toaster } from '@/components/ui/toaster';
 import { FloatingDockClient } from '@/components/ui/floating-dock-client';
+import { MainContent } from '@/components/ui/main-content';
 import PageLoader from '@/components/ui/PageLoader';
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -65,7 +66,7 @@ export default function RootLayout({
         <AppProviders>
           <div className="relative flex min-h-screen flex-col">
             <PageLoader />
-            <main className="flex-1 mb-16">{children}</main>
+            <MainContent>{children}</MainContent>
             <FloatingDockClient />
           </div>
           <Toaster />

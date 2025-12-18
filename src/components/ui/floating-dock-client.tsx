@@ -15,7 +15,11 @@ export function FloatingDockClient() {
   const isHomePage = pathname === '/';
   const isAdmin = user?.role === 'ADMIN';
 
-  const desktopItems = [
+  if (pathname.startsWith('/dashboard')) {
+    return null;
+  }
+
+  const allItems = [
     ...(isAdmin ? [{
       title: "Dashboard",
       icon: <LayoutDashboard className="h-full w-full" />,
@@ -27,7 +31,6 @@ export function FloatingDockClient() {
         <BookOpen className="h-full w-full" />
       ),
       href: "/guide",
-      isCurrentPage: pathname === "/guide",
     },
     {
       title: "Review",
@@ -35,7 +38,6 @@ export function FloatingDockClient() {
         <Hourglass className="h-full w-full" />
       ),
       href: "/review",
-      isCurrentPage: pathname === "/review",
     },
     {
       title: "Home",
@@ -43,7 +45,6 @@ export function FloatingDockClient() {
         <Home className="h-full w-full" />
       ),
       href: "/",
-      isCurrentPage: pathname === "/",
     },
     ...(isHomePage
       ? []
@@ -70,6 +71,8 @@ export function FloatingDockClient() {
       href: "/profile",
     },
   ];
+
+  const desktopItems = allItems.filter(item => item.href !== pathname);
 
   return <FloatingDock items={desktopItems} />;
 }
