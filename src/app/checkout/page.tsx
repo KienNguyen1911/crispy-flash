@@ -44,7 +44,7 @@ export default function CheckoutPage() {
   const { token, isAuthenticated } = useAuth();
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState(plans[1]);
-  const [paymentMethod, setPaymentMethod] = useState('STRIPE');
+  const [paymentMethod, setPaymentMethod] = useState('MOMO');
   const [loading, setLoading] = useState(false);
 
   const handleCheckout = async () => {
@@ -72,7 +72,25 @@ export default function CheckoutPage() {
 
       const data = await response.json();
       
-      if (data.url) {
+      if (data.method === 'POST') {
+          // Create form and submit
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = data.url;
+          
+          if (data.params) {
+              Object.keys(data.params).forEach(key => {
+                  const input = document.createElement('input');
+                  input.type = 'hidden';
+                  input.name = key;
+                  input.value = data.params[key];
+                  form.appendChild(input);
+              });
+          }
+          
+          document.body.appendChild(form);
+          form.submit();
+      } else if (data.url) {
         window.location.href = data.url;
       } else {
         toast.error('Failed to create payment link');
@@ -129,8 +147,8 @@ export default function CheckoutPage() {
             <CardDescription>Select a secure payment method</CardDescription>
         </CardHeader>
         <CardContent>
-            <RadioGroup defaultValue="STRIPE" onValueChange={setPaymentMethod} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
+            <RadioGroup defaultValue="MOMO" onValueChange={setPaymentMethod} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* <div>
                     <RadioGroupItem value="STRIPE" id="stripe" className="peer sr-only" />
                     <Label
                         htmlFor="stripe"
@@ -139,7 +157,7 @@ export default function CheckoutPage() {
                         <CreditCard className="mb-3 h-6 w-6" />
                         International Card
                     </Label>
-                </div>
+                </div> */}
                 <div>
                     <RadioGroupItem value="MOMO" id="momo" className="peer sr-only" />
                     <Label
