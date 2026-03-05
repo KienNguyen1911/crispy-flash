@@ -9,48 +9,80 @@ export function apiUrl(path: string): string {
   return `${API_BASE}${path}`;
 }
 
-export interface ApiOptions extends RequestInit {
-  // token?: string; // We don't need to pass the token manually anymore
-}
+export interface ApiOptions extends RequestInit { }
+
+// Flag để tránh nhiều refresh request chạy đồng thời
+let isRefreshing = false;
 
 export async function apiClient<T = any>(
   path: string,
   options: ApiOptions = {}
 ): Promise<T> {
   const url = apiUrl(path);
-  const { ...fetchOptions } = options;
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...fetchOptions.headers,
+    ...options.headers,
   };
 
-  // --- MAIN CHANGE IS HERE ---
-  // Only run on the client-side
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('jwt_token');
     if (token) {
       (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
   }
-  // --- END OF CHANGE ---
 
   const response = await fetch(url, {
-    ...fetchOptions,
+    ...options,
     headers,
   });
 
-  if (!response.ok) {
-    // Add logic to handle expired tokens
-    if (response.status === 401) {
-      if (typeof window !== 'undefined') {
-        console.error('API Client - Unauthorized. Token may be expired. Logging out.');
-        localStorage.removeItem('jwt_token');
-        window.location.href = '/'; // Or an error page
+  // Nếu nhận 401 và chưa đang trong quá trình refresh
+  if (response.status === 401 && !isRefreshing && typeof window !== 'undefined') {
+    isRefreshing = true;
+    try {
+      const storedRefreshToken = localStorage.getItem('refresh_token');
+      if (storedRefreshToken) {
+        const refreshRes = await fetch(apiUrl('/api/auth/refresh'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken: storedRefreshToken })
+        });
+
+        if (refreshRes.ok) {
+          isRefreshing = false;
+          const { access_token, refresh_token } = await refreshRes.json();
+          // Luu token moi
+          localStorage.setItem('jwt_token', access_token);
+          localStorage.setItem('refresh_token', refresh_token);
+
+          // Retry lại request gốc voi token moi
+          (headers as Record<string, string>)['Authorization'] = `Bearer ${access_token}`;
+          const retryRes = await fetch(url, {
+            ...options,
+            headers,
+          });
+          if (retryRes.ok) return retryRes.json() as T;
+        }
       }
+    } catch {
+      // Refresh request thất bại
+    } finally {
+      isRefreshing = false;
     }
+
+    // Refresh không thành công — redirect về trang chủ để login lại
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('refresh_token');
+    window.location.href = '/';
+    throw new Error('Session expired. Please log in again.');
+  }
+
+  if (!response.ok) {
     throw new Error(`API call failed: ${response.status} ${response.statusText}`);
   }
 
-  return response.json();
+  return response.json() as T;
 }

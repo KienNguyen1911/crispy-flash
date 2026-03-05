@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import { useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -7,19 +7,18 @@ import { useAuth } from '@/context/AuthContext';
 export default function CallbackHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { setAuthToken } = useAuth();
+  const { setAuthTokens } = useAuth();
 
   useEffect(() => {
     const token = searchParams.get('token');
-    console.log('Token:', token);
-    if (token) {
-      setAuthToken(token);
-      router.push('/');
+    const refreshToken = searchParams.get('refreshToken');
+    if (token && refreshToken) {
+      setAuthTokens(token, refreshToken); // Lưu vao localStorage qua AuthContext
+      router.replace('/'); // replace để token không còn trong browser history
     } else {
-      // Handle cases where token is not present
-      router.push('/?error=Authentication-failed');
+      router.replace('/?error=Authentication-failed');
     }
-  }, [searchParams, router, setAuthToken]);
+  }, [searchParams, router, setAuthTokens]);
 
   return <div>Loading...</div>;
 }

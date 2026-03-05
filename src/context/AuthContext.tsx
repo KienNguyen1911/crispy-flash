@@ -9,6 +9,7 @@ import {
   useCallback
 } from "react";
 import { jwtDecode } from "jwt-decode";
+import { apiClient } from "@/lib/api";
 
 interface User {
   id: string;
@@ -24,7 +25,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: () => void;
   logout: () => void;
-  setAuthToken: (token: string) => void;
+  setAuthTokens: (accessToken: string, refreshToken: string) => void;
   isLoading: boolean;
 }
 
@@ -35,23 +36,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const logout = useCallback(() => {
-    console.log("Logging out");
-    localStorage.removeItem("jwt_token");
-    setUser(null);
-    setToken(null);
-    window.location.href = "/"; // Redirect to login page
+  const logout = useCallback(async () => {
+    try {
+      const refreshToken = localStorage.getItem("refresh_token");
+      if (refreshToken) {
+        // Revoke refresh token trên BE (xóa khỏi Redis)
+        await fetch(`${process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001"}/api/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+      }
+    } catch {
+      // ignore network errors
+    } finally {
+      localStorage.removeItem("jwt_token");
+      localStorage.removeItem("refresh_token");
+      setUser(null);
+      setToken(null);
+      window.location.href = "/";
+    }
   }, []);
 
-  const setAuthToken = useCallback(
-    (newToken: string) => {
+  const setAuthTokens = useCallback(
+    (accessToken: string, refreshToken: string) => {
       try {
-        const decodedUser: User = jwtDecode(newToken);
-        localStorage.setItem("jwt_token", newToken);
-        setUser(decodedUser);
-        setToken(newToken);
+        const decoded = jwtDecode<User & { exp: number; sub: string }>(accessToken);
+
+        // Kiểm tra expiry token
+        if (decoded.exp * 1000 < Date.now()) {
+          logout();
+          return;
+        }
+
+        // Lưu vào localStorage theo yêu cầu của user
+        localStorage.setItem("jwt_token", accessToken);
+        localStorage.setItem("refresh_token", refreshToken);
+
+        setUser({
+          id: decoded.sub,
+          email: decoded.email,
+          name: decoded.name,
+          picture: (decoded as any).picture || '',
+          role: decoded.role,
+        });
+        setToken(accessToken);
       } catch (error) {
-        console.error("Failed to decode new token:", error);
+        console.error("Failed to decode token:", error);
         logout();
       }
     },
@@ -59,18 +92,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    try {
-      const storedToken = localStorage.getItem("jwt_token");
-      if (storedToken) {
-        setAuthToken(storedToken);
+    const initializeAuth = async () => {
+      const storedAccessToken = localStorage.getItem("jwt_token");
+      const storedRefreshToken = localStorage.getItem("refresh_token");
+
+      if (storedAccessToken && storedRefreshToken) {
+        try {
+          const decoded = jwtDecode<{ exp: number; sub: string }>(storedAccessToken);
+
+          if (decoded.exp * 1000 < Date.now()) {
+            // Access token expired, thu refresh refreshToken
+            const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
+            const res = await fetch(`${apiBase}/api/auth/refresh`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ refreshToken: storedRefreshToken })
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              setAuthTokens(data.access_token, data.refresh_token);
+            } else {
+              // Refresh token khong hop le (bi xoa trong Redis hoac maxAge het)
+              console.log("Refresh token is invalid or expired in server. Logging out.");
+              logout();
+            }
+          } else {
+            // Còn hạn, set normal
+            setAuthTokens(storedAccessToken, storedRefreshToken);
+          }
+        } catch (error) {
+          console.error("Token verification error:", error);
+          logout();
+        }
       }
-    } catch (error) {
-      console.error("Invalid or expired token:", error);
-      localStorage.removeItem("jwt_token");
-    } finally {
       setIsLoading(false);
-    }
-  }, [setAuthToken]);
+    };
+
+    initializeAuth();
+  }, [setAuthTokens, logout]);
 
   const login = () => {
     const apiUrl = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
@@ -85,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!token,
         login,
         logout,
-        setAuthToken,
+        setAuthTokens,
         isLoading
       }}
     >

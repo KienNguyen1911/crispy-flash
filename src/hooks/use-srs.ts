@@ -11,7 +11,6 @@ export function useDueReviews(projectId?: string) {
       revalidateOnFocus: false,
     }
   );
-  console.log('useDueReviews', data);
 
   return {
     dueReviews: data || [],
