@@ -73,14 +73,16 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
 
                 if (kanjiAliveRes.status === "fulfilled" && kanjiAliveRes.value.ok) {
                     const data = await kanjiAliveRes.value.json();
-                    data.examples.forEach((ex: any) => {
-                        // "展覧会（てんらんかい）" -> "てんらんかい"
-                        ex.reading = (ex.japanese.match(/（(.*?)）/) || [])[1] || "";
-                        // "展覧会（てんらんかい）" -> "展覧会"
-                        ex.japanese = ex.japanese.replace(/（.*?）/g, "");
-                    });
-                    newKanjiAliveData = data;
-                    setKanjiAliveData(data);
+                    if (data.length != 0) {
+                        data.examples.forEach((ex: any) => {
+                            // "展覧会（てんらんかい）" -> "てんらんかい"
+                            ex.reading = (ex.japanese.match(/（(.*?)）/) || [])[1] || "";
+                            // "展覧会（てんらんかい）" -> "展覧会"
+                            ex.japanese = ex.japanese.replace(/（.*?）/g, "");
+                        });
+                        newKanjiAliveData = data;
+                        setKanjiAliveData(data);
+                    }
                 }
 
                 if (jdictRes.status === "fulfilled" && jdictRes.value.ok) {
@@ -185,16 +187,16 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
                                                                             </Badge>
                                                                         )}
                                                                     </div>
-                                                                    <p className="text-xl font-medium text-foreground">{kanjiAliveData?.meaning || "—"}</p>
+                                                                    <p className="text-xl font-medium text-foreground">{kanjiAliveData?.meaning || jdictData?.mean || "—"}</p>
                                                                 </div>
                                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                     <div className="bg-muted/30 p-4 rounded-md">
                                                                         <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mr-2"></span>Onyomi</h4>
-                                                                        <p className="font-japanese text-xl">{kanjiAliveData?.onyomi_ja || "—"}</p>
+                                                                        <p className="font-japanese text-xl">{kanjiAliveData?.onyomi_ja || jdictData?.onyomi || "—"}</p>
                                                                     </div>
                                                                     <div className="bg-muted/30 p-4 rounded-md">
                                                                         <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-2"></span>Kunyomi</h4>
-                                                                        <p className="font-japanese text-xl">{kanjiAliveData?.kunyomi_ja || "—"}</p>
+                                                                        <p className="font-japanese text-xl">{kanjiAliveData?.kunyomi_ja || jdictData?.kunyomi || "—"}</p>
                                                                     </div>
                                                                 </div>
                                                             </div>
