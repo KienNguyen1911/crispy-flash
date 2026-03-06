@@ -61,6 +61,7 @@ import {
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { KanjiDrawer } from "@/components/vocabularies/KanjiDrawer";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface DataTableProps<TData, TValue> {
@@ -94,6 +95,7 @@ export function DataTable<TData, TValue>({
   >(new Set());
   const [viewMode, setViewMode] = React.useState<"table" | "cards">("table");
   const [globalFilter, setGlobalFilter] = React.useState("");
+  const [selectedKanjiWord, setSelectedKanjiWord] = React.useState<string | null>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const augmentedColumns = React.useMemo(() => {
@@ -116,7 +118,7 @@ export function DataTable<TData, TValue>({
       }
     };
     return [...columns, actionColumn];
-  }, [columns]);
+  }, [columns, isEditing]);
 
   React.useEffect(() => {
     setData(initialData);
@@ -195,7 +197,7 @@ export function DataTable<TData, TValue>({
     },
     meta: {
       isEditing,
-      updateData: (rowIndex, columnId, value) => {
+      updateData: (rowIndex: number, columnId: string, value: unknown) => {
         setData((old) =>
           old.map((row, index) => {
             if (index === rowIndex) {
@@ -212,7 +214,7 @@ export function DataTable<TData, TValue>({
         const idToDelete = (visibleData[rowIndex] as any).id;
         setDeletedVocabularyIds((old) => new Set(old).add(idToDelete));
       }
-    }
+    } as any
   });
 
   const handleSave = async () => {
@@ -291,7 +293,7 @@ export function DataTable<TData, TValue>({
         }}
       >
         <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Filter by status"/>
+          <SelectValue placeholder="Filter by status" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">All</SelectItem>
@@ -376,7 +378,10 @@ export function DataTable<TData, TValue>({
                 transition={{ duration: 0.2, delay: index * 0.05 }}
                 className="h-full"
               >
-                <Card className="h-full hover:shadow-lg transition-all duration-200 hover:scale-105">
+                <Card
+                  className="h-full hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer"
+                  onClick={() => setSelectedKanjiWord(item.word)}
+                >
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start gap-3">
                       <div className="flex-1 min-w-0">
@@ -441,9 +446,9 @@ export function DataTable<TData, TValue>({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </TableHead>
                 );
               })}
@@ -476,13 +481,13 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className={rowClassName}
+                  className={`${rowClassName} cursor-pointer`}
+                  onClick={() => setSelectedKanjiWord((row.original as any).word)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={!isDesktop ? "w-1/3" : undefined}
-                      className={isEditing ? "px-1" : undefined}
+                      className={`${!isDesktop ? "w-1/3" : ""} ${isEditing ? "px-1" : ""}`.trim() || undefined}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -531,6 +536,12 @@ export function DataTable<TData, TValue>({
           {viewMode === "table" ? renderTableView() : renderCardsView()}
         </motion.div>
       </AnimatePresence>
+
+      <KanjiDrawer
+        word={selectedKanjiWord}
+        isOpen={!!selectedKanjiWord}
+        onOpenChange={(open) => !open && setSelectedKanjiWord(null)}
+      />
     </div>
   );
 }

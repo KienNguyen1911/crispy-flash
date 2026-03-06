@@ -1,4 +1,4 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   eslint: {
@@ -30,6 +30,14 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/kanjialive/:kanji',
+        destination: 'https://app.kanjialive.com/api/kanji/:kanji',
+      },
+    ];
   },
 };
 
