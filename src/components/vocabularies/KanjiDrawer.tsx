@@ -24,6 +24,7 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [kanjiAliveData, setKanjiAliveData] = useState<any>(null);
     const [jdictData, setJdictData] = useState<any>(null);
+    const [kanjiCache, setKanjiCache] = useState<Record<string, { kanjiAlive: any, jdict: any }>>({});
 
     // Extract kanjis from the word when it changes
     useEffect(() => {
@@ -38,6 +39,10 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
                 setKanjiAliveData(null);
                 setJdictData(null);
             }
+        } else if (!isOpen) {
+            // Optional: clear cache when drawer closes entirely to fetch fresh data next time,
+            // or keep it if you want to reuse it across different words with the same kanji.
+            // Let's keep it to maximize cache hits.
         }
     }, [word, isOpen]);
 
@@ -45,6 +50,13 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
     useEffect(() => {
         const fetchKanjiData = async () => {
             if (!selectedKanji || !isOpen) return;
+
+            // Check if we already have the data in cache
+            if (kanjiCache[selectedKanji]) {
+                setKanjiAliveData(kanjiCache[selectedKanji].kanjiAlive);
+                setJdictData(kanjiCache[selectedKanji].jdict);
+                return;
+            }
 
             setIsLoading(true);
             setKanjiAliveData(null);
@@ -56,6 +68,9 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
                     fetch(`https://api.jdict.net/api/v1/kanjis/${selectedKanji}`)
                 ]);
 
+                let newKanjiAliveData = null;
+                let newJdictData = null;
+
                 if (kanjiAliveRes.status === "fulfilled" && kanjiAliveRes.value.ok) {
                     const data = await kanjiAliveRes.value.json();
                     data.examples.forEach((ex: any) => {
@@ -64,13 +79,25 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
                         // "展覧会（てんらんかい）" -> "展覧会"
                         ex.japanese = ex.japanese.replace(/（.*?）/g, "");
                     });
+                    newKanjiAliveData = data;
                     setKanjiAliveData(data);
                 }
 
                 if (jdictRes.status === "fulfilled" && jdictRes.value.ok) {
                     const data = await jdictRes.value.json();
+                    newJdictData = data;
                     setJdictData(data);
                 }
+
+                // Update Cache
+                setKanjiCache(prev => ({
+                    ...prev,
+                    [selectedKanji]: {
+                        kanjiAlive: newKanjiAliveData,
+                        jdict: newJdictData
+                    }
+                }));
+
             } catch (error) {
                 console.error("Error fetching Kanji data:", error);
             } finally {
@@ -79,7 +106,7 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
         };
 
         fetchKanjiData();
-    }, [selectedKanji, isOpen]);
+    }, [selectedKanji, isOpen, kanjiCache]);
 
     if (!word || kanjis.length === 0) {
         return (
