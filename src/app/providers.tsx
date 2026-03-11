@@ -14,8 +14,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <AuthProvider> { /* Use AuthProvider instead of SessionProvider */ }
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
-        enableSystem
+        defaultTheme="dark"
+        forcedTheme="dark"
         disableTransitionOnChange
       >
         <SWRConfig

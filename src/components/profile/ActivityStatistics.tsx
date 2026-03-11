@@ -5,8 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import LearningHeatMap from "./LearningHeatMap";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, User } from "lucide-react";
-import { useTheme } from "next-themes";
+import { User } from "lucide-react";
 import { AuthIcon } from "../ui/auth-button";
 
 interface UserInfo {
@@ -49,7 +48,6 @@ interface ActivityStatisticsProps {
 const ActivityStatistics: React.FC<ActivityStatisticsProps> = ({ userInfo, learningStats }) => {
   const { user, loading: userLoading, error: userError } = userInfo;
   const { stats, loading: statsLoading, error: statsError } = learningStats;
-  const { theme, setTheme } = useTheme();
   
   // Mock data for vocabulary progress (will be replaced when we have vocabulary API)
   const rememberedWords = 150;
@@ -85,15 +83,6 @@ const ActivityStatistics: React.FC<ActivityStatisticsProps> = ({ userInfo, learn
                 </p>
               </div>
               <div className="flex gap-2 flex-col">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="h-10 w-10"
-                >
-                  {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </Button>
-
                 <AuthIcon></AuthIcon>
               </div>
             </>
