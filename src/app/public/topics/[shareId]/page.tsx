@@ -1,12 +1,4 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import useSWR from "swr";
-import { useAuthFetcher } from "@/hooks/useAuthFetcher";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,59 +7,34 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
-import { Copy, Check, BookOpen } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import LearnModePublic from "@/components/LearnModePublic";
+import PublicTopicActions from "@/components/topics/PublicTopicActions";
 
-export default function PublicTopicPage() {
-  const params = useParams<{ shareId: string }>();
-  const { shareId } = params;
-  const [copied, setCopied] = useState(false);
-  const [isLearnModeOpen, setIsLearnModeOpen] = useState(false);
-
-  // Use public fetcher (no auth required)
-  const fetcher = async (url: string) => {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
-    const fullUrl = url.startsWith("http") ? url : `${apiBase}${url}`;
-    const res = await fetch(fullUrl);
+async function getTopic(shareId: string) {
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
+  try {
+    const res = await fetch(`${apiBase}/api/topic-share/public/${shareId}`, {
+      // Use Next.js fetch cache options here if needed, 
+      // e.g., next: { revalidate: 60 } for ISR
+      cache: "no-store", 
+    });
+    
     if (!res.ok) {
-      throw new Error("Failed to fetch");
+      return null;
     }
     return res.json();
-  };
-
-  const {
-    data: topic,
-    error,
-    isLoading,
-  } = useSWR(shareId ? `/api/topic-share/public/${shareId}` : null, fetcher);
-
-  const { toast } = useToast();
-
-  const handleCopyLink = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    toast({
-      title: "Link copied",
-      description: "Share link copied to clipboard",
-    });
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto max-w-5xl p-8 space-y-4">
-        <Skeleton className="h-8 w-1/4" />
-        <Skeleton className="h-4 w-1/2" />
-        <Separator />
-        <Skeleton className="h-96 w-full" />
-      </div>
-    );
+  } catch (error) {
+    console.error("Failed to fetch public topic:", error);
+    return null;
   }
+}
 
-  if (error || !topic) {
+export default async function PublicTopicPage(
+  props: { params: Promise<{ shareId: string }> }
+) {
+  const params = await props.params;
+  const topic = await getTopic(params.shareId);
+
+  if (!topic) {
     return (
       <div className="container mx-auto max-w-5xl p-8">
         <Card className="p-6">
@@ -97,36 +64,9 @@ export default function PublicTopicPage() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <div className="flex gap-2">
-            {topic.vocabulary && topic.vocabulary.length > 0 && (
-              <Button
-                size="sm"
-                onClick={() => setIsLearnModeOpen(true)}
-                className="gap-2"
-              >
-                <BookOpen className="h-4 w-4" />
-                Learn Mode
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCopyLink}
-              className="gap-2"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  Copy Link
-                </>
-              )}
-            </Button>
-          </div>
+          
+          {/* Extract client-side interactive actions */}
+          <PublicTopicActions topic={topic} />
         </div>
 
         <div className="mb-6">
@@ -137,73 +77,64 @@ export default function PublicTopicPage() {
         </div>
       </Card>
 
-
-        <div className="space-y-6">
-          <div>
-            {topic.vocabulary && topic.vocabulary.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {topic.vocabulary.map((vocab: any) => (
-                  <Card key={vocab.id} className="p-4">
-                    <div className="space-y-2">
-                      {vocab.word && (
-                        <div>
-                          <p className="text-sm text-gray-600">Word</p>
-                          <p className="text-lg font-semibold">{vocab.word}</p>
-                        </div>
-                      )}
-                      {vocab.pronunciation && (
-                        <div>
-                          <p className="text-sm text-gray-600">Pronunciation</p>
-                          <p className="text-sm">{vocab.pronunciation}</p>
-                        </div>
-                      )}
+      <div className="space-y-6">
+        <div>
+          {topic.vocabulary && topic.vocabulary.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {topic.vocabulary.map((vocab: any) => (
+                <Card key={vocab.id} className="p-4">
+                  <div className="space-y-2">
+                    {vocab.word && (
                       <div>
-                        <p className="text-sm text-gray-600">Meaning</p>
-                        <p className="text-sm">{vocab.meaning}</p>
+                        <p className="text-sm text-gray-600">Word</p>
+                        <p className="text-lg font-semibold">{vocab.word}</p>
                       </div>
-                      {vocab.image && (
-                        <div>
-                          <img
-                            src={vocab.image}
-                            alt={vocab.word}
-                            className="w-full h-32 object-cover rounded"
-                          />
-                        </div>
-                      )}
+                    )}
+                    {vocab.pronunciation && (
+                      <div>
+                        <p className="text-sm text-gray-600">Pronunciation</p>
+                        <p className="text-sm">{vocab.pronunciation}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm text-gray-600">Meaning</p>
+                      <p className="text-sm">{vocab.meaning}</p>
                     </div>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-600">No vocabulary items yet.</p>
-            )}
-          </div>
-
-          {topic.contextualPracticeContent && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Story</h2>
-              <Card className="p-6 bg-blue-50">
-                <div className="prose prose-sm max-w-none">
-                  {typeof topic.contextualPracticeContent === "string" ? (
-                    <p>{topic.contextualPracticeContent}</p>
-                  ) : (
-                    <pre className="whitespace-pre-wrap text-sm">
-                      {JSON.stringify(topic.contextualPracticeContent, null, 2)}
-                    </pre>
-                  )}
-                </div>
-              </Card>
+                    {vocab.image && (
+                      <div>
+                        <img
+                          src={vocab.image}
+                          alt={vocab.word}
+                          className="w-full h-32 object-cover rounded"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ))}
             </div>
+          ) : (
+            <p className="text-gray-600">No vocabulary items yet.</p>
           )}
         </div>
 
-        {isLearnModeOpen && topic.vocabulary && (
-          <LearnModePublic
-            topicTitle={topic.title}
-            vocabulary={topic.vocabulary}
-            onClose={() => setIsLearnModeOpen(false)}
-          />
+        {topic.contextualPracticeContent && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Story</h2>
+            <Card className="p-6 bg-blue-50">
+              <div className="prose prose-sm max-w-none">
+                {typeof topic.contextualPracticeContent === "string" ? (
+                  <p>{topic.contextualPracticeContent}</p>
+                ) : (
+                  <pre className="whitespace-pre-wrap text-sm">
+                    {JSON.stringify(topic.contextualPracticeContent, null, 2)}
+                  </pre>
+                )}
+              </div>
+            </Card>
+          </div>
         )}
+      </div>
     </div>
   );
 }

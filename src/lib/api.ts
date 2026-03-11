@@ -11,14 +11,38 @@ export function apiUrl(path: string): string {
 
 export interface ApiOptions extends RequestInit { }
 
-// Flag để tránh nhiều refresh request chạy đồng thời
+// Flag và queue để tránh nhiều refresh request chạy đồng thời và xử lý race conditions
 let isRefreshing = false;
+let failedQueue: { resolve: (value: any) => void; reject: (reason?: any) => void; options: ApiOptions & { url?: string } }[] = [];
+
+const processQueue = (error: Error | null, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      // Retry with new token
+      const headers = { ...prom.options.headers } as Record<string, string>;
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      fetch(prom.options.url as string, { ...prom.options, headers })
+        .then(res => {
+          if (!res.ok) throw new Error(`API call failed: ${res.status} ${res.statusText}`);
+          return res.json();
+        })
+        .then(prom.resolve)
+        .catch(prom.reject);
+    }
+  });
+  failedQueue = [];
+};
 
 export async function apiClient<T = any>(
   path: string,
   options: ApiOptions = {}
 ): Promise<T> {
   const url = apiUrl(path);
+  // Store url in options for queueing
+  const fetchOptions: ApiOptions & { url?: string } = { ...options, url };
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -33,12 +57,19 @@ export async function apiClient<T = any>(
   }
 
   const response = await fetch(url, {
-    ...options,
+    ...fetchOptions,
     headers,
   });
 
-  // Nếu nhận 401 và chưa đang trong quá trình refresh
-  if (response.status === 401 && !isRefreshing && typeof window !== 'undefined') {
+  // Nếu nhận 401
+  if (response.status === 401 && typeof window !== 'undefined') {
+    if (isRefreshing) {
+      // Nếu đang refresh, đưa request vào queue chờ
+      return new Promise<T>((resolve, reject) => {
+        failedQueue.push({ resolve, reject, options: fetchOptions });
+      });
+    }
+
     isRefreshing = true;
     try {
       const storedRefreshToken = localStorage.getItem('refresh_token');
@@ -52,30 +83,35 @@ export async function apiClient<T = any>(
         });
 
         if (refreshRes.ok) {
-          isRefreshing = false;
           const { access_token, refresh_token } = await refreshRes.json();
           // Luu token moi
           localStorage.setItem('jwt_token', access_token);
           localStorage.setItem('refresh_token', refresh_token);
 
+          // Xử lý các request đang đợi
+          processQueue(null, access_token);
+          
+          isRefreshing = false;
+
           // Retry lại request gốc voi token moi
           (headers as Record<string, string>)['Authorization'] = `Bearer ${access_token}`;
           const retryRes = await fetch(url, {
-            ...options,
+            ...fetchOptions,
             headers,
           });
           if (retryRes.ok) return retryRes.json() as T;
         }
       }
-    } catch {
-      // Refresh request thất bại
+    } catch (refreshError) {
+      processQueue(refreshError as Error, null);
     } finally {
       isRefreshing = false;
     }
 
-    // Refresh không thành công — redirect về trang chủ để login lại
+    // Refresh lỗi -> Logout
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('refresh_token');
+    processQueue(new Error('Session expired'), null);
     window.location.href = '/';
     throw new Error('Session expired. Please log in again.');
   }
