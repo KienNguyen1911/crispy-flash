@@ -127,12 +127,12 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
 
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
-            <SheetContent side="bottom" className="h-[80vh] sm:h-[85vh] rounded-t-xl flex flex-col px-0 sm:px-4">
+            <SheetContent side="bottom" className="h-[90vh] sm:h-[90vh] rounded-t-xl flex flex-col px-0 sm:px-4">
                 <SheetHeader className="px-4 pb-2 border-b">
                     <SheetTitle>Word: <span className="text-primary">{word}</span></SheetTitle>
                 </SheetHeader>
 
-                <div className="flex-1 flex flex-col min-h-0 pt-4 px-4">
+                <div className="flex-1 flex flex-col min-h-0 pt-2 px-4">
                     <Tabs
                         value={selectedKanji}
                         onValueChange={setSelectedKanji}
@@ -152,7 +152,7 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
                             </TabsList>
                         )}
 
-                        <div className="flex-1 relative pb-6">
+                        <div className="flex-1 relative pb-0">
                             {kanjis.map((k) => (
                                 <TabsContent
                                     key={k}
@@ -161,7 +161,7 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
                                 >
                                     <ScrollArea className="h-full pr-4">
                                         {selectedKanji === k && (
-                                            <div className="space-y-8 pb-10">
+                                            <div className="space-y-8 ">
                                                 {isLoading ? (
                                                     <div className="flex flex-col items-center justify-center h-40 gap-4 text-muted-foreground">
                                                         <Loader2 className="h-8 w-8 animate-spin text-primary" />

@@ -8,21 +8,21 @@
         --clr-dark: 0 0% 0%; /* Đen tuyệt đối */
         --clr-light: 0 0% 100%; /* Trắng */
 
-        /* Primary colors - Cyan theme (Hue 188) */
-        --clr-primary-a0: 188 78% 46%; /* #1aaecc - Cyan đậm làm màu chính */
-        --clr-primary-a10: 188 78% 56%; /* #37b7d1 */
-        --clr-primary-a20: 188 78% 66%; /* #55c1d6 */
-        --clr-primary-a30: 188 78% 76%;
-        --clr-primary-a40: 188 78% 86%;
-        --clr-primary-a50: 188 78% 94%;
+        /* Primary colors - Cyan theme */
+        --clr-primary-a0: 190 70% 45%; /* Slightly softer cyan */
+        --clr-primary-a10: 190 70% 55%;
+        --clr-primary-a20: 190 70% 65%;
+        --clr-primary-a30: 190 70% 75%;
+        --clr-primary-a40: 190 70% 85%;
+        --clr-primary-a50: 190 70% 95%;
 
-        /* Surface colors - Pure Black / Very Dark */
-        --clr-surface-a0: 0 0% 0%; /* #000000 - Nền tuyệt đối (Black) */
-        --clr-surface-a10: 0 0% 4%; /* #0a0a0a - Nền lớp 2 */
-        --clr-surface-a20: 0 0% 8%; /* #141414 - Nền lớp 3 */
-        --clr-surface-a30: 0 0% 12%; /* #1f1f1f */
-        --clr-surface-a40: 0 0% 18%; /* #2e2e2e */
-        --clr-surface-a50: 0 0% 25%; /* #404040 */
+        /* Surface colors - Zinc/Slate Dark */
+        --clr-surface-a0: 240 10% 4%; /* Base background */
+        --clr-surface-a10: 240 5% 8%; /* Cards */
+        --clr-surface-a20: 240 5% 12%; /* Borders/Hover */
+        --clr-surface-a30: 240 5% 16%;
+        --clr-surface-a40: 240 5% 20%;
+        --clr-surface-a50: 240 5% 26%;
         --clr-surface-a60: 0 0% 35%; /* #606060 */
         --clr-surface-a70: 0 0% 45%; /* #808080 */
         --clr-surface-a80: 0 0% 55%; /* #a0a0a0 */
@@ -87,28 +87,23 @@
         --chart-4: var(--clr-danger-a10);
         --chart-5: var(--clr-info-a10);
 
-        /* App gradient (dark): Pure Black and Cyan tones */
+        /* App gradient (dark): Zinc and Cyan tones */
         --app-gradient:
-                /* Gradient #1: Tông nền tối (Giữ nguyên) */
             radial-gradient(
                 1200px circle at 15% 10%,
-                hsl(200 15% 8% / 0.9),
+                hsl(240 5% 8% / 0.8),
                 transparent 38%
             ),
-            /* Gradient #2: Ánh sáng Cyan góc trên bên phải (Giữ nguyên) */
-                radial-gradient(
-                    1200px circle at 85% 15%,
-                    hsl(188 78% 25% / 0.6),
-                    transparent 42%
-                ),
-            /* Gradient #3: Ánh sáng Cyan góc dưới bên trái (MỚI) */
-                radial-gradient(
-                    1200px circle at 10% 90%,
-                    /* Thay đổi vị trí: 10% trái, 90% dưới */
-                        hsl(188 78% 25% / 0.5),
-                    /* Giảm nhẹ opacity (0.5) để không quá rực rỡ */ transparent
-                        40%
-                );
+            radial-gradient(
+                1200px circle at 85% 15%,
+                hsl(190 70% 30% / 0.3),
+                transparent 42%
+            ),
+            radial-gradient(
+                1200px circle at 10% 90%,
+                hsl(190 70% 30% / 0.2),
+                transparent 40%
+            );
 
         /* Glassmorphism variables (dark) */
         --glass-bg: rgba(0, 0, 0, 0.55); /* Black với opacity cao hơn */

@@ -85,7 +85,7 @@ export default function TopicCardClient({
   return (
     <Card
       ref={containerRef}
-      className="relative h-full flex flex-col hover:shadow-lg hover:scale-105 transition-all duration-300"
+      className="group relative h-full flex flex-col bg-card/40 backdrop-blur-sm border-white/5 shadow-lg hover:shadow-glow hover:scale-[1.02] hover:border-primary/30 transition-all duration-300"
     >
       <CardHeader>
         <div>
@@ -117,29 +117,31 @@ export default function TopicCardClient({
         </div>
       </CardHeader>
 
-      <CardContent>
-        <p className="text-sm md:text-base text-muted-foreground">
-          {topic.vocabularyCount } word(s), {topic.learnedCount} learned
-        </p>
-        <Progress
-          value={(topic.learnedCount / topic.vocabularyCount) * 100}
-          className="mt-2"
-        />
+      <CardContent className="flex-grow flex flex-col justify-end">
+        <div className="mt-auto">
+          <p className="text-sm md:text-base text-muted-foreground mb-3">
+            <span className="font-semibold text-foreground/80">{topic.vocabularyCount}</span> word(s), <span className="text-primary">{topic.learnedCount}</span> learned
+          </p>
+          <Progress
+            value={topic.vocabularyCount > 0 ? (topic.learnedCount / topic.vocabularyCount) * 100 : 0}
+            className="h-1.5 shadow-[0_0_8px_rgba(26,174,204,0.3)]"
+          />
+        </div>
       </CardContent>
 
-      {/* Delete button top-right */}
-      <div className="absolute top-2 right-2 z-20 flex items-center gap-1">
+      {/* Action buttons top-right, visible on group hover */}
+      <div className="absolute top-2 right-2 z-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         <Button
           variant="ghost"
-          size="sm"
-          className="text-muted-foreground"
+          size="icon"
+          className="text-muted-foreground hover:bg-muted h-8 w-8 rounded-full"
           onClick={() => onMoveClick?.(topic.id, topic.title)}
         >
           <ArrowRight className="h-4 w-4" />
         </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-destructive">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 rounded-full">
               <Trash2 className="h-4 w-4" />
             </Button>
           </AlertDialogTrigger>

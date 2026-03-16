@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 import { AppProviders } from './providers';
 import { Toaster } from '@/components/ui/toaster';
@@ -10,6 +11,9 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import { PWAInstall } from '@/components/PWAInstall';
 import { PWAiOSInstall } from '@/components/PWAiOSInstall';
 import { PWADesktopInstall } from '@/components/PWADesktopInstall';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 
 export const metadata: Metadata = {
   title: 'Lingofy',
@@ -49,10 +53,6 @@ export default function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap"
-          rel="stylesheet"
-        />
         {/* PWA Icons */}
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.svg" />
         <link rel="icon" type="image/svg+xml" sizes="32x32" href="/icons/favicon-32x32.svg" />
@@ -62,7 +62,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" />
         <meta name="google-site-verification" content="kpGH1OCFFQJ2nuwsikJU7gocp-x05eGTjD3yFI57eHU" />
       </head>
-      <body className="font-body antialiased">
+      <body className={`${inter.variable} ${outfit.variable} font-body antialiased`}>
         <AppProviders>
           <div className="relative flex min-h-screen flex-col">
             <PageLoader />

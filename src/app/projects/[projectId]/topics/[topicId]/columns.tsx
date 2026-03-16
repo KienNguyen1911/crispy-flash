@@ -21,10 +21,10 @@ import { CheckCircle, XCircle, HelpCircle, Sparkles } from "lucide-react"
 const getStatusIcon = (status: string) => {
   const iconClass = "h-4 w-4";
   switch (status) {
-    case "REMEMBERED": return <CheckCircle className={`${iconClass} text-green-600`} />;
-    case "NOT_REMEMBERED": return <XCircle className={`${iconClass} text-red-600`} />;
-    case "NEW": return <Sparkles className={`${iconClass} text-blue-600`} />;
-    default: return <HelpCircle className={`${iconClass} text-gray-600`} />;
+    case "REMEMBERED": return <CheckCircle className={`${iconClass} text-emerald-500 drop-shadow-[0_0_5px_rgba(16,185,129,0.4)]`} />;
+    case "NOT_REMEMBERED": return <XCircle className={`${iconClass} text-rose-500 drop-shadow-[0_0_5px_rgba(244,63,94,0.4)]`} />;
+    case "NEW": return <Sparkles className={`${iconClass} text-sky-500 drop-shadow-[0_0_5px_rgba(14,165,233,0.4)]`} />;
+    default: return <HelpCircle className={`${iconClass} text-slate-500`} />;
   }
 };
 
@@ -33,7 +33,8 @@ const EditableCell = ({
   row,
   column,
   table,
-}: CellContext<Vocabulary, unknown>) => {
+  className,
+}: CellContext<Vocabulary, unknown> & { className?: string }) => {
   const initialValue = getValue();
   const [value, setValue] = React.useState(initialValue);
 
@@ -53,28 +54,29 @@ const EditableCell = ({
             table.options.meta.updateData(row.index, column.id, value);
           }
         }}
+        className={className}
       />
     );
   }
 
-  return <span>{value as React.ReactNode}</span>;
+  return <span className={className}>{value as React.ReactNode}</span>;
 };
 
 export const columns: ColumnDef<Vocabulary>[] = [
   {
     accessorKey: "word",
     header: "Word",
-    cell: EditableCell,
+    cell: (props) => <EditableCell {...props} className="font-headline text-xl md:text-2xl font-bold tracking-wide text-foreground break-words" />,
   },
   {
     accessorKey: "pronunciation",
     header: "Pronunciation",
-    cell: EditableCell,
+    cell: (props) => <EditableCell {...props} className="text-muted-foreground italic text-sm md:text-lg break-words" />,
   },
   {
     accessorKey: "meaning",
     header: "Meaning",
-    cell: EditableCell,
+    cell: (props) => <EditableCell {...props} className="text-sm md:text-lg w-full break-words" />,
   },
   {
     accessorKey: "status",

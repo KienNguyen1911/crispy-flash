@@ -166,14 +166,10 @@ export function DataTable<TData, TValue>({
   const getStatusIcon = (status: string) => {
     const iconClass = "h-4 w-4";
     switch (status) {
-      case "REMEMBERED":
-        return <CheckCircle className={`${iconClass} text-green-600`} />;
-      case "NOT_REMEMBERED":
-        return <XCircle className={`${iconClass} text-red-600`} />;
-      case "NEW":
-        return <Sparkles className={`${iconClass} text-blue-600`} />;
-      default:
-        return <HelpCircle className={`${iconClass} text-gray-600`} />;
+      case "REMEMBERED": return <CheckCircle className={`${iconClass} text-emerald-500 drop-shadow-[0_0_5px_rgba(16,185,129,0.4)]`} />;
+      case "NOT_REMEMBERED": return <XCircle className={`${iconClass} text-rose-500 drop-shadow-[0_0_5px_rgba(244,63,94,0.4)]`} />;
+      case "NEW": return <Sparkles className={`${iconClass} text-sky-500 drop-shadow-[0_0_5px_rgba(14,165,233,0.4)]`} />;
+      default: return <HelpCircle className={`${iconClass} text-slate-500`} />;
     }
   };
 
@@ -379,7 +375,7 @@ export function DataTable<TData, TValue>({
                 className="h-full"
               >
                 <Card
-                  className="h-full hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer"
+                  className="group h-full bg-card/50 backdrop-blur-sm border-white/5 shadow-md hover:shadow-glow transition-all duration-300 hover:scale-[1.02] cursor-pointer"
                   onClick={() => setSelectedKanjiWord(item.word)}
                 >
                   <CardHeader className="pb-3">
@@ -432,29 +428,31 @@ export function DataTable<TData, TValue>({
   };
 
   const renderTableView = () => (
-    <Card className="rounded-md border">
+    <Card className="rounded-xl border-white/5 bg-card/40 backdrop-blur-sm overflow-hidden shadow-lg">
       <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead
-                    key={header.id}
-                    className={!isDesktop ? "w-1/3" : undefined}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
+        {!isDesktop ? null : (
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead
+                      key={header.id}
+                      className="whitespace-nowrap px-4"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+        )}
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => {
@@ -463,31 +461,72 @@ export function DataTable<TData, TValue>({
               if (!isDesktop) {
                 switch (status) {
                   case "REMEMBERED":
-                    rowClassName = "bg-green-200 dark:bg-emerald-800/60";
+                    rowClassName = "border-l-4 border-emerald-500 bg-emerald-500/5";
                     break;
                   case "NOT_REMEMBERED":
-                    rowClassName = "bg-red-200 dark:bg-rose-900/60";
+                    rowClassName = "border-l-4 border-rose-500 bg-rose-500/5";
                     break;
                   case "NEW":
-                    rowClassName = "bg-blue-200 dark:bg-blue-800/60";
+                    rowClassName = "border-l-4 border-sky-500 bg-sky-500/5";
                     break;
                   case "UNKNOWN":
                   default:
-                    rowClassName = "bg-slate-100 dark:bg-slate-800/50";
+                    rowClassName = "border-l-4 border-slate-500 bg-slate-500/5";
                     break;
                 }
               }
+              if (!isDesktop) {
+                // Stacked Row Layout for Mobile
+                const wordCell = row.getVisibleCells().find(c => c.column.id === "word");
+                const pronCell = row.getVisibleCells().find(c => c.column.id === "pronunciation");
+                const meanCell = row.getVisibleCells().find(c => c.column.id === "meaning");
+                
+                if (isEditing) {
+                  return (
+                    <TableRow key={row.id} className={`${rowClassName}`}>
+                      <TableCell className="p-4 flex flex-col gap-3">
+                        {wordCell && flexRender(wordCell.column.columnDef.cell, wordCell.getContext())}
+                        {pronCell && flexRender(pronCell.column.columnDef.cell, pronCell.getContext())}
+                        {meanCell && flexRender(meanCell.column.columnDef.cell, meanCell.getContext())}
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+
+                return (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className={`${rowClassName} hover:bg-muted/50 transition-colors duration-200 cursor-pointer block w-full`}
+                    onClick={() => setSelectedKanjiWord((row.original as any).word)}
+                  >
+                    <TableCell className="p-4 flex flex-col gap-1 border-b border-border/10 w-full block">
+                      <div className="flex justify-between items-start w-full">
+                        <div className="flex-1 min-w-0 pr-4">
+                          <h4 className="font-headline text-2xl font-bold text-primary truncate max-w-full">{(row.original as any).word}</h4>
+                          <p className="text-muted-foreground italic text-sm truncate max-w-full">{(row.original as any).pronunciation}</p>
+                        </div>
+                        <div className="flex-1 min-w-0 text-right">
+                          <p className="text-foreground font-medium text-sm break-words">{(row.original as any).meaning}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              }
+
+              // Standard Table Layout for Desktop
               return (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className={`${rowClassName} cursor-pointer`}
+                  className={`${rowClassName} hover:bg-muted/50 transition-colors duration-200 cursor-pointer`}
                   onClick={() => setSelectedKanjiWord((row.original as any).word)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={`${!isDesktop ? "w-1/3" : ""} ${isEditing ? "px-1" : ""}`.trim() || undefined}
+                      className={`p-4 ${isEditing ? "px-1" : ""}`.trim() || undefined}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,

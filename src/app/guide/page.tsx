@@ -1,11 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Rocket, Sparkles, Library, Brain, BarChart3, Lightbulb, FileText, Target, RefreshCcw, TrendingUp } from 'lucide-react';
 
 export default function GuidePage() {
   return (
     <div className="container mx-auto max-w-6xl py-8 px-4">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold font-headline mb-4">🚀 How to Use Lingofy</h1>
+        <h1 className="text-4xl font-bold font-headline mb-4 flex items-center justify-center gap-3">
+          <Rocket className="w-10 h-10 text-primary" />
+          How to Use Lingofy
+        </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Follow these simple steps to start learning Japanese vocabulary effectively
         </p>
@@ -76,29 +80,32 @@ export default function GuidePage() {
         {/* Features Section */}
         <Card className="p-6">
           <CardHeader>
-            <CardTitle className="text-2xl font-headline">✨ Key Features</CardTitle>
+            <CardTitle className="text-2xl font-headline flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-primary" />
+              Key Features
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center space-y-2">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  📚
+                <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto">
+                  <Library className="w-6 h-6" />
                 </div>
                 <h3 className="font-semibold">Organized Learning</h3>
                 <p className="text-sm md:text-base text-muted-foreground">Structure your vocabulary into projects and topics for better organization.</p>
               </div>
 
               <div className="text-center space-y-2">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  🧠
+                <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto">
+                  <Brain className="w-6 h-6" />
                 </div>
                 <h3 className="font-semibold">Smart Flashcards</h3>
                 <p className="text-sm md:text-base text-muted-foreground">Interactive flashcards with progress tracking and review filtering.</p>
               </div>
 
               <div className="text-center space-y-2">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  📊
+                <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto">
+                  <BarChart3 className="w-6 h-6" />
                 </div>
                 <h3 className="font-semibold">Progress Analytics</h3>
                 <p className="text-sm md:text-base text-muted-foreground">Track your learning progress with detailed statistics and insights.</p>
@@ -110,12 +117,17 @@ export default function GuidePage() {
         {/* Tips Section */}
         <Card className="p-6">
           <CardHeader>
-            <CardTitle className="text-2xl font-headline">💡 Learning Tips</CardTitle>
+            <CardTitle className="text-2xl font-headline flex items-center gap-2">
+              <Lightbulb className="w-6 h-6 text-primary" />
+              Learning Tips
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <h4 className="font-semibold">📝 Import Format</h4>
+                <h4 className="font-semibold flex items-center gap-2 text-primary">
+                  <FileText className="w-5 h-5" /> Import Format
+                </h4>
                 <p className="text-sm md:text-base text-muted-foreground">Use this format for importing vocabulary:<br/>
                   <code className="bg-muted px-2 py-1 rounded">Word,Pronunciation,Meaning</code><br/>
                   Example: <code className="bg-muted px-2 py-1 rounded">日,にち,ひ,Ngày, mặt trời</code>
@@ -123,17 +135,23 @@ export default function GuidePage() {
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-semibold">🎯 Study Strategy</h4>
+                <h4 className="font-semibold flex items-center gap-2 text-primary">
+                  <Target className="w-5 h-5" /> Study Strategy
+                </h4>
                 <p className="text-sm md:text-base text-muted-foreground">Start with small topics (10-20 words). Review "Not Remembered" words frequently. Use spaced repetition for better retention.</p>
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-semibold">🔄 Review Sessions</h4>
+                <h4 className="font-semibold flex items-center gap-2 text-primary">
+                  <RefreshCcw className="w-5 h-5" /> Review Sessions
+                </h4>
                 <p className="text-sm md:text-base text-muted-foreground">Regular short sessions (15-30 minutes) are more effective than long cramming sessions.</p>
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-semibold">📈 Progress Tracking</h4>
+                <h4 className="font-semibold flex items-center gap-2 text-primary">
+                  <TrendingUp className="w-5 h-5" /> Progress Tracking
+                </h4>
                 <p className="text-sm md:text-base text-muted-foreground">Your progress is automatically saved. Focus on difficult words and celebrate small victories!</p>
               </div>
             </div>
