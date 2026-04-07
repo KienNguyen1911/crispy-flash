@@ -49,6 +49,8 @@ const EditableCell = ({
       <Input
         value={value as string}
         onChange={(e) => setValue(e.target.value)}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
         onBlur={() => {
           if (table.options.meta?.updateData) {
             table.options.meta.updateData(row.index, column.id, value);

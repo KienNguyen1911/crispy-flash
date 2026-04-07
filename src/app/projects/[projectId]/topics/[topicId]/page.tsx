@@ -3,12 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
+import { useSWRConfig } from "swr";
 import dynamic from "next/dynamic";
 import { useAuthFetcher } from "@/hooks/useAuthFetcher";
 import { useGenerationWebSocket } from "@/hooks/useGenerationWebSocket";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, BookOpenCheck } from "lucide-react";
 import { columns } from "./columns";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -82,6 +83,7 @@ export default function TopicDetailPage() {
   const [shouldListenWebSocket, setShouldListenWebSocket] = useState(false);
   const fetcher = useAuthFetcher();
   const { toast } = useToast();
+  const { mutate } = useSWRConfig();
   const { projectId, topicId } = params;
 
   const {
@@ -99,6 +101,14 @@ export default function TopicDetailPage() {
 
   const isLoading = isProjectLoading || isTopicLoading;
   const hasVocabulary = topic?.vocabulary && topic.vocabulary.length > 0;
+
+  const mutateProjectTopics = useCallback(async () => {
+    await mutate(
+      (key) =>
+        typeof key === "string" &&
+        key.startsWith(`/api/projects/${projectId}/topics?page=`),
+    );
+  }, [mutate, projectId]);
 
   const handleGenerateContent = useCallback(() => {
     if (!hasVocabulary) {
@@ -246,7 +256,15 @@ export default function TopicDetailPage() {
 
           <TopicHeaderEditor projectId={projectId} topic={topic} />
 
-          <div className="mt-4 flex justify-end gap-2">
+          <div className="mt-4 flex flex-wrap justify-end gap-2">
+            <Button
+              onClick={() => setIsLearnMode(true)}
+              disabled={!hasVocabulary}
+              className="gap-2"
+            >
+              <BookOpenCheck className="h-4 w-4" />
+              Learn
+            </Button>
             <Button
               onClick={() => setIsShareDialogOpen(true)}
               variant="outline"
@@ -294,8 +312,6 @@ export default function TopicDetailPage() {
           data={topic.vocabulary || []}
           projectId={projectId}
           topicId={topicId}
-          hasVocabulary={hasVocabulary}
-          setIsLearnMode={setIsLearnMode}
         />
       </div>
 
@@ -316,6 +332,7 @@ export default function TopicDetailPage() {
               initialVocab={topic.vocabulary || []}
               onClose={() => setIsLearnMode(false)}
               mutateTopic={mutateTopic}
+              mutateProjectTopics={mutateProjectTopics}
             />
           </motion.div>
         )}

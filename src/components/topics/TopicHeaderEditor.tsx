@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Check, X } from 'lucide-react';
 import { mutate } from 'swr';
-import { updateTopicHeader } from '@/services/topics-vocabularies-api';
+import { updateTopic } from '@/services/topics-api';
 import { toast } from 'sonner';
 
 export default function TopicHeaderEditor({ projectId, topic }: { projectId: string; topic: { id: string; title: string; description?: string } }) {
@@ -16,7 +16,20 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
 
   const isDirty = title !== (topic.title ?? '') || description !== (topic.description ?? '');
 
+  useEffect(() => {
+    setTitle(topic.title);
+    setDescription(topic.description ?? '');
+  }, [topic.title, topic.description]);
+
   const save = async () => {
+    const nextTitle = title.trim();
+    const nextDescription = description.trim();
+
+    if (!nextTitle) {
+      toast.error('Topic title cannot be empty.');
+      return;
+    }
+
     if (!isDirty) {
       setEditing(false);
       return;
@@ -24,8 +37,32 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
 
     setSaving(true);
     try {
-      const updatedTopic = await updateTopicHeader(projectId, topic.id, { title, description });
-      mutate(`/api/projects/${projectId}/topics/${topic.id}`, updatedTopic, false);
+      const updatedTopic = await updateTopic(topic.id, {
+        title: nextTitle,
+        description: nextDescription
+      });
+      await mutate(
+        `/api/topics/${topic.id}`,
+        (currentTopic?: {
+          id: string;
+          title: string;
+          description?: string;
+          vocabulary?: unknown[];
+        }) => {
+          if (!currentTopic) {
+            return updatedTopic;
+          }
+
+          return {
+            ...currentTopic,
+            ...updatedTopic,
+            vocabulary: currentTopic.vocabulary ?? []
+          };
+        },
+        false
+      );
+      await mutate(`/api/topics/${topic.id}`);
+      await mutate(`/api/projects/${projectId}/topics`);
       toast.success('Topic updated successfully!');
       setEditing(false);
     } catch (error) {

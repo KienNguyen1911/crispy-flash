@@ -24,6 +24,7 @@ interface LearnModeProps {
   initialVocab: Vocabulary[];
   onClose: (updatedVocab: Vocabulary[]) => void;
   mutateTopic?: () => Promise<any>;
+  mutateProjectTopics?: () => Promise<any>;
 }
 
 const LearnMode = ({
@@ -32,6 +33,7 @@ const LearnMode = ({
   initialVocab,
   onClose,
   mutateTopic,
+  mutateProjectTopics,
 }: LearnModeProps) => {
   const [vocabularies, setVocabularies] = useState<Vocabulary[]>(() =>
     JSON.parse(JSON.stringify(initialVocab)),
@@ -154,6 +156,9 @@ const LearnMode = ({
       }
       if (mutateTopic) {
         await mutateTopic();
+      }
+      if (mutateProjectTopics) {
+        await mutateProjectTopics();
       }
     } catch (error) {
       toast.error("Failed to save progress.");
