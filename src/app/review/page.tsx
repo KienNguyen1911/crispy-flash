@@ -2,17 +2,15 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { ReviewDashboard } from "@/components/srs/ReviewDashboard";
-import { ReviewSession } from "@/components/srs/ReviewSession";
+import { ProjectReviewOverview } from "@/components/srs/ProjectReviewOverview";
+import { BatchReviewSummary, ReviewSession } from "@/components/srs/ReviewSession";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, BookOpen, ArrowRight, Loader } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useDueReviewCount } from "@/hooks/use-srs";
+import { Brain, BookOpen, ArrowRight, Loader, BarChart3 } from "lucide-react";
+import { useDailyReviewSummary, useDueReviewCount } from "@/hooks/use-srs";
 import { getProjects } from "@/services/projects-api";
 
 export default function ReviewPage() {
-  const router = useRouter();
   const { data: projects = [], isLoading: projectsLoading } = useSWR(
     "/api/projects",
     getProjects,
@@ -23,21 +21,29 @@ export default function ReviewPage() {
   );
   const [isInSession, setIsInSession] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [lastBatchSummary, setLastBatchSummary] = useState<BatchReviewSummary | null>(null);
 
   const handleSelectProject = (projectId: string) => {
     setSelectedProjectId(projectId);
-    setIsInSession(true);
+    setIsInSession(false);
   };
 
-  const handleCompleteSession = () => {
+  const handleStartReview = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setIsInSession(true);
+    setLastBatchSummary(null);
+  };
+
+  const handleCompleteSession = (summary: BatchReviewSummary) => {
+    setLastBatchSummary(summary);
     setIsInSession(false);
-    setSelectedProjectId("");
   };
 
   const handleCancelSession = () => {
     setIsInSession(false);
-    setSelectedProjectId("");
   };
+
+  const selectedProject = projects.find((project: any) => project.id === selectedProjectId);
 
   return (
     <div className="container mx-auto py-6 px-4 max-w-6xl">
@@ -54,6 +60,17 @@ export default function ReviewPage() {
           projectId={selectedProjectId}
           onComplete={handleCompleteSession}
           onCancel={handleCancelSession}
+        />
+      ) : selectedProject ? (
+        <ProjectReviewOverview
+          projectId={selectedProject.id}
+          projectTitle={selectedProject.title}
+          batchSummary={lastBatchSummary}
+          onStartReview={() => handleStartReview(selectedProject.id)}
+          onBack={() => {
+            setSelectedProjectId("");
+            setLastBatchSummary(null);
+          }}
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -81,6 +98,7 @@ export default function ReviewPage() {
                 key={project.id}
                 project={project}
                 onSelect={handleSelectProject}
+                onStartReview={handleStartReview}
               />
             ))
           )}
@@ -93,13 +111,15 @@ export default function ReviewPage() {
 interface ProjectReviewCardProps {
   project: any;
   onSelect: (projectId: string) => void;
+  onStartReview: (projectId: string) => void;
 }
 
-function ProjectReviewCard({ project, onSelect }: ProjectReviewCardProps) {
+function ProjectReviewCard({ project, onSelect, onStartReview }: ProjectReviewCardProps) {
   const { count, dueToday, overdue, isLoading } = useDueReviewCount(project.id);
+  const { summary, isLoading: summaryLoading } = useDailyReviewSummary(project.id);
 
   return (
-    <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => onSelect(project.id)}>
+    <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -125,6 +145,19 @@ function ProjectReviewCard({ project, onSelect }: ProjectReviewCardProps) {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-100 dark:bg-slate-900 p-3 rounded-lg">
+              <div className="text-2xl font-bold">{summaryLoading ? "-" : summary?.reviewedCount || 0}</div>
+              <div className="text-xs text-muted-foreground">Today reviewed</div>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-950 p-3 rounded-lg">
+              <div className="text-2xl font-bold text-amber-600 dark:text-amber-300">
+                {summaryLoading ? "-" : summary?.weakWordCount || 0}
+              </div>
+              <div className="text-xs text-muted-foreground">Weak words</div>
+            </div>
+          </div>
+
           {/* Overdue warning */}
           {overdue > 0 && (
             <div className="bg-red-50 dark:bg-red-950 p-3 rounded-lg border border-red-200 dark:border-red-800">
@@ -140,11 +173,19 @@ function ProjectReviewCard({ project, onSelect }: ProjectReviewCardProps) {
             disabled={isLoading || count === 0}
             onClick={(e) => {
               e.stopPropagation();
-              onSelect(project.id);
+              onStartReview(project.id);
             }}
           >
             {count === 0 ? "No words to review" : "Start Review"}
             <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+          <Button
+            className="w-full"
+            variant="outline"
+            onClick={() => onSelect(project.id)}
+          >
+            Today Summary
+            <BarChart3 className="h-4 w-4 ml-2" />
           </Button>
         </div>
       </CardContent>

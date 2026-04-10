@@ -1,6 +1,13 @@
 import useSWR from 'swr';
 import { srsApi } from '@/services/srs-api';
-import { VocabularyWithSrs, ReviewFeedbackDto, DueReviewCount } from '@/types/srs';
+import {
+  DailyReviewHistoryItem,
+  DailyReviewSummary,
+  DueReviewCount,
+  ReviewFeedbackDto,
+  VocabularyWithSrs,
+  WeakWordItem,
+} from '@/types/srs';
 
 export function useDueReviews(projectId?: string) {
   const { data, error, mutate } = useSWR<VocabularyWithSrs[]>(
@@ -64,5 +71,68 @@ export function useReviewSession() {
   return {
     submitFeedback,
     initializeSrs,
+  };
+}
+
+export function useDailyReviewSummary(projectId?: string, date?: string) {
+  const key = projectId
+    ? `/api/vocabulary/review/daily-summary?projectId=${projectId}${date ? `&date=${date}` : ''}`
+    : null;
+
+  const { data, error, mutate } = useSWR<DailyReviewSummary>(
+    key,
+    () => srsApi.getDailyReviewSummary(projectId as string, date),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    summary: data,
+    isLoading: !error && !data,
+    isError: error,
+    mutate,
+  };
+}
+
+export function useDailyReviewHistory(projectId?: string, date?: string) {
+  const key = projectId
+    ? `/api/vocabulary/review/history/daily?projectId=${projectId}${date ? `&date=${date}` : ''}`
+    : null;
+
+  const { data, error, mutate } = useSWR<DailyReviewHistoryItem[]>(
+    key,
+    () => srsApi.getDailyReviewHistory(projectId as string, date),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    items: data || [],
+    isLoading: !error && !data,
+    isError: error,
+    mutate,
+  };
+}
+
+export function useWeakWords(projectId?: string, limit = 20) {
+  const key = projectId
+    ? `/api/vocabulary/review/weak?projectId=${projectId}&limit=${limit}`
+    : null;
+
+  const { data, error, mutate } = useSWR<WeakWordItem[]>(
+    key,
+    () => srsApi.getWeakWords(projectId as string, limit),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+
+  return {
+    weakWords: data || [],
+    isLoading: !error && !data,
+    isError: error,
+    mutate,
   };
 }

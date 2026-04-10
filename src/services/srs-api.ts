@@ -1,4 +1,11 @@
-import { VocabularyWithSrs, DueReviewCount, ReviewFeedbackDto } from '@/types/srs';
+import {
+  DailyReviewHistoryItem,
+  DailyReviewSummary,
+  DueReviewCount,
+  ReviewFeedbackDto,
+  VocabularyWithSrs,
+  WeakWordItem,
+} from '@/types/srs';
 
 // Re-export SRS types for convenience
 export type { VocabularyWithSrs, DueReviewCount, ReviewFeedbackDto };
@@ -41,6 +48,39 @@ class SrsApiService extends BaseApiService {
       })
     );
   }
+
+  async getDailyReviewSummary(projectId: string, date?: string): Promise<DailyReviewSummary> {
+    const params = new URLSearchParams({ projectId });
+    if (date) {
+      params.set('date', date);
+    }
+
+    return this.handleApiCall(() =>
+      this.apiClient<DailyReviewSummary>(`/api/vocabulary/review/daily-summary?${params.toString()}`)
+    );
+  }
+
+  async getDailyReviewHistory(projectId: string, date?: string): Promise<DailyReviewHistoryItem[]> {
+    const params = new URLSearchParams({ projectId });
+    if (date) {
+      params.set('date', date);
+    }
+
+    return this.handleApiCall(() =>
+      this.apiClient<DailyReviewHistoryItem[]>(`/api/vocabulary/review/history/daily?${params.toString()}`)
+    );
+  }
+
+  async getWeakWords(projectId: string, limit = 20): Promise<WeakWordItem[]> {
+    const params = new URLSearchParams({
+      projectId,
+      limit: String(limit),
+    });
+
+    return this.handleApiCall(() =>
+      this.apiClient<WeakWordItem[]>(`/api/vocabulary/review/weak?${params.toString()}`)
+    );
+  }
 }
 
 // Create and export a singleton instance
@@ -55,4 +95,7 @@ export const srsApi = {
   getDueReviewCount: (projectId?: string) => srsApiService.getDueReviewCount(projectId),
   submitReviewFeedback: (vocabId: string, feedback: ReviewFeedbackDto) => srsApiService.submitReviewFeedback(vocabId, feedback),
   initializeSrsData: (vocabId: string) => srsApiService.initializeSrsData(vocabId),
+  getDailyReviewSummary: (projectId: string, date?: string) => srsApiService.getDailyReviewSummary(projectId, date),
+  getDailyReviewHistory: (projectId: string, date?: string) => srsApiService.getDailyReviewHistory(projectId, date),
+  getWeakWords: (projectId: string, limit?: number) => srsApiService.getWeakWords(projectId, limit),
 };

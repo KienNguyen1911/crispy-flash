@@ -12,19 +12,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, Brain, Clock } from "lucide-react";
+import { ChevronLeft, Brain, Clock, CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { VocabularyWithSrs } from "@/lib/api";
+import { VocabularyWithSrs } from "@/types/srs";
+import type { ReviewAttemptResult } from "@/types/srs";
 
 interface ReviewSessionProps {
   projectId?: string;
-  onComplete?: () => void;
+  onComplete?: (summary: BatchReviewSummary) => void;
   onCancel?: () => void;
+}
+
+export interface BatchReviewSummary {
+  reviewedCount: number;
+  correctCount: number;
+  incorrectCount: number;
+  timeoutCount: number;
 }
 
 const TIME_LIMIT = 10; // 10 seconds per card
 
-// Helper to shuffle array
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -42,11 +49,16 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
   const [sessionReviews, setSessionReviews] = useState<VocabularyWithSrs[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // New state for multiple choice & timer
-  const [answerOptions, setAnswerOptions] = useState<string[]>([]);
   const [isAnswered, setIsAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
+  const [lastResult, setLastResult] = useState<ReviewAttemptResult | null>(null);
+  const [batchSummary, setBatchSummary] = useState<BatchReviewSummary>({
+    reviewedCount: 0,
+    correctCount: 0,
+    incorrectCount: 0,
+    timeoutCount: 0,
+  });
 
   useEffect(() => {
     if (dueReviews.length > 0 && sessionReviews.length === 0) {
@@ -62,30 +74,89 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
     return null;
   }, [sessionReviews, currentIndex]);
 
-  // Generate answer options when card changes
   useEffect(() => {
-    if (!currentVocab || sessionReviews.length < 2) return;
+    if (!currentVocab) return;
 
-    // Reset answer state when card changes to prevent mobile ghost clicks
     setIsAnswered(false);
     setSelectedAnswer(null);
     setTimeLeft(TIME_LIMIT);
-
-    const distractors = sessionReviews
-      .filter((v) => v.id !== currentVocab.id)
-      .map((v) => v.meaning);
-
-    const uniqueDistractors = [...new Set(distractors)];
-    const shuffledDistractors = shuffleArray(uniqueDistractors).slice(0, 3);
-
-    const options = shuffleArray([
-      ...shuffledDistractors,
-      currentVocab.meaning,
-    ]);
-    setAnswerOptions(options);
+    setLastResult(null);
   }, [currentVocab, sessionReviews]);
 
-  // Timer logic
+  const moveToNext = useCallback((finalSummary?: BatchReviewSummary) => {
+    if (currentIndex === sessionReviews.length - 1) {
+      onComplete?.(finalSummary || batchSummary);
+    } else {
+      setCurrentIndex((prev) => prev + 1);
+      setIsAnswered(false);
+      setSelectedAnswer(null);
+      setTimeLeft(TIME_LIMIT);
+      setLastResult(null);
+    }
+  }, [batchSummary, currentIndex, sessionReviews.length, onComplete]);
+
+  const promptType = currentVocab?.promptType || "WORD_TO_MEANING";
+  const correctAnswer = currentVocab?.correctAnswer ||
+    (promptType === "WORD_TO_READING" ? currentVocab?.pronunciation : currentVocab?.meaning) ||
+    "";
+  const answerOptions =
+    currentVocab?.answerOptions && currentVocab.answerOptions.length > 0
+      ? currentVocab.answerOptions
+      : shuffleArray([currentVocab?.meaning || ""]);
+
+  const handleAnswerSelect = useCallback(
+    async (selectedOption: string | null, forcedResult?: ReviewAttemptResult) => {
+      if (isAnswered) return;
+
+      setIsAnswered(true);
+      setIsSubmitting(true);
+      setSelectedAnswer(selectedOption);
+
+      const timeSpent = TIME_LIMIT - timeLeft;
+      const responseTimeMs = Math.max(timeSpent, 0) * 1000;
+      const isCorrect = selectedOption === correctAnswer;
+      const result: ReviewAttemptResult =
+        forcedResult || (isCorrect ? "CORRECT" : "INCORRECT");
+      setLastResult(result);
+
+      let quality: number;
+      if (result !== "CORRECT" || timeSpent > 7) {
+        quality = 0; // Hard
+      } else if (timeSpent > 4) {
+        quality = 3; // Medium
+      } else {
+        quality = 5; // Easy
+      }
+
+      const status = isCorrect ? "REMEMBERED" : "NOT_REMEMBERED";
+      const nextBatchSummary = {
+        reviewedCount: batchSummary.reviewedCount + 1,
+        correctCount: batchSummary.correctCount + (result === "CORRECT" ? 1 : 0),
+        incorrectCount:
+          batchSummary.incorrectCount + (result === "INCORRECT" ? 1 : 0),
+        timeoutCount: batchSummary.timeoutCount + (result === "TIMEOUT" ? 1 : 0),
+      };
+      setBatchSummary(nextBatchSummary);
+
+      try {
+        if (currentVocab) {
+          await submitFeedback(currentVocab.id, {
+            quality,
+            status,
+            promptType,
+            result,
+            responseTimeMs,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to submit review:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [isAnswered, timeLeft, currentVocab, submitFeedback, batchSummary, correctAnswer, promptType],
+  );
+
   useEffect(() => {
     if (!currentVocab || isAnswered) return;
 
@@ -95,64 +166,30 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
 
     if (timeLeft <= 0) {
       clearInterval(timer);
-      handleAnswerSelect(null); // Auto-submit when time is up
+      handleAnswerSelect(null, "TIMEOUT");
     }
 
     return () => clearInterval(timer);
-  }, [timeLeft, currentVocab, isAnswered]);
+  }, [timeLeft, currentVocab, isAnswered, handleAnswerSelect]);
 
-  const moveToNext = useCallback(() => {
-    if (currentIndex === sessionReviews.length - 1) {
-      onComplete?.();
-    } else {
-      setCurrentIndex((prev) => prev + 1);
-      setIsAnswered(false);
-      setSelectedAnswer(null);
-      setTimeLeft(TIME_LIMIT);
+  const renderContextSentence = (sentence: string, word: string) => {
+    const index = sentence.indexOf(word);
+    if (index === -1) {
+      return <span>{sentence}</span>;
     }
-  }, [currentIndex, sessionReviews.length, onComplete]);
 
-  const handleAnswerSelect = useCallback(
-    async (selectedMeaning: string | null) => {
-      if (isAnswered) return;
+    const before = sentence.slice(0, index);
+    const target = sentence.slice(index, index + word.length);
+    const after = sentence.slice(index + word.length);
 
-      setIsAnswered(true);
-      setIsSubmitting(true);
-      setSelectedAnswer(selectedMeaning);
-
-      const timeSpent = TIME_LIMIT - timeLeft;
-      const isCorrect = selectedMeaning === currentVocab?.meaning;
-
-      let quality: number;
-      if (!isCorrect || timeSpent > 7) {
-        quality = 0; // Hard
-      } else if (timeSpent > 4) {
-        quality = 3; // Medium
-      } else {
-        quality = 5; // Easy
-      }
-
-      const status = isCorrect ? "REMEMBERED" : "NOT_REMEMBERED";
-
-      try {
-        if (currentVocab) {
-          await submitFeedback(currentVocab.id, { quality, timeSpent, status });
-        }
-      } catch (error) {
-        console.error("Failed to submit review:", error);
-      } finally {
-        setIsSubmitting(false);
-        // Wait a moment to show feedback before moving to the next card
-        setTimeout(
-          () => {
-            moveToNext();
-          },
-          isCorrect ? 1000 : 2000,
-        ); // Longer delay for incorrect answers
-      }
-    },
-    [isAnswered, timeLeft, currentVocab, submitFeedback, moveToNext],
-  );
+    return (
+      <span>
+        {before}
+        <span className="rounded bg-primary/15 px-1 text-primary">{target}</span>
+        {after}
+      </span>
+    );
+  };
 
   if (isLoading) {
     return <ReviewSessionSkeleton />;
@@ -176,9 +213,6 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
       </Card>
     );
   }
-
-  const progress = ((currentIndex + 1) / sessionReviews.length) * 100;
-
   return (
     <div className="max-w-2xl mx-auto space-y-4">
       {/* Progress Bar & Timer */}
@@ -194,7 +228,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
         </div>
         <Progress
           value={(timeLeft / TIME_LIMIT) * 100}
-          className="h-2 transition-all duration-1000 linear"
+          className="h-2"
         />
       </div>
 
@@ -203,9 +237,11 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
         <CardHeader>
           <div className="flex justify-between items-start">
             <div className="space-y-1">
-              <CardTitle>What is the meaning of this word?</CardTitle>
+              <CardTitle>{currentVocab.promptQuestion || "What is the meaning of this word?"}</CardTitle>
               <CardDescription>
-                Select the correct answer within {TIME_LIMIT} seconds.
+                {isAnswered
+                  ? "Review the answer and continue when you're ready."
+                  : `Select the correct answer within ${TIME_LIMIT} seconds.`}
               </CardDescription>
             </div>
             <Badge variant="outline">
@@ -217,10 +253,15 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
         <CardContent className="space-y-6">
           {/* Word Display */}
           <div className="text-center space-y-2 min-h-[100px] flex flex-col justify-center">
+            {promptType === "WORD_TO_READING" && currentVocab.promptContext && currentVocab.word && (
+              <div className="mx-auto max-w-xl text-base text-muted-foreground leading-7">
+                {renderContextSentence(currentVocab.promptContext, currentVocab.word)}
+              </div>
+            )}
             <div className="text-5xl font-bold text-primary">
               {currentVocab.word || currentVocab.pronunciation}
             </div>
-            {currentVocab.pronunciation && (
+            {isAnswered && currentVocab.pronunciation && (
               <div className="text-2xl font-semibold text-secondary">
                 {currentVocab.pronunciation}
               </div>
@@ -230,7 +271,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
           {/* Answer Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {answerOptions.map((option, index) => {
-              const isCorrect = option === currentVocab.meaning;
+              const isCorrect = option === correctAnswer;
               const isSelected = option === selectedAnswer;
 
               let buttonVariant:
@@ -266,6 +307,56 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
               );
             })}
           </div>
+
+          {isAnswered && (
+            <div
+              className={cn(
+                "rounded-lg border px-4 py-3 space-y-3",
+                lastResult === "CORRECT"
+                  ? "border-green-500/40 bg-green-500/10"
+                  : "border-amber-500/40 bg-amber-500/10",
+              )}
+            >
+              <div className="flex items-center gap-2 font-semibold">
+                {lastResult === "CORRECT" ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-amber-500" />
+                )}
+                <span>
+                  {lastResult === "CORRECT"
+                    ? "Correct"
+                    : lastResult === "TIMEOUT"
+                      ? "Time is up"
+                      : "Incorrect"}
+                </span>
+              </div>
+              <div className="text-sm md:text-base space-y-1">
+                <div>
+                  <span className="text-muted-foreground">Correct answer: </span>
+                  <span className="font-semibold">{correctAnswer}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Meaning: </span>
+                  <span>{currentVocab.meaning}</span>
+                </div>
+                {promptType === "WORD_TO_MEANING" && currentVocab.pronunciation && (
+                  <div>
+                    <span className="text-muted-foreground">Reading: </span>
+                    <span>{currentVocab.pronunciation}</span>
+                  </div>
+                )}
+              </div>
+              <Button
+                onClick={() => moveToNext(batchSummary)}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto"
+              >
+                Continue
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
 
           {/* Navigation & Info */}
           <div className="flex justify-between items-center pt-4 border-t">

@@ -131,7 +131,9 @@ export function ReviewDashboard({ projectId }: ReviewDashboardProps) {
                 >
                   {/* 👈 Thay đổi ở đây: Thêm 'min-w-0' để đảm bảo flex item này có thể xuống dòng */}
                   <div className="space-y-1 min-w-0">
-                    <div className="font-medium">{vocab.word}</div>
+                    <div className="font-medium">
+                      {vocab.word || vocab.pronunciation || "Untitled word"}
+                    </div>
 
                     {/* 👈 Thêm 'text-wrap' để nghĩa tự động xuống dòng */}
                     <div className="text-sm md:text-base text-muted-foreground text-wrap">
@@ -147,7 +149,9 @@ export function ReviewDashboard({ projectId }: ReviewDashboardProps) {
                       {vocab.interval > 21 ? "Long-term" : "Short-term"}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      {format(new Date(vocab.nextReviewDate), "MM/dd")}
+                      {vocab.nextReviewDate
+                        ? format(new Date(vocab.nextReviewDate), "MM/dd")
+                        : "--/--"}
                     </span>
                   </div>
                 </div>
