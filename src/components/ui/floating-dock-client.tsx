@@ -19,6 +19,13 @@ export function FloatingDockClient() {
     return null;
   }
 
+  // Hide on unauthenticated public pages (Home, Guide)
+  const isPublicPage = (pathname === '/' || pathname === '/guide') && !user;
+
+  if (isPublicPage) {
+    return null;
+  }
+
   const allItems = [
     ...(isAdmin ? [{
       title: "Dashboard",
