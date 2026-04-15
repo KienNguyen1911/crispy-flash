@@ -16,6 +16,7 @@ import { ChevronLeft, Brain, Clock, CheckCircle2, XCircle, ArrowRight } from "lu
 import { cn } from "@/lib/utils";
 import { VocabularyWithSrs } from "@/types/srs";
 import type { ReviewAttemptResult } from "@/types/srs";
+import { KanjiDrawer } from "@/components/vocabularies/KanjiDrawer";
 
 interface ReviewSessionProps {
   projectId?: string;
@@ -59,6 +60,10 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
     incorrectCount: 0,
     timeoutCount: 0,
   });
+
+  const [isKanjiDrawerOpen, setIsKanjiDrawerOpen] = useState(false);
+  const [selectedWordForKanji, setSelectedWordForKanji] = useState<string | null>(null);
+  const [selectedKanjiChar, setSelectedKanjiChar] = useState<string | null>(null);
 
   useEffect(() => {
     if (dueReviews.length > 0 && sessionReviews.length === 0) {
@@ -191,6 +196,44 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
     );
   };
 
+  const handleKanjiClick = (word: string, kanji: string) => {
+    setSelectedWordForKanji(word);
+    setSelectedKanjiChar(kanji);
+    setIsKanjiDrawerOpen(true);
+  };
+
+  const renderKanjiWord = (word: string) => {
+    // Extract individual kanji characters
+    const kanjiRegex = /[\u4e00-\u9faf]/g;
+    const kanjis = word.match(kanjiRegex);
+    
+    if (!kanjis || kanjis.length === 0) {
+      return <span>{word}</span>;
+    }
+
+    const parts: JSX.Element[] = [];
+
+    word.split('').forEach((char, index) => {
+      if (/[\u4e00-\u9faf]/.test(char)) {
+        // This is a kanji character - make it clickable
+        parts.push(
+          <span
+            key={index}
+            className="cursor-pointer hover:text-blue-500 hover:scale-110 transition-all inline-block mx-0.5"
+            onClick={() => handleKanjiClick(word, char)}
+          >
+            {char}
+          </span>
+        );
+      } else {
+        // This is not a kanji (hiragana, katakana, etc.)
+        parts.push(<span key={index}>{char}</span>);
+      }
+    });
+
+    return <span className="inline-flex items-center">{parts}</span>;
+  };
+
   if (isLoading) {
     return <ReviewSessionSkeleton />;
   }
@@ -214,23 +257,24 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
     );
   }
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
-      {/* Progress Bar & Timer */}
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm md:text-base font-medium">
-          <span>
-            Progress: {currentIndex + 1} / {sessionReviews.length}
-          </span>
-          <span className="flex items-center">
-            <Clock className="h-4 w-4 mr-1.5" />
-            {timeLeft}s
-          </span>
+    <>
+      <div className="max-w-2xl mx-auto space-y-4">
+        {/* Progress Bar & Timer */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm md:text-base font-medium">
+            <span>
+              Progress: {currentIndex + 1} / {sessionReviews.length}
+            </span>
+            <span className="flex items-center">
+              <Clock className="h-4 w-4 mr-1.5" />
+              {timeLeft}s
+            </span>
+          </div>
+          <Progress
+            value={(timeLeft / TIME_LIMIT) * 100}
+            className="h-2"
+          />
         </div>
-        <Progress
-          value={(timeLeft / TIME_LIMIT) * 100}
-          className="h-2"
-        />
-      </div>
 
       {/* Main Card */}
       <Card className="relative">
@@ -259,11 +303,18 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
               </div>
             )}
             <div className="text-5xl font-bold text-primary">
-              {currentVocab.word || currentVocab.pronunciation}
+              {isAnswered && currentVocab.word && /[\u4e00-\u9faf]/.test(currentVocab.word)
+                ? renderKanjiWord(currentVocab.word)
+                : (currentVocab.word || currentVocab.pronunciation)}
             </div>
             {isAnswered && currentVocab.pronunciation && (
               <div className="text-2xl font-semibold text-secondary">
                 {currentVocab.pronunciation}
+              </div>
+            )}
+            {isAnswered && currentVocab.word && /[\u4e00-\u9faf]/.test(currentVocab.word) && (
+              <div className="text-sm text-muted-foreground mt-2">
+                Click on kanji to see details
               </div>
             )}
           </div>
@@ -379,7 +430,15 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+
+      <KanjiDrawer
+        word={selectedWordForKanji}
+        isOpen={isKanjiDrawerOpen}
+        onOpenChange={setIsKanjiDrawerOpen}
+        initialKanji={selectedKanjiChar}
+      />
+    </>
   );
 }
 

@@ -16,9 +16,10 @@ interface KanjiDrawerProps {
     word: string | null;
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
+    initialKanji?: string | null;
 }
 
-export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
+export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiDrawerProps) {
     const [kanjis, setKanjis] = useState<string[]>([]);
     const [selectedKanji, setSelectedKanji] = useState<string>("");
     const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +34,13 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
             const uniqueKanjis = Array.from(new Set(kanjiCharacters));
             setKanjis(uniqueKanjis);
             if (uniqueKanjis.length > 0) {
-                setSelectedKanji(uniqueKanjis[0]);
+                // If initialKanji is provided and exists in the word, use it
+                // Otherwise use the first kanji
+                if (initialKanji && uniqueKanjis.includes(initialKanji)) {
+                    setSelectedKanji(initialKanji);
+                } else {
+                    setSelectedKanji(uniqueKanjis[0]);
+                }
             } else {
                 setSelectedKanji("");
                 setKanjiAliveData(null);
@@ -44,7 +51,7 @@ export function KanjiDrawer({ word, isOpen, onOpenChange }: KanjiDrawerProps) {
             // or keep it if you want to reuse it across different words with the same kanji.
             // Let's keep it to maximize cache hits.
         }
-    }, [word, isOpen]);
+    }, [word, isOpen, initialKanji]);
 
     // Fetch API data when selectedKanji changes
     useEffect(() => {
