@@ -134,7 +134,7 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
               }}
             />
           )}
-          <Controls />
+          <Controls className="bg-white border-[3px] border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] [&_button]:bg-white [&_button]:border-b-[3px] [&_button]:border-black [&_button:last-child]:border-b-0 [&_button_svg]:fill-black [&_button_svg]:stroke-black [&_button_svg]:text-black" />
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         </ReactFlow>
       </div>

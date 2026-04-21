@@ -23,7 +23,7 @@ export default function VocabNode({ data, selected }: { data: { vocab: Vocabular
       <div className="flex flex-col">
         <span className="text-2xl font-bold">{word}</span>
         <span className="text-[11px] text-muted-foreground font-medium mb-1">{pronunciation}</span>
-        
+
         <div className="border-t border-dotted border-gray-400 mt-1 pt-1">
           <span className="text-sm font-semibold text-blue-600 line-clamp-2 leading-tight">
             {meaning}
