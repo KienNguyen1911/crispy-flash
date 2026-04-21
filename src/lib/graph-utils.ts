@@ -41,7 +41,49 @@ export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boole
   const cols = isMobile ? 1 : (Math.ceil(Math.sqrt(kanjis.length)) || 1);
   const addedVocabs = new Set<string>();
 
-  kanjis.forEach((k, index) => {
+  // Sort Kanjis based on shared vocab relationships (BFS) so related Kanjis are physically adjacent
+  const kanjiAdj = new Map<string, Set<string>>();
+  kanjis.forEach(k => kanjiAdj.set(k.id, new Set()));
+
+  vocabs.forEach(v => {
+    const parentIds = kanjis.filter(k => v.word.includes(k.word)).map(k => k.id);
+    if (parentIds.length > 1) {
+      for (let i = 0; i < parentIds.length; i++) {
+        for (let j = i + 1; j < parentIds.length; j++) {
+          kanjiAdj.get(parentIds[i])!.add(parentIds[j]);
+          kanjiAdj.get(parentIds[j])!.add(parentIds[i]);
+        }
+      }
+    }
+  });
+
+  const sortedKanjis: Vocabulary[] = [];
+  const visitedKanjis = new Set<string>();
+
+  kanjis.forEach(startKanji => {
+    if (!visitedKanjis.has(startKanji.id)) {
+      const queue = [startKanji.id];
+      visitedKanjis.add(startKanji.id);
+
+      while (queue.length > 0) {
+        const currId = queue.shift()!;
+        const currKanji = kanjis.find(k => k.id === currId)!;
+        sortedKanjis.push(currKanji);
+
+        const neighbors = kanjiAdj.get(currId);
+        if (neighbors) {
+          neighbors.forEach(neighborId => {
+            if (!visitedKanjis.has(neighborId)) {
+              visitedKanjis.add(neighborId);
+              queue.push(neighborId);
+            }
+          });
+        }
+      }
+    }
+  });
+
+  sortedKanjis.forEach((k, index) => {
     const col = isMobile ? 0 : (index % cols);
     const row = isMobile ? index : Math.floor(index / cols);
 
@@ -66,7 +108,7 @@ export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boole
 
     unaddedChildren.forEach((v, cIndex) => {
       addedVocabs.add(v.id);
-      
+
       let angle;
       if (isMobile) {
         if (totalChildren === 1) {
@@ -81,7 +123,7 @@ export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boole
         // Evenly distribute around a full circle. Top is -PI/2
         angle = (cIndex / totalChildren) * 2 * Math.PI - Math.PI / 2;
       }
-      
+
       // Node center offset compensation
       const childX = rootX + Math.cos(angle) * RADIUS;
       const childY = rootY + Math.sin(angle) * RADIUS;

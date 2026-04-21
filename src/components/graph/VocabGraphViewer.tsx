@@ -34,11 +34,12 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const { setCenter, getNode } = useReactFlow();
   const isMobile = useMediaQuery("(max-width: 767px)");
-  console.log("isMobile", isMobile)
+  const isUpperCase = (str: string) => str === str.toUpperCase();
 
   // Extract root kanjis for the directory
   const rootKanjis = useMemo(() => {
-    return vocabulary.filter(v => Boolean(v.part_of_speech) && v.part_of_speech?.toLowerCase() === 'kanji');
+    return vocabulary.filter(v => Boolean(v.part_of_speech) && (v.part_of_speech?.toLowerCase() === 'kanji'
+      || isUpperCase(v.meaning)));
   }, [vocabulary]);
 
   useEffect(() => {
@@ -59,7 +60,7 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
         { zoom: isMobile ? 0.8 : 1.2, duration: 800 }
       );
     }
-    
+
     // Smoothly scroll the clicked sidebar item into the center of the viewport
     e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
   }, [setCenter, getNode, isMobile]);

@@ -140,8 +140,6 @@ export function DataTable<TData, TValue>({
     [data, deletedVocabularyIds]
   );
 
-  console.log("visibleData", visibleData)
-
   const hasUnsavedChanges = React.useMemo(() => {
     if (deletedVocabularyIds.size > 0) {
       return true;
