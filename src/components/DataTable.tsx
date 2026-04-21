@@ -44,7 +44,8 @@ import {
   CheckCircle,
   XCircle,
   HelpCircle,
-  Sparkles
+  Sparkles,
+  Network
 } from "lucide-react";
 import {
   Tooltip,
@@ -61,6 +62,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { KanjiDrawer } from "@/components/vocabularies/KanjiDrawer";
 import { motion, AnimatePresence } from "framer-motion";
+import VocabGraphViewer from "@/components/graph/VocabGraphViewer";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -88,6 +91,7 @@ export function DataTable<TData, TValue>({
     Set<string>
   >(new Set());
   const [viewMode, setViewMode] = React.useState<"table" | "cards">("cards");
+  const [isGraphOpen, setIsGraphOpen] = React.useState(false);
   const [selectedKanjiWord, setSelectedKanjiWord] = React.useState<string | null>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -135,6 +139,8 @@ export function DataTable<TData, TValue>({
     () => data.filter((row) => !deletedVocabularyIds.has((row as any).id)),
     [data, deletedVocabularyIds]
   );
+
+  console.log("visibleData", visibleData)
 
   const hasUnsavedChanges = React.useMemo(() => {
     if (deletedVocabularyIds.size > 0) {
@@ -358,6 +364,16 @@ export function DataTable<TData, TValue>({
         >
           <TableIcon className="mr-2 h-4 w-4" />
           Table
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsGraphOpen(true)}
+          title="Graph view"
+          className="flex-1 sm:flex-none"
+        >
+          <Network className="mr-2 h-4 w-4" />
+          Graph
         </Button>
       </div>
       {viewMode === "table" ? (
@@ -639,6 +655,13 @@ export function DataTable<TData, TValue>({
           {viewMode === "table" ? renderTableView() : renderCardsView()}
         </motion.div>
       </AnimatePresence>
+
+      <Dialog open={isGraphOpen} onOpenChange={setIsGraphOpen}>
+        <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 border-none overflow-hidden [&>button]:z-[60] bg-zinc-50">
+          <DialogTitle className="sr-only">Whiteboard Graph View</DialogTitle>
+          <VocabGraphViewer vocabulary={visibleData as any[]} />
+        </DialogContent>
+      </Dialog>
 
       <KanjiDrawer
         word={selectedKanjiWord}

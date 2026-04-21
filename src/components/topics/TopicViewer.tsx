@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { Search, BrainCircuit, Upload, Check, X, Edit, Save, Trash2, Clock } from 'lucide-react';
+import { Search, BrainCircuit, Upload, Check, X, Edit, Save, Trash2, Clock, LayoutGrid, List, Network } from 'lucide-react';
 import { DueReviewButton } from '@/components/srs/DueReviewBadge';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import VocabGraphViewer from '@/components/graph/VocabGraphViewer';
 
 export default function TopicViewer({ projectId, topic, projectName }: { projectId: string; topic: any; projectName: string }) {
   const { updateTopic } = useContext(TopicContext) as any;
@@ -182,8 +184,8 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
       );
     })
     .filter((v: Vocabulary) => {
-        if (statusFilter === 'all') return true;
-        return v.status === statusFilter;
+      if (statusFilter === 'all') return true;
+      return v.status === statusFilter;
     });
 
   const LearnDialog = () => (
@@ -223,22 +225,22 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
 
       <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
         <div className="relative w-full md:w-auto flex-1 flex flex-row items-center gap-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-                placeholder="Search vocabulary..."
-                className="pl-10 flex-1 md:w-80"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <div className="block md:hidden">
-              {/* Learn chooser dialog: pick All or Not Remembered */}
-              <LearnDialog />
-            </div>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            placeholder="Search vocabulary..."
+            className="pl-10 flex-1 md:w-80"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <div className="block md:hidden">
+            {/* Learn chooser dialog: pick All or Not Remembered */}
+            <LearnDialog />
+          </div>
         </div>
         <div className="flex w-full md:w-auto items-center gap-2">
           {!isEditMode ? (
             <>
-              <DueReviewButton 
+              <DueReviewButton
                 onReviewClick={() => window.location.href = '/review'}
                 className="hidden md:inline-flex"
               />
@@ -278,90 +280,114 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
           )}
         </div>
       </div>
-      
-      <Card className="h-[calc(80vh)] overflow-auto">
-        <Table className=''>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Word</TableHead>
-              <TableHead>Pronunciation</TableHead>
-              <TableHead className="w-1/3 md:w-1/4">Meaning</TableHead>
-              <TableHead className="hidden sm:table-cell">Status</TableHead>
-              {isEditMode && <TableHead className="w-20">Actions</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredVocabulary.length > 0 ? (
-              filteredVocabulary.map((v: Vocabulary) => (
-                <TableRow key={v.id} className={
-                  v.status === 'remembered' ? 'bg-green-50 dark:bg-green-900/20 sm:bg-transparent dark:sm:bg-transparent' :
-                  v.status === 'not_remembered' ? 'bg-red-50 dark:bg-red-900/20 sm:bg-transparent dark:sm:bg-transparent' :
-                  'bg-gray-50 dark:bg-gray-800/20 sm:bg-transparent dark:sm:bg-transparent'
-                }>
-                  <TableCell className="font-medium">
-                    {isEditMode ? (
-                      <Input
-                        value={v.word || ''}
-                        onChange={(e) => updateLocalVocabulary(v.id, 'word', e.target.value)}
-                        className="h-8"
-                      />
-                    ) : (
-                      v.word
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {isEditMode ? (
-                      <Input
-                        value={v.pronunciation || ''}
-                        onChange={(e) => updateLocalVocabulary(v.id, 'pronunciation', e.target.value)}
-                        className="h-8"
-                      />
-                    ) : (
-                      v.pronunciation
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {isEditMode ? (
-                      <Input
-                        value={v.meaning}
-                        onChange={(e) => updateLocalVocabulary(v.id, 'meaning', e.target.value)}
-                        className="h-8"
-                      />
-                    ) : (
-                      v.meaning
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <Badge variant={
-                        v.status === 'remembered' ? 'default' : v.status === 'not_remembered' ? 'destructive' : 'secondary'
-                    } className={v.status === 'remembered' ? 'bg-green-500' : ''}>
-                        {v.status == 'not_remembered' ? 'forgot' : v.status}
-                    </Badge>
-                  </TableCell>
-                  {isEditMode && (
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteLocalVocabulary(v.id)}
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  )}
+
+      <Tabs defaultValue="table" className="w-full">
+        <div className="flex justify-end mb-4">
+          <TabsList className="bg-muted">
+            <TabsTrigger value="card" className="flex items-center gap-2"><LayoutGrid className="w-4 h-4" /> Card</TabsTrigger>
+            <TabsTrigger value="table" className="flex items-center gap-2"><List className="w-4 h-4" /> Table</TabsTrigger>
+            <TabsTrigger value="graph" className="flex items-center gap-2"><Network className="w-4 h-4" /> Graph</TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="card" className="mt-0">
+          <Card className="h-[calc(80vh)] overflow-auto p-4 flex items-center justify-center text-muted-foreground">
+            Card view coming soon...
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="table" className="mt-0">
+          <Card className="h-[calc(80vh)] overflow-auto">
+            <Table className=''>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Word</TableHead>
+                  <TableHead>Pronunciation</TableHead>
+                  <TableHead className="w-1/3 md:w-1/4">Meaning</TableHead>
+                  <TableHead className="hidden sm:table-cell">Status</TableHead>
+                  {isEditMode && <TableHead className="w-20">Actions</TableHead>}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={isEditMode ? 5 : 4} className="h-24 text-center">
-                  {(!topic.vocabulary || topic.vocabulary.length === 0) ? "No vocabulary in this topic yet." : "No results found."}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {filteredVocabulary.length > 0 ? (
+                  filteredVocabulary.map((v: Vocabulary) => (
+                    <TableRow key={v.id} className={
+                      v.status === 'remembered' ? 'bg-green-50 dark:bg-green-900/20 sm:bg-transparent dark:sm:bg-transparent' :
+                        v.status === 'not_remembered' ? 'bg-red-50 dark:bg-red-900/20 sm:bg-transparent dark:sm:bg-transparent' :
+                          'bg-gray-50 dark:bg-gray-800/20 sm:bg-transparent dark:sm:bg-transparent'
+                    }>
+                      <TableCell className="font-medium">
+                        {isEditMode ? (
+                          <Input
+                            value={v.word || ''}
+                            onChange={(e) => updateLocalVocabulary(v.id, 'word', e.target.value)}
+                            className="h-8"
+                          />
+                        ) : (
+                          v.word
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditMode ? (
+                          <Input
+                            value={v.pronunciation || ''}
+                            onChange={(e) => updateLocalVocabulary(v.id, 'pronunciation', e.target.value)}
+                            className="h-8"
+                          />
+                        ) : (
+                          v.pronunciation
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditMode ? (
+                          <Input
+                            value={v.meaning}
+                            onChange={(e) => updateLocalVocabulary(v.id, 'meaning', e.target.value)}
+                            className="h-8"
+                          />
+                        ) : (
+                          v.meaning
+                        )}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge variant={
+                          v.status === 'remembered' ? 'default' : v.status === 'not_remembered' ? 'destructive' : 'secondary'
+                        } className={v.status === 'remembered' ? 'bg-green-500' : ''}>
+                          {v.status == 'not_remembered' ? 'forgot' : v.status}
+                        </Badge>
+                      </TableCell>
+                      {isEditMode && (
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteLocalVocabulary(v.id)}
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={isEditMode ? 5 : 4} className="h-24 text-center">
+                      {(!topic.vocabulary || topic.vocabulary.length === 0) ? "No vocabulary in this topic yet." : "No results found."}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="graph" className="mt-0">
+          <Card className="h-[calc(80vh)] w-full overflow-hidden p-0 m-0 border-none bg-zinc-50">
+            <VocabGraphViewer vocabulary={filteredVocabulary} />
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
