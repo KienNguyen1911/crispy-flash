@@ -10,9 +10,13 @@ export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boole
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
+  const isKanjiMatch = (v: Vocabulary) => {
+    return Boolean(v.part_of_speech?.toLowerCase() === 'kanji') || (Boolean(v.meaning) && v.meaning === v.meaning?.toUpperCase());
+  };
+
   // Separate into Kanji and Vocab
-  const kanjis = vocabularyList.filter(v => Boolean(v.part_of_speech) && v.part_of_speech?.toLowerCase() === 'kanji');
-  const vocabs = vocabularyList.filter(v => !v.part_of_speech || v.part_of_speech?.toLowerCase() !== 'kanji');
+  const kanjis = vocabularyList.filter(v => isKanjiMatch(v));
+  const vocabs = vocabularyList.filter(v => !isKanjiMatch(v));
 
   const KANJI_X_SPACING = isMobile ? 0 : 1000;
   const KANJI_Y_SPACING = isMobile ? 800 : 800;
