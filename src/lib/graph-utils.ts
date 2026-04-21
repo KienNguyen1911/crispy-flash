@@ -1,5 +1,5 @@
 import { Vocabulary } from '@/lib/types';
-import { Edge, Node } from '@xyflow/react';
+import { Edge, Node, MarkerType } from '@xyflow/react';
 
 export type GraphDataType = {
   nodes: Node[];
@@ -36,6 +36,10 @@ export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boole
           source: k.id,
           target: v.id,
           style: { stroke: '#000', strokeWidth: 2 },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#000',
+          },
         });
       }
     });

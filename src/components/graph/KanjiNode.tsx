@@ -1,11 +1,15 @@
 import { Handle, Position } from '@xyflow/react';
 import { Vocabulary } from '@/lib/types';
 
-export default function KanjiNode({ data }: { data: { vocab: Vocabulary } }) {
+export default function KanjiNode({ data, selected }: { data: { vocab: Vocabulary }, selected?: boolean }) {
   const { word, pronunciation, meaning } = data.vocab;
 
+  const borderClass = selected ? "border-emerald-400" : "border-black";
+  const shadowClass = selected ? "shadow-[4px_4px_0px_#34d399]" : "shadow-[4px_4px_0px_rgba(0,0,0,1)]";
+  const hoverShadowClass = selected ? "hover:shadow-[6px_6px_0px_#34d399]" : "hover:shadow-[6px_6px_0px_rgba(0,0,0,1)]";
+
   return (
-    <div className="bg-white text-black border-[3px] border-black rounded-sm shadow-[4px_4px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center p-4 w-[120px] h-[140px] hover:-translate-y-1 hover:shadow-[6px_6px_0px_rgba(0,0,0,1)] transition-all">
+    <div className={`bg-white text-black border-[3px] rounded-sm flex flex-col items-center justify-center p-4 w-[120px] h-[140px] hover:-translate-y-1 transition-all ${borderClass} ${shadowClass} ${hoverShadowClass}`}>
       <Handle type="source" position={Position.Top} id="top" className="opacity-0" />
       <Handle type="source" position={Position.Right} id="right" className="opacity-0" />
       <Handle type="source" position={Position.Bottom} id="bottom" className="opacity-0" />

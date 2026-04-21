@@ -65,6 +65,25 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
     e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
   }, [setCenter, getNode, isMobile]);
 
+  // Handle clicking on nodes in the graph canvas
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    // React Flow's onNodeClick only triggers for true clicks/taps, 
+    // it automatically ignores drag/pan events!
+    if (node.type === 'vocabNode') {
+      const vocab = node.data.vocab as Vocabulary;
+      console.log(vocab);
+      const textToPlay = vocab.word || vocab.pronunciation || '';
+
+      if (textToPlay && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Stop current playing audio if any
+        const utterance = new SpeechSynthesisUtterance(textToPlay);
+        utterance.lang = 'ja-JP';
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+  }, []);
+
   return (
     <div className="flex flex-col md:flex-row w-full h-[calc(100vh-100px)] rounded-md relative bg-zinc-50 overflow-hidden">
 
@@ -96,6 +115,7 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           fitView
           attributionPosition="bottom-right"
