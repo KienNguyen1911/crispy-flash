@@ -6,7 +6,7 @@ export type GraphDataType = {
   edges: Edge[];
 };
 
-export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boolean = false): GraphDataType => {
+export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boolean = false, categoryMap: Record<string, string> = {}): GraphDataType => {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
@@ -82,8 +82,8 @@ export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boole
         if (neighbors) {
           neighbors.forEach(neighborId => {
             if (!visitedKanjis.has(neighborId)) {
-              visitedKanjis.add(neighborId);
-              queue.push(neighborId);
+               visitedKanjis.add(neighborId);
+               queue.push(neighborId);
             }
           });
         }
@@ -161,23 +161,92 @@ export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boole
     if (normalized < 0) normalized += 2 * Math.PI;
 
     if (normalized >= 7 * Math.PI / 4 || normalized < Math.PI / 4) {
-      // Right
       edge.sourceHandle = 'right';
       edge.targetHandle = 'left';
     } else if (normalized >= Math.PI / 4 && normalized < 3 * Math.PI / 4) {
-      // Bottom
       edge.sourceHandle = 'bottom';
       edge.targetHandle = 'top';
     } else if (normalized >= 3 * Math.PI / 4 && normalized < 5 * Math.PI / 4) {
-      // Left
       edge.sourceHandle = 'left';
       edge.targetHandle = 'right';
     } else {
-      // Top
       edge.sourceHandle = 'top';
       edge.targetHandle = 'bottom';
     }
   });
+
+  // Calculate position for isolated vocabularies
+  const isolatedVocabs = vocabs.filter(v => !addedVocabs.has(v.id));
+  
+  if (isolatedVocabs.length > 0) {
+    let maxY = 0;
+    if (nodes.length > 0) {
+      maxY = nodes.reduce((max, node) => Math.max(max, node.position.y), 0) + (isMobile ? 400 : 500);
+    }
+
+    const ISO_COLS = isMobile ? 1 : 4;
+    const ISOLATED_X_SPACING = 360;
+    const ISOLATED_Y_SPACING = 260;
+    
+    // Group them
+    const groupedVocabs: Record<string, Vocabulary[]> = {};
+    const hasCategories = Object.keys(categoryMap).length > 0;
+    
+    isolatedVocabs.forEach(v => {
+      const cat = hasCategories ? (categoryMap[v.id] || "Từ vựng chung") : "Vocabulary";
+      if (!groupedVocabs[cat]) groupedVocabs[cat] = [];
+      groupedVocabs[cat].push(v);
+    });
+
+    let currentY = maxY;
+    let startX = 0;
+    let groupIndex = 0;
+
+    Object.entries(groupedVocabs).forEach(([catName, items]) => {
+      const GROUP_X_PADDING = 30;
+      const GROUP_Y_PADDING = 60;
+      
+      const cols = isMobile ? 1 : Math.min(items.length, ISO_COLS);
+      const rows = Math.ceil(items.length / cols);
+      
+      const maxAllowedNodeWidth = 320;
+      const maxAllowedNodeHeight = 250;
+      
+      const groupWidth = (cols - 1) * ISOLATED_X_SPACING + maxAllowedNodeWidth + 2 * GROUP_X_PADDING;
+      const groupHeight = (rows - 1) * ISOLATED_Y_SPACING + maxAllowedNodeHeight + 2 * GROUP_Y_PADDING;
+      
+      const groupId = `cat-group-${groupIndex}`;
+      
+      // Add Group Parent Node
+      nodes.push({
+        id: groupId,
+        type: 'categoryGroupNode',
+        position: { x: startX, y: currentY },
+        data: { label: catName, width: groupWidth, height: groupHeight }
+      });
+
+      // Add child items using relative positioning to the parent
+      items.forEach((v, index) => {
+        const col = index % cols;
+        const row = Math.floor(index / cols);
+
+        nodes.push({
+          id: v.id,
+          type: 'vocabNode',
+          data: { vocab: v },
+          position: { 
+            x: GROUP_X_PADDING + col * ISOLATED_X_SPACING, 
+            y: GROUP_Y_PADDING + row * ISOLATED_Y_SPACING 
+          },
+          parentId: groupId,
+          extent: 'parent'
+        });
+      });
+
+      currentY += groupHeight + 100; // Vertical spacing between groups
+      groupIndex++;
+    });
+  }
 
   return { nodes, edges };
 };
