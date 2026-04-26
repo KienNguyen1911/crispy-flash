@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, CreditCard, Activity, DollarSign } from "lucide-react"
 import { apiClient } from "@/lib/api";
+import { DatabaseBackupPanel } from "@/components/admin/DatabaseBackupPanel";
 
 export default function AdminDashboardPage() {
   const [summary, setSummary] = useState({
@@ -88,6 +89,10 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Database Backup Panel */}
+      <DatabaseBackupPanel />
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>

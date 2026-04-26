@@ -13,7 +13,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       if (!isAuthenticated) {
         router.push("/");
       } else if (user?.role !== "ADMIN") {
-        router.push("/dashboard"); // Redirect non-admins to dashboard
+        router.push("/"); // Non-admin users belong on the main user dashboard
       }
     }
   }, [isLoading, isAuthenticated, user, router]);
@@ -23,7 +23,16 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   }
 
   if (!isAuthenticated || user?.role !== "ADMIN") {
-    return null;
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center px-4 text-center">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold">Admin access required</h1>
+          <p className="text-muted-foreground">
+            This page is only available to admin accounts. Redirecting you to the main dashboard.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;
