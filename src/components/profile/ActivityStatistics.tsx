@@ -4,8 +4,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import LearningHeatMap from "./LearningHeatMap";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
 import { AuthIcon } from "../ui/auth-button";
 
 interface UserInfo {
@@ -48,11 +46,6 @@ interface ActivityStatisticsProps {
 const ActivityStatistics: React.FC<ActivityStatisticsProps> = ({ userInfo, learningStats }) => {
   const { user, loading: userLoading, error: userError } = userInfo;
   const { stats, loading: statsLoading, error: statsError } = learningStats;
-  
-  // Mock data for vocabulary progress (will be replaced when we have vocabulary API)
-  const rememberedWords = 150;
-  const totalWords = 200;
-  const progress = (rememberedWords / totalWords) * 100;
 
   return (
     <div className="space-y-6">

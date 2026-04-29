@@ -9,7 +9,7 @@ import {
   useCallback
 } from "react";
 import { jwtDecode } from "jwt-decode";
-import { apiClient } from "@/lib/api";
+import AuthDialog from "@/components/auth/AuthDialog";
 
 interface User {
   id: string;
@@ -24,6 +24,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   login: () => void;
+  loginWithGoogle: () => void;
   logout: () => void;
   setAuthTokens: (accessToken: string, refreshToken: string) => void;
   isLoading: boolean;
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
 
   const logout = useCallback(async () => {
     try {
@@ -83,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role: decoded.role,
         });
         setToken(accessToken);
+        setIsAuthDialogOpen(false);
       } catch (error) {
         console.error("Failed to decode token:", error);
         logout();
@@ -134,10 +137,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
   }, [setAuthTokens, logout]);
 
-  const login = () => {
+  const loginWithGoogle = useCallback(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
     window.location.href = `${apiUrl}/api/auth/google`;
-  };
+  }, []);
+
+  const login = useCallback(() => {
+    setIsAuthDialogOpen(true);
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -146,12 +153,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         isAuthenticated: !!token,
         login,
+        loginWithGoogle,
         logout,
         setAuthTokens,
         isLoading
       }}
     >
       {children}
+      <AuthDialog
+        open={isAuthDialogOpen}
+        onOpenChange={setIsAuthDialogOpen}
+        onGoogleLogin={loginWithGoogle}
+        onQrAuthenticated={setAuthTokens}
+      />
     </AuthContext.Provider>
   );
 }

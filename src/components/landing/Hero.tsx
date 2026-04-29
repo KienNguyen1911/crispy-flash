@@ -42,7 +42,7 @@ export function Hero() {
                 size="lg"
                 className="w-full sm:w-auto text-base h-14 px-8 rounded-full shadow-glow hover:scale-105 transition-transform duration-300"
               >
-                Sign In with Google
+                Sign In
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
