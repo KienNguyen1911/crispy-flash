@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -40,6 +40,7 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
   const { setCenter, getNode } = useReactFlow();
   const isMobile = useMediaQuery("(max-width: 767px)");
   const isUpperCase = (str: string) => str === str.toUpperCase();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Extract root kanjis for the directory
   const rootKanjis = useMemo(() => {
@@ -93,6 +94,14 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
     };
   }, [vocabulary, setNodes, setEdges, isMobile]);
 
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
+
   // Zoom into root kanji
   const handleKanjiClick = useCallback((id: string, e: React.MouseEvent<HTMLDivElement>) => {
     const node = getNode(id);
@@ -130,24 +139,32 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
     }
   }, [setCenter, getNode, isMobile]);
 
+  const playVocabularyText = useCallback((text: string) => {
+    if (!text) return;
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
+    const url = `/api/tts?text=${encodeURIComponent(text)}&lang=ja`;
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    audio.play().catch((error) => {
+      console.error('TTS playback failed:', error);
+    });
+  }, []);
+
   // Handle clicking on nodes in the graph canvas
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     // React Flow's onNodeClick only triggers for true clicks/taps, 
     // it automatically ignores drag/pan events!
     if (node.type === 'vocabNode') {
       const vocab = node.data.vocab as Vocabulary;
-      console.log(vocab);
       const textToPlay = vocab.word || vocab.pronunciation || '';
-
-      if (textToPlay && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Stop current playing audio if any
-        const utterance = new SpeechSynthesisUtterance(textToPlay);
-        utterance.lang = 'ja-JP';
-        utterance.rate = 0.9;
-        window.speechSynthesis.speak(utterance);
-      }
+      playVocabularyText(textToPlay);
     }
-  }, []);
+  }, [playVocabularyText]);
 
   return (
     <div className="flex flex-col md:flex-row w-full h-[calc(100vh-100px)] rounded-md relative bg-zinc-50 overflow-hidden">

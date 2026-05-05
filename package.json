@@ -54,6 +54,7 @@
     "firebase": "^11.10.0",
     "framer-motion": "^11.2.12",
     "genkit": "^1.14.1",
+    "google-tts-api": "^2.0.0",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.475.0",
     "motion": "^12.23.22",
