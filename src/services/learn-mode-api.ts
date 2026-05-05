@@ -26,9 +26,6 @@ class LearnModeApiService extends BaseApiService {
 // Create and export a singleton instance
 const learnModeApiService = new LearnModeApiService(apiClient);
 
-// Export the service instance
-export { learnModeApiService };
-
 // Export individual functions for backward compatibility
 export const updateVocabularyBatchStatus = (
   topicId: string,

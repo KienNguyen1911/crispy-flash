@@ -30,9 +30,6 @@ class AnalyticsApiService extends BaseApiService {
 // Create and export a singleton instance
 const analyticsApiService = new AnalyticsApiService(apiClient);
 
-// Export the service instance
-export { analyticsApiService };
-
 // Export individual functions for backward compatibility
 export const getProjectProgress = (fetcher: Function, projectId: string) => analyticsApiService.getProjectProgress(fetcher, projectId);
 export const getUserLearningStats = (fetcher: Function) => analyticsApiService.getUserLearningStats(fetcher);

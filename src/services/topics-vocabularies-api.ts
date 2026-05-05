@@ -40,10 +40,6 @@ class TopicsVocabulariesApiService extends BaseApiService {
 // Create and export a singleton instance
 const topicsVocabulariesApiService = new TopicsVocabulariesApiService(apiClient);
 
-// Export the service instance
-export { topicsVocabulariesApiService };
-
 // Export individual functions for backward compatibility
 export const deleteVocabularies = (topicId: string, ids: string[]) => topicsVocabulariesApiService.deleteVocabularies(topicId, ids);
 export const updateVocabularies = (topicId: string, vocabularies: Vocabulary[]) => topicsVocabulariesApiService.updateVocabularies(topicId, vocabularies);
-export const updateTopicHeader = (projectId: string, topicId: string, data: { title: string; description: string }) => topicsVocabulariesApiService.updateTopicHeader(projectId, topicId, data);

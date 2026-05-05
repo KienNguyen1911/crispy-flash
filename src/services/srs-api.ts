@@ -86,9 +86,6 @@ class SrsApiService extends BaseApiService {
 // Create and export a singleton instance
 const srsApiService = new SrsApiService(apiClient);
 
-// Export the service instance
-export { srsApiService };
-
 // Export individual functions for backward compatibility
 export const srsApi = {
   getDueReviews: (projectId?: string) => srsApiService.getDueReviews(projectId),

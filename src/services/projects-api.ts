@@ -42,9 +42,6 @@ class ProjectsApiService extends BaseApiService {
 // Create and export a singleton instance
 const projectsApiService = new ProjectsApiService(apiClient);
 
-// Export the service instance
-export { projectsApiService };
-
 // Export individual functions for backward compatibility
 export const getProjects = () => projectsApiService.getProjects();
 export const createProject = (projectData: { title: string; description: string }) => projectsApiService.createProject(projectData);

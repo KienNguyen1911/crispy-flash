@@ -81,9 +81,6 @@ class TopicsApiService extends BaseApiService {
 // Create and export a singleton instance
 const topicsApiService = new TopicsApiService(apiClient);
 
-// Export the service instance
-export { topicsApiService };
-
 // Export individual functions for backward compatibility
 export const getTopicById = (topicId: string) =>
   topicsApiService.getTopicById(topicId);
@@ -105,6 +102,3 @@ export const generateContent = (
 ) => topicsApiService.generateContent(topicId, language, difficulty);
 export const moveTopic = (topicId: string, targetProjectId: string) =>
   topicsApiService.moveTopic(topicId, targetProjectId);
-
-export const getGenerationStatus = (topicId: string, jobId: string) =>
-  topicsApiService.getGenerationStatus(topicId, jobId);

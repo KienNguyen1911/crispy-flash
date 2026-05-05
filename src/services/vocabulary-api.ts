@@ -47,9 +47,6 @@ class VocabularyApiService extends BaseApiService {
 // Create and export a singleton instance
 const vocabularyApiService = new VocabularyApiService(apiClient);
 
-// Export the service instance
-export { vocabularyApiService };
-
 // Export individual functions for backward compatibility
 export const createVocabulary = (vocabularyItems: Array<Omit<Vocabulary, 'id' | 'topicId' | 'status'> & { topicId: string }>) => vocabularyApiService.createVocabulary(vocabularyItems);
 export const updateVocabulary = (vocabId: string, vocabData: Partial<Vocabulary>) => vocabularyApiService.updateVocabulary(vocabId, vocabData);
