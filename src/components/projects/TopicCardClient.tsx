@@ -41,10 +41,15 @@ export default function TopicCardClient({
   const { deleteTopic } = useContext(TopicContext);
   const { updateTopic } = useContext(TopicContext) as any;
   const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState(topic.title);
-  const [description, setDescription] = useState(topic.description ?? "");
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setTitle(topic.title);
+    setDescription(topic.description ?? '');
+  }, [topic.id]);
 
   const isDirty =
     title !== topic.title || description !== (topic.description ?? "");

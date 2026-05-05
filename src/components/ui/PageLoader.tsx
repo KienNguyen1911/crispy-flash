@@ -54,9 +54,29 @@ function AnimatedLogo() {
 export default function PageLoader() {
   const pathname = usePathname();
   const prevPath = useRef<string | null>(null);
-  const [active, setActive] = useState(false);
-  const [showSpinner, setShowSpinner] = useState(false);
   const overlayRef = useRef(false);
+
+  type LoaderState = { active: boolean; showSpinner: boolean };
+  type LoaderAction = 
+    | { type: 'SHOW' }
+    | { type: 'HIDE' }
+    | { type: 'RESET' };
+
+  const [state, dispatch] = React.useReducer(
+    (state: LoaderState, action: LoaderAction): LoaderState => {
+      switch (action.type) {
+        case 'SHOW':
+          return { active: true, showSpinner: true };
+        case 'HIDE':
+          return { active: false, showSpinner: false };
+        case 'RESET':
+          return { active: false, showSpinner: false };
+        default:
+          return state;
+      }
+    },
+    { active: false, showSpinner: false }
+  );
 
   useEffect(() => {
     if (!prevPath.current) {
@@ -65,14 +85,12 @@ export default function PageLoader() {
     }
     if (pathname !== prevPath.current) {
       if (!overlayRef.current) {
-        setActive(true);
-        setShowSpinner(true);
+        dispatch({ type: 'SHOW' });
       }
 
       const doneTimer = setTimeout(() => {
         overlayRef.current = false;
-        setShowSpinner(false);
-        setActive(false);
+        dispatch({ type: 'HIDE' });
       }, 220);
 
       prevPath.current = pathname;
@@ -104,12 +122,10 @@ export default function PageLoader() {
         return;
 
       overlayRef.current = true;
-      setActive(true);
-      setShowSpinner(true);
+      dispatch({ type: 'SHOW' });
       const reset = setTimeout(() => {
         overlayRef.current = false;
-        setShowSpinner(false);
-        setActive(false);
+        dispatch({ type: 'HIDE' });
       }, 5000);
       const clearOnNav = () => clearTimeout(reset);
       window.addEventListener("popstate", clearOnNav, { once: true });
@@ -117,12 +133,10 @@ export default function PageLoader() {
 
     function onPopState() {
       overlayRef.current = true;
-      setActive(true);
-      setShowSpinner(true);
+      dispatch({ type: 'SHOW' });
       setTimeout(() => {
         overlayRef.current = false;
-        setShowSpinner(false);
-        setActive(false);
+        dispatch({ type: 'HIDE' });
       }, 5000);
     }
 
@@ -136,8 +150,8 @@ export default function PageLoader() {
 
   return (
     <>
-      <TopBar active={active} />
-      {showSpinner && (
+      <TopBar active={state.active} />
+      {state.showSpinner && (
         <>
           {/* overlay beneath spinner to dim and block interaction */}
           <div className="fixed inset-0 z-[9997] bg-black/40 backdrop-blur-sm transition-opacity animate-fade-in" />
@@ -149,8 +163,7 @@ export default function PageLoader() {
         </>
       )}
 
-      {/* @ts-expect-error styled-jsx attributes */}
-      <style jsx global>{`
+      {React.createElement('style', { jsx: true, global: true } as any, `
         @keyframes logo-piece-1 {
           0%,
           100% {
@@ -218,7 +231,7 @@ export default function PageLoader() {
         .animate-scale-in {
           animation: scale-in 0.3s ease-out;
         }
-      `}</style>
+      `)}
     </>
   );
 }

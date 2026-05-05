@@ -152,7 +152,7 @@ function HistoryDialog({
             <div className="text-sm text-muted-foreground">No reviewed words yet today.</div>
           ) : (
             reviewedToday.map((item) => (
-              <div key={item.vocabularyId} className="rounded-lg border p-3">
+              <div key={item.vocabularyId} className="rounded-lg border p-3" suppressHydrationWarning>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="font-semibold">{item.word || item.pronunciation || "Untitled word"}</div>
@@ -160,7 +160,7 @@ function HistoryDialog({
                   </div>
                   <StatusBadge result={item.result} />
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground" suppressHydrationWarning>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
                   <span>{new Date(item.reviewedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>
                   {item.responseTimeMs !== null && (
                     <span>{(item.responseTimeMs / 1000).toFixed(1)}s</span>

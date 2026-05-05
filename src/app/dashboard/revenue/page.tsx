@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useReducer } from "react";
 import { DateRange } from "react-day-picker";
 import { addDays, startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 import { Loader2 } from "lucide-react";
@@ -16,22 +16,54 @@ interface RevenueStats {
   amount: number;
 }
 
+interface RevenueState {
+  stats: RevenueStats[];
+  totalRevenue: number;
+  providerStats: { provider: string; amount: number }[];
+  loading: boolean;
+}
+
+type RevenueAction = 
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_DATA'; payload: { stats: RevenueStats[]; totalRevenue: number; providerStats: { provider: string; amount: number }[] } }
+  | { type: 'SET_ERROR' };
+
+const revenueReducer = (state: RevenueState, action: RevenueAction): RevenueState => {
+  switch (action.type) {
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
+    case 'SET_DATA':
+      return { ...state, ...action.payload, loading: false };
+    case 'SET_ERROR':
+      return { ...state, loading: false };
+    default:
+      return state;
+  }
+};
+
 export default function RevenuePage() {
   const { user } = useAuth();
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: startOfMonth(subMonths(new Date(), 0)),
-    to: endOfMonth(new Date()),
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [revenueState, dispatch] = useReducer(revenueReducer, {
+    stats: [],
+    totalRevenue: 0,
+    providerStats: [],
+    loading: false
   });
-  const [providerStats, setProviderStats] = useState<{ provider: string; amount: number }[]>([]);
-  const [stats, setStats] = useState<RevenueStats[]>([]);
-  const [totalRevenue, setTotalRevenue] = useState<number>(0);
-  const [loading, setLoading] = useState(false);
+
+  // Initialize date range on client side only
+  useEffect(() => {
+    setDateRange({
+      from: startOfMonth(subMonths(new Date(), 0)),
+      to: endOfMonth(new Date()),
+    });
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
       if (!dateRange?.from || !dateRange?.to) return;
 
-      setLoading(true);
+      dispatch({ type: 'SET_LOADING', payload: true });
       try {
         const fromStr = format(dateRange.from, "yyyy-MM-dd");
         const toStr = format(dateRange.to, "yyyy-MM-dd");
@@ -45,14 +77,10 @@ export default function RevenuePage() {
             apiClient<{ provider: string; amount: number }[]>(`/revenue/by-provider?from=${fromStr}&to=${toStr}`)
         ]);
 
-        setStats(statsData);
-        setTotalRevenue(totalData.total);
-        setProviderStats(providerData);
-
+        dispatch({ type: 'SET_DATA', payload: { stats: statsData, totalRevenue: totalData.total, providerStats: providerData } });
       } catch (error) {
         console.error("Failed to fetch revenue data:", error);
-      } finally {
-        setLoading(false);
+        dispatch({ type: 'SET_ERROR' });
       }
     }
 
@@ -85,8 +113,8 @@ export default function RevenuePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 
-                new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalRevenue)}
+                {revenueState.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 
+                new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(revenueState.totalRevenue)}
             </div>
             <p className="text-xs text-muted-foreground">
               {dateRange?.from && dateRange?.to ? 
@@ -95,7 +123,7 @@ export default function RevenuePage() {
             </p>
           </CardContent>
         </Card>
-        {providerStats.map((stat) => (
+        {revenueState.providerStats.map((stat) => (
           <Card key={stat.provider}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -113,7 +141,7 @@ export default function RevenuePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 
+                {revenueState.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 
                 new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stat.amount)}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -130,13 +158,14 @@ export default function RevenuePage() {
           <CardTitle>Overview</CardTitle>
         </CardHeader>
         <CardContent className="pl-2">
-            {loading ? (
+            {revenueState.loading ? (
                 <div className="flex h-[350px] items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             ) : (
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={stats}>
+              <div suppressHydrationWarning>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={revenueState.stats}>
                   <XAxis
                     dataKey="date"
                     stroke="#888888"
@@ -149,7 +178,6 @@ export default function RevenuePage() {
                         if (value.length === 7) return value; 
                         return new Date(value).toLocaleDateString("en-US", { day: 'numeric', month: 'numeric'});
                     }}
-                    suppressHydrationWarning
                   />
                   <YAxis
                     stroke="#888888"
@@ -179,6 +207,7 @@ export default function RevenuePage() {
                   />
                 </BarChart>
               </ResponsiveContainer>
+              </div>
             )}
         </CardContent>
       </Card>

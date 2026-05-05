@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useReducer } from "react";
 import { useDueReviews, useReviewSession } from "@/hooks/use-srs";
 import {
   Card,
@@ -33,6 +33,34 @@ export interface BatchReviewSummary {
 
 const TIME_LIMIT = 10; // 10 seconds per card
 
+interface CardState {
+  isAnswered: boolean;
+  selectedAnswer: string | null;
+  timeLeft: number;
+  lastResult: ReviewAttemptResult | null;
+}
+
+type CardAction =
+  | { type: 'RESET' }
+  | { type: 'SET_ANSWERED'; payload: { selectedAnswer: string | null; lastResult: ReviewAttemptResult } }
+  | { type: 'TICK_TIME' }
+  | { type: 'SET_TIME_LEFT'; payload: number };
+
+const cardReducer = (state: CardState, action: CardAction): CardState => {
+  switch (action.type) {
+    case 'RESET':
+      return { isAnswered: false, selectedAnswer: null, timeLeft: TIME_LIMIT, lastResult: null };
+    case 'SET_ANSWERED':
+      return { ...state, isAnswered: true, selectedAnswer: action.payload.selectedAnswer, lastResult: action.payload.lastResult };
+    case 'TICK_TIME':
+      return { ...state, timeLeft: Math.max(0, state.timeLeft - 1) };
+    case 'SET_TIME_LEFT':
+      return { ...state, timeLeft: action.payload };
+    default:
+      return state;
+  }
+};
+
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -49,11 +77,12 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sessionReviews, setSessionReviews] = useState<VocabularyWithSrs[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [isAnswered, setIsAnswered] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
-  const [lastResult, setLastResult] = useState<ReviewAttemptResult | null>(null);
+  const [cardState, dispatchCard] = useReducer(cardReducer, {
+    isAnswered: false,
+    selectedAnswer: null,
+    timeLeft: TIME_LIMIT,
+    lastResult: null,
+  });
   const [batchSummary, setBatchSummary] = useState<BatchReviewSummary>({
     reviewedCount: 0,
     correctCount: 0,
@@ -81,11 +110,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
 
   useEffect(() => {
     if (!currentVocab) return;
-
-    setIsAnswered(false);
-    setSelectedAnswer(null);
-    setTimeLeft(TIME_LIMIT);
-    setLastResult(null);
+    dispatchCard({ type: 'RESET' });
   }, [currentVocab, sessionReviews]);
 
   const moveToNext = useCallback((finalSummary?: BatchReviewSummary) => {
@@ -93,10 +118,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
       onComplete?.(finalSummary || batchSummary);
     } else {
       setCurrentIndex((prev) => prev + 1);
-      setIsAnswered(false);
-      setSelectedAnswer(null);
-      setTimeLeft(TIME_LIMIT);
-      setLastResult(null);
+      dispatchCard({ type: 'RESET' });
     }
   }, [batchSummary, currentIndex, sessionReviews.length, onComplete]);
 
@@ -111,18 +133,16 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
 
   const handleAnswerSelect = useCallback(
     async (selectedOption: string | null, forcedResult?: ReviewAttemptResult) => {
-      if (isAnswered) return;
+      if (cardState.isAnswered) return;
 
-      setIsAnswered(true);
-      setIsSubmitting(true);
-      setSelectedAnswer(selectedOption);
-
-      const timeSpent = TIME_LIMIT - timeLeft;
+      const timeSpent = TIME_LIMIT - cardState.timeLeft;
       const responseTimeMs = Math.max(timeSpent, 0) * 1000;
       const isCorrect = selectedOption === correctAnswer;
       const result: ReviewAttemptResult =
         forcedResult || (isCorrect ? "CORRECT" : "INCORRECT");
-      setLastResult(result);
+      
+      dispatchCard({ type: 'SET_ANSWERED', payload: { selectedAnswer: selectedOption, lastResult: result } });
+      setIsSubmitting(true);
 
       let quality: number;
       if (result !== "CORRECT" || timeSpent > 7) {
@@ -159,23 +179,23 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
         setIsSubmitting(false);
       }
     },
-    [isAnswered, timeLeft, currentVocab, submitFeedback, batchSummary, correctAnswer, promptType],
+    [cardState.isAnswered, cardState.timeLeft, currentVocab, submitFeedback, batchSummary, correctAnswer, promptType],
   );
 
   useEffect(() => {
-    if (!currentVocab || isAnswered) return;
+    if (!currentVocab || cardState.isAnswered) return;
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      dispatchCard({ type: 'TICK_TIME' });
     }, 1000);
 
-    if (timeLeft <= 0) {
+    if (cardState.timeLeft <= 0) {
       clearInterval(timer);
       handleAnswerSelect(null, "TIMEOUT");
     }
 
     return () => clearInterval(timer);
-  }, [timeLeft, currentVocab, isAnswered, handleAnswerSelect]);
+  }, [cardState.timeLeft, cardState.isAnswered, currentVocab, handleAnswerSelect]);
 
   const renderContextSentence = (sentence: string, word: string) => {
     const index = sentence.indexOf(word);
@@ -211,14 +231,13 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
       return <span>{word}</span>;
     }
 
-    const parts: JSX.Element[] = [];
-
-    word.split('').forEach((char, index) => {
+    const chars = word.split('');
+    const parts = chars.map((char) => {
       if (/[\u4e00-\u9faf]/.test(char)) {
         // This is a kanji character - make it clickable
-        parts.push(
+        return (
           <span
-            key={`kanji-${index}`}
+            key={`${word}-${char}-kanji`}
             className="cursor-pointer hover:text-blue-500 hover:scale-110 transition-all inline-block mx-0.5"
             onClick={() => handleKanjiClick(word, char)}
           >
@@ -227,7 +246,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
         );
       } else {
         // This is not a kanji (hiragana, katakana, etc.)
-        parts.push(<span key={`char-${index}`}>{char}</span>);
+        return <span key={`${word}-${char}-char`}>{char}</span>;
       }
     });
 
@@ -267,11 +286,11 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
             </span>
             <span className="flex items-center">
               <Clock className="h-4 w-4 mr-1.5" />
-              {timeLeft}s
+              {cardState.timeLeft}s
             </span>
           </div>
           <Progress
-            value={(timeLeft / TIME_LIMIT) * 100}
+            value={(cardState.timeLeft / TIME_LIMIT) * 100}
             className="h-2"
           />
         </div>
@@ -283,7 +302,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
             <div className="space-y-1">
               <CardTitle>{currentVocab.promptQuestion || "What is the meaning of this word?"}</CardTitle>
               <CardDescription>
-                {isAnswered
+                {cardState.isAnswered
                   ? "Review the answer and continue when you're ready."
                   : `Select the correct answer within ${TIME_LIMIT} seconds.`}
               </CardDescription>
@@ -303,16 +322,16 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
               </div>
             )}
             <div className="text-5xl font-bold text-primary">
-              {isAnswered && currentVocab.word && /[\u4e00-\u9faf]/.test(currentVocab.word)
+              {cardState.isAnswered && currentVocab.word && /[\u4e00-\u9faf]/.test(currentVocab.word)
                 ? renderKanjiWord(currentVocab.word)
                 : (currentVocab.word || currentVocab.pronunciation)}
             </div>
-            {isAnswered && currentVocab.pronunciation && (
+            {cardState.isAnswered && currentVocab.pronunciation && (
               <div className="text-2xl font-semibold text-secondary">
                 {currentVocab.pronunciation}
               </div>
             )}
-            {isAnswered && currentVocab.word && /[\u4e00-\u9faf]/.test(currentVocab.word) && (
+            {cardState.isAnswered && currentVocab.word && /[\u4e00-\u9faf]/.test(currentVocab.word) && (
               <div className="text-sm text-muted-foreground mt-2">
                 Click on kanji to see details
               </div>
@@ -323,14 +342,14 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {answerOptions.map((option) => {
               const isCorrect = option === correctAnswer;
-              const isSelected = option === selectedAnswer;
+              const isSelected = option === cardState.selectedAnswer;
 
               let buttonVariant:
                 | "default"
                 | "destructive"
                 | "secondary"
                 | "outline" = "outline";
-              if (isAnswered) {
+              if (cardState.isAnswered) {
                 if (isCorrect) {
                   // Correct answer is now handled by className
                 } else if (isSelected) {
@@ -344,13 +363,13 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
                   variant={buttonVariant}
                   size="lg"
                   onClick={() => handleAnswerSelect(option)}
-                  disabled={isAnswered}
+                  disabled={cardState.isAnswered}
                   className={cn(
                     "h-auto py-4 text-base justify-center text-center whitespace-normal",
-                    isAnswered &&
+                    cardState.isAnswered &&
                       isCorrect &&
                       "bg-green-600 text-white hover:bg-green-700",
-                    isAnswered && !isCorrect && !isSelected && "opacity-50",
+                    cardState.isAnswered && !isCorrect && !isSelected && "opacity-50",
                   )}
                 >
                   {option}
@@ -359,25 +378,25 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
             })}
           </div>
 
-          {isAnswered && (
+          {cardState.isAnswered && (
             <div
               className={cn(
                 "rounded-lg border px-4 py-3 space-y-3",
-                lastResult === "CORRECT"
+                cardState.lastResult === "CORRECT"
                   ? "border-green-500/40 bg-green-500/10"
                   : "border-amber-500/40 bg-amber-500/10",
               )}
             >
               <div className="flex items-center gap-2 font-semibold">
-                {lastResult === "CORRECT" ? (
+                {cardState.lastResult === "CORRECT" ? (
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
                 ) : (
                   <XCircle className="h-5 w-5 text-amber-500" />
                 )}
                 <span>
-                  {lastResult === "CORRECT"
+                  {cardState.lastResult === "CORRECT"
                     ? "Correct"
-                    : lastResult === "TIMEOUT"
+                    : cardState.lastResult === "TIMEOUT"
                       ? "Time is up"
                       : "Incorrect"}
                 </span>

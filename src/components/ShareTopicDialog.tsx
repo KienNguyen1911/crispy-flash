@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useTransition } from "react";
 import {
   Dialog,
   DialogContent,
@@ -28,45 +28,44 @@ export default function ShareTopicDialog({
   onOpenChange,
 }: ShareTopicDialogProps) {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const fetcher = useAuthFetcher();
 
   const handleCreateShare = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem("jwt_token");
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
-      const response = await fetch(`${apiBase}/api/topic-share/${topicId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    startTransition(async () => {
+      try {
+        const token = localStorage.getItem("jwt_token");
+        const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
+        const response = await fetch(`${apiBase}/api/topic-share/${topicId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to create share link");
+        if (!response.ok) {
+          throw new Error("Failed to create share link");
+        }
+
+        const data = await response.json();
+        setShareUrl(data.shareUrl);
+        toast({
+          title: "Share link created",
+          description: "You can now share this link with others",
+        });
+      } catch (error) {
+        console.error("Error creating share link:", error);
+        toast({
+          title: "Error",
+          description:
+            error instanceof Error ? error.message : "Failed to create share link",
+          variant: "destructive",
+        });
       }
-
-      const data = await response.json();
-      setShareUrl(data.shareUrl);
-      toast({
-        title: "Share link created",
-        description: "You can now share this link with others",
-      });
-    } catch (error) {
-      console.error("Error creating share link:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to create share link",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    });
   }, [topicId, toast]);
 
   const handleCopyLink = useCallback(() => {
@@ -82,38 +81,37 @@ export default function ShareTopicDialog({
   }, [shareUrl, toast]);
 
   const handleDeleteShare = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem("jwt_token");
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
-      const response = await fetch(`${apiBase}/api/topic-share/${topicId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    startTransition(async () => {
+      try {
+        const token = localStorage.getItem("jwt_token");
+        const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
+        const response = await fetch(`${apiBase}/api/topic-share/${topicId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to delete share link");
+        if (!response.ok) {
+          throw new Error("Failed to delete share link");
+        }
+
+        setShareUrl(null);
+        toast({
+          title: "Share link deleted",
+          description: "This topic is no longer shared",
+        });
+      } catch (error) {
+        console.error("Error deleting share link:", error);
+        toast({
+          title: "Error",
+          description:
+            error instanceof Error ? error.message : "Failed to delete share link",
+          variant: "destructive",
+        });
       }
-
-      setShareUrl(null);
-      toast({
-        title: "Share link deleted",
-        description: "This topic is no longer shared",
-      });
-    } catch (error) {
-      console.error("Error deleting share link:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to delete share link",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    });
   }, [topicId, toast]);
 
   const handleOpenChange = useCallback(
@@ -153,7 +151,7 @@ export default function ShareTopicDialog({
                     size="icon"
                     variant="outline"
                     onClick={handleCopyLink}
-                    disabled={isLoading}
+                    disabled={isPending}
                   >
                     {copied ? (
                       <Check className="h-4 w-4" />
@@ -171,10 +169,10 @@ export default function ShareTopicDialog({
               <Button
                 variant="destructive"
                 onClick={handleDeleteShare}
-                disabled={isLoading}
+                disabled={isPending}
                 className="w-full"
               >
-                {isLoading ? (
+                {isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     Deleting...
@@ -187,10 +185,10 @@ export default function ShareTopicDialog({
           ) : (
             <Button
               onClick={handleCreateShare}
-              disabled={isLoading}
+              disabled={isPending}
               className="w-full"
             >
-              {isLoading ? (
+              {isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Creating...

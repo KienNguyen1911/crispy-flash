@@ -1,13 +1,47 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useReducer, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, X } from 'lucide-react';
 
+type State = {
+  deferredPrompt: any;
+  showInstallButton: boolean;
+  isInstalled: boolean;
+};
+
+type Action =
+  | { type: 'SET_DEFERRED_PROMPT'; payload: any }
+  | { type: 'SHOW_INSTALL_BUTTON' }
+  | { type: 'HIDE_INSTALL_BUTTON' }
+  | { type: 'SET_INSTALLED' }
+  | { type: 'CLEAR_DEFERRED_PROMPT' };
+
+const initialState: State = {
+  deferredPrompt: null,
+  showInstallButton: false,
+  isInstalled: false
+};
+
+const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case 'SET_DEFERRED_PROMPT':
+      return { ...state, deferredPrompt: action.payload, showInstallButton: true };
+    case 'SHOW_INSTALL_BUTTON':
+      return { ...state, showInstallButton: true };
+    case 'HIDE_INSTALL_BUTTON':
+      return { ...state, showInstallButton: false };
+    case 'SET_INSTALLED':
+      return { ...state, isInstalled: true };
+    case 'CLEAR_DEFERRED_PROMPT':
+      return { ...state, deferredPrompt: null };
+    default:
+      return state;
+  }
+};
+
 export function PWAInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [showInstallButton, setShowInstallButton] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
     console.log('PWAInstall: Initializing...');
@@ -15,8 +49,7 @@ export function PWAInstall() {
     const handler = (e: Event) => {
       console.log('PWAInstall: beforeinstallprompt event fired');
       e.preventDefault();
-      setDeferredPrompt(e);
-      setShowInstallButton(true);
+      dispatch({ type: 'SET_DEFERRED_PROMPT', payload: e });
     };
 
     window.addEventListener('beforeinstallprompt', handler);
@@ -24,7 +57,7 @@ export function PWAInstall() {
     // Check if app is already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       console.log('PWAInstall: App is already in standalone mode');
-      setIsInstalled(true);
+      dispatch({ type: 'SET_INSTALLED' });
     } else {
       console.log('PWAInstall: App is not in standalone mode');
     }
@@ -67,26 +100,26 @@ export function PWAInstall() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
+    if (!state.deferredPrompt) return;
 
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
+    state.deferredPrompt.prompt();
+    const { outcome } = await state.deferredPrompt.userChoice;
 
     if (outcome === 'accepted') {
       console.log('User accepted the install prompt');
-      setShowInstallButton(false);
+      dispatch({ type: 'HIDE_INSTALL_BUTTON' });
     } else {
       console.log('User dismissed the install prompt');
     }
 
-    setDeferredPrompt(null);
+    dispatch({ type: 'CLEAR_DEFERRED_PROMPT' });
   };
 
   const handleClose = () => {
-    setShowInstallButton(false);
+    dispatch({ type: 'HIDE_INSTALL_BUTTON' });
   };
 
-  if (isInstalled || !showInstallButton) {
+  if (state.isInstalled || !state.showInstallButton) {
     return null;
   }
 

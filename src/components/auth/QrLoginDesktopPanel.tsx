@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useReducer } from "react";
 import { io } from "socket.io-client";
 import { Loader2, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,21 +22,58 @@ interface QrLoginDesktopPanelProps {
 
 type PanelStatus = QrLoginSessionView["status"] | "CREATING";
 
+interface PanelState {
+  session: QrLoginSessionResponse | null;
+  status: PanelStatus;
+  error: string | null;
+  secondsLeft: number;
+  isExchanging: boolean;
+}
+
+type PanelAction =
+  | { type: 'SET_SESSION'; payload: QrLoginSessionResponse }
+  | { type: 'SET_STATUS'; payload: PanelStatus }
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'SET_SECONDS_LEFT'; payload: number }
+  | { type: 'SET_EXCHANGING'; payload: boolean }
+  | { type: 'RESET_SESSION' };
+
+const panelReducer = (state: PanelState, action: PanelAction): PanelState => {
+  switch (action.type) {
+    case 'SET_SESSION':
+      return { ...state, session: action.payload, status: action.payload.status, error: null };
+    case 'SET_STATUS':
+      return { ...state, status: action.payload };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload };
+    case 'SET_SECONDS_LEFT':
+      return { ...state, secondsLeft: action.payload };
+    case 'SET_EXCHANGING':
+      return { ...state, isExchanging: action.payload };
+    case 'RESET_SESSION':
+      return { ...state, session: null, status: 'CREATING', error: null, secondsLeft: 0, isExchanging: false };
+    default:
+      return state;
+  }
+};
+
 export default function QrLoginDesktopPanel({
   onAuthenticated,
 }: QrLoginDesktopPanelProps) {
-  const [session, setSession] = useState<QrLoginSessionResponse | null>(null);
-  const [status, setStatus] = useState<PanelStatus>("CREATING");
-  const [error, setError] = useState<string | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(0);
-  const [isExchanging, setIsExchanging] = useState(false);
+  const [state, dispatch] = useReducer(panelReducer, {
+    session: null,
+    status: 'CREATING',
+    error: null,
+    secondsLeft: 0,
+    isExchanging: false,
+  });
   const hasExchangedRef = useRef(false);
 
   const qrImageUrl = useMemo(
-    () => (session ? getQrImageUrl(session.qrPayload) : null),
-    [session],
+    () => (state.session ? getQrImageUrl(state.session.qrPayload) : null),
+    [state.session],
   );
-  const badgeLabel = status === "CREATING" ? "Preparing QR" : formatQrLoginStatus(status);
+  const badgeLabel = state.status === "CREATING" ? "Preparing QR" : formatQrLoginStatus(state.status);
 
   const buildRequesterDevice = useCallback(() => {
     if (typeof window === "undefined") {
@@ -55,8 +92,8 @@ export default function QrLoginDesktopPanel({
   }, []);
 
   const createSession = useCallback(async () => {
-    setError(null);
-    setStatus("CREATING");
+    dispatch({ type: 'SET_ERROR', payload: null });
+    dispatch({ type: 'SET_STATUS', payload: 'CREATING' });
     hasExchangedRef.current = false;
 
     try {
@@ -73,34 +110,32 @@ export default function QrLoginDesktopPanel({
       }
 
       const data = (await response.json()) as QrLoginSessionResponse;
-      setSession(data);
-      setStatus(data.status);
-      setSecondsLeft(getTimeRemaining(data.expiresAt));
+      dispatch({ type: 'SET_SESSION', payload: data });
+      dispatch({ type: 'SET_SECONDS_LEFT', payload: getTimeRemaining(data.expiresAt) });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create QR login session");
-      setSession(null);
-      setStatus("EXPIRED");
+      dispatch({ type: 'SET_ERROR', payload: err instanceof Error ? err.message : "Failed to create QR login session" });
+      dispatch({ type: 'SET_STATUS', payload: 'EXPIRED' });
     }
   }, [buildRequesterDevice]);
 
   const exchangeSession = useCallback(async () => {
-    if (!session || hasExchangedRef.current) {
+    if (!state.session || hasExchangedRef.current) {
       return;
     }
 
     hasExchangedRef.current = true;
-    setIsExchanging(true);
-    setError(null);
+    dispatch({ type: 'SET_EXCHANGING', payload: true });
+    dispatch({ type: 'SET_ERROR', payload: null });
 
     try {
       const response = await fetch(
-        `${API_BASE}/api/auth/qr-login/sessions/${session.sessionId}/exchange`,
+        `${API_BASE}/api/auth/qr-login/sessions/${state.session.sessionId}/exchange`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ sessionToken: session.sessionToken }),
+          body: JSON.stringify({ sessionToken: state.session.sessionToken }),
         },
       );
 
@@ -113,41 +148,41 @@ export default function QrLoginDesktopPanel({
         refresh_token: string;
       };
 
-      setStatus("CONSUMED");
+      dispatch({ type: 'SET_STATUS', payload: 'CONSUMED' });
       onAuthenticated(data.access_token, data.refresh_token);
     } catch (err) {
       hasExchangedRef.current = false;
-      setError(err instanceof Error ? err.message : "Failed to complete QR login");
+      dispatch({ type: 'SET_ERROR', payload: err instanceof Error ? err.message : "Failed to complete QR login" });
     } finally {
-      setIsExchanging(false);
+      dispatch({ type: 'SET_EXCHANGING', payload: false });
     }
-  }, [onAuthenticated, session]);
+  }, [onAuthenticated, state.session]);
 
   useEffect(() => {
     createSession();
   }, [createSession]);
 
   useEffect(() => {
-    if (!session) {
+    if (!state.session) {
       return;
     }
 
-    setSecondsLeft(getTimeRemaining(session.expiresAt));
+    dispatch({ type: 'SET_SECONDS_LEFT', payload: getTimeRemaining(state.session.expiresAt) });
 
     const timer = window.setInterval(() => {
-      const remaining = getTimeRemaining(session.expiresAt);
-      setSecondsLeft(remaining);
+      const remaining = getTimeRemaining(state.session!.expiresAt);
+      dispatch({ type: 'SET_SECONDS_LEFT', payload: remaining });
 
       if (remaining <= 0) {
-        setStatus("EXPIRED");
+        dispatch({ type: 'SET_STATUS', payload: 'EXPIRED' });
       }
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [session]);
+  }, [state.session]);
 
   useEffect(() => {
-    if (!session) {
+    if (!state.session) {
       return;
     }
 
@@ -159,45 +194,45 @@ export default function QrLoginDesktopPanel({
 
     socket.on("connect", () => {
       socket.emit("subscribe-qr-login", {
-        sessionId: session.sessionId,
-        sessionToken: session.sessionToken,
+        sessionId: state.session!.sessionId,
+        sessionToken: state.session!.sessionToken,
       });
     });
 
     socket.on("qr-login:scanned", () => {
-      setStatus("SCANNED");
+      dispatch({ type: 'SET_STATUS', payload: 'SCANNED' });
     });
 
     socket.on("qr-login:approved", () => {
-      setStatus("APPROVED");
+      dispatch({ type: 'SET_STATUS', payload: 'APPROVED' });
     });
 
     socket.on("qr-login:expired", () => {
-      setStatus("EXPIRED");
+      dispatch({ type: 'SET_STATUS', payload: 'EXPIRED' });
     });
 
     socket.on("qr-login:error", (event: { error?: string }) => {
-      setError(event.error || "QR login failed");
+      dispatch({ type: 'SET_ERROR', payload: event.error || "QR login failed" });
     });
 
     return () => {
       socket.emit("unsubscribe-qr-login", {
-        sessionId: session.sessionId,
-        sessionToken: session.sessionToken,
+        sessionId: state.session!.sessionId,
+        sessionToken: state.session!.sessionToken,
       });
       socket.disconnect();
     };
-  }, [session]);
+  }, [state.session]);
 
   useEffect(() => {
-    if (!session || status === "CONSUMED" || status === "EXPIRED") {
+    if (!state.session || state.status === "CONSUMED" || state.status === "EXPIRED") {
       return;
     }
 
     const timer = window.setInterval(async () => {
       try {
         const response = await fetch(
-          `${API_BASE}/api/auth/qr-login/sessions/${session.sessionId}/status?sessionToken=${encodeURIComponent(session.sessionToken)}`,
+          `${API_BASE}/api/auth/qr-login/sessions/${state.session!.sessionId}/status?sessionToken=${encodeURIComponent(state.session!.sessionToken)}`,
         );
 
         if (!response.ok) {
@@ -205,23 +240,23 @@ export default function QrLoginDesktopPanel({
         }
 
         const data = (await response.json()) as QrLoginSessionView;
-        setStatus(data.status);
+        dispatch({ type: 'SET_STATUS', payload: data.status });
       } catch {
         // ignore polling errors and keep waiting for websocket
       }
     }, 3000);
 
     return () => window.clearInterval(timer);
-  }, [session, status]);
+  }, [state.session, state.status]);
 
   useEffect(() => {
-    if (status === "APPROVED") {
+    if (state.status === "APPROVED") {
       exchangeSession();
     }
-  }, [exchangeSession, status]);
+  }, [exchangeSession, state.status]);
 
   useEffect(() => {
-    if (status !== "EXPIRED") {
+    if (state.status !== "EXPIRED") {
       return;
     }
 
@@ -231,7 +266,7 @@ export default function QrLoginDesktopPanel({
     }, 1000);
 
     return () => window.clearTimeout(timer);
-  }, [status, createSession]);
+  }, [state.status, createSession]);
 
   return (
     <div className="space-y-4">
@@ -244,15 +279,15 @@ export default function QrLoginDesktopPanel({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {session ? <span className="text-xs text-muted-foreground">{secondsLeft}s</span> : null}
-            <Badge variant={status === "EXPIRED" ? "destructive" : "secondary"}>
+            {state.session ? <span className="text-xs text-muted-foreground">{state.secondsLeft}s</span> : null}
+            <Badge variant={state.status === "EXPIRED" ? "destructive" : "secondary"}>
               {badgeLabel}
             </Badge>
           </div>
         </div>
 
         <div className="mt-4 mx-auto max-w-xs rounded-2xl bg-white p-3 shadow-sm">
-          {status === "CREATING" ? (
+          {state.status === "CREATING" ? (
             <div className="flex aspect-square items-center justify-center text-slate-500">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
@@ -272,13 +307,13 @@ export default function QrLoginDesktopPanel({
 
       </div>
 
-      {error ? (
+      {state.error ? (
         <Alert variant="destructive">
-          <AlertDescription className="text-xs">{error}</AlertDescription>
+          <AlertDescription className="text-xs">{state.error}</AlertDescription>
         </Alert>
       ) : null}
 
-      {status === "APPROVED" || isExchanging ? (
+      {state.status === "APPROVED" || state.isExchanging ? (
         <div className="flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
           <Loader2 className="h-3 w-3 animate-spin" />
           Finishing sign-in...

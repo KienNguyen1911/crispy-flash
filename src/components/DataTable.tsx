@@ -86,13 +86,11 @@ export function DataTable<TData, TValue>({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [isEditing, setIsEditing] = React.useState(false);
-  const [data, setData] = React.useState(initialData);
-  const [deletedVocabularyIds, setDeletedVocabularyIds] = React.useState<
-    Set<string>
-  >(new Set());
+  const [data, setData] = React.useState<TData[]>([]);
+  const deletedVocabularyIdsRef = React.useRef<Set<string>>(new Set());
   const [viewMode, setViewMode] = React.useState<"table" | "cards">("cards");
   const [isGraphOpen, setIsGraphOpen] = React.useState(false);
-  const [selectedKanjiWord, setSelectedKanjiWord] = React.useState<string | null>(null);
+  const selectedKanjiWordRef = React.useRef<string | null>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const augmentedColumns = React.useMemo(() => {
@@ -121,27 +119,19 @@ export function DataTable<TData, TValue>({
     setData(initialData);
   }, [initialData]);
 
-  React.useEffect(() => {
-    if (isEditing) {
-      setSelectedKanjiWord(null);
-    }
-  }, [isEditing]);
-
-  React.useEffect(() => {
-    setColumnVisibility((current) => ({
-      ...current,
-      status: isDesktop,
-      actions: isEditing
-    }));
-  }, [isDesktop, isEditing]);
+  // Compute visibility based on responsive state and editing mode
+  const computedColumnVisibility = React.useMemo(() => ({
+    status: isDesktop,
+    actions: isEditing
+  }), [isDesktop, isEditing]);
 
   const visibleData = React.useMemo(
-    () => data.filter((row) => !deletedVocabularyIds.has((row as any).id)),
-    [data, deletedVocabularyIds]
+    () => data.filter((row) => !deletedVocabularyIdsRef.current.has((row as any).id)),
+    [data]
   );
 
   const hasUnsavedChanges = React.useMemo(() => {
-    if (deletedVocabularyIds.size > 0) {
+    if (deletedVocabularyIdsRef.current.size > 0) {
       return true;
     }
 
@@ -174,7 +164,7 @@ export function DataTable<TData, TValue>({
     return new Set(
       (data as any[])
         .filter((row) => {
-          if (deletedVocabularyIds.has((row as any).id)) {
+          if (deletedVocabularyIdsRef.current.has((row as any).id)) {
             return false;
           }
 
@@ -187,7 +177,7 @@ export function DataTable<TData, TValue>({
         })
         .map((row) => (row as any).id)
     );
-  }, [data, deletedVocabularyIds, initialData]);
+  }, [data, initialData]);
 
   const getStatusIcon = (status: string) => {
     const iconClass = "h-4 w-4";
@@ -212,7 +202,7 @@ export function DataTable<TData, TValue>({
     state: {
       sorting,
       columnFilters,
-      columnVisibility,
+      columnVisibility: { ...columnVisibility, ...computedColumnVisibility },
       rowSelection
     },
     meta: {
@@ -232,7 +222,9 @@ export function DataTable<TData, TValue>({
       },
       deleteRow: (rowIndex: number) => {
         const idToDelete = (visibleData[rowIndex] as any).id;
-        setDeletedVocabularyIds((old) => new Set(old).add(idToDelete));
+        deletedVocabularyIdsRef.current.add(idToDelete);
+        // Force re-render by updating a state
+        setData(d => [...d]);
       }
     } as any
   });
@@ -245,7 +237,7 @@ export function DataTable<TData, TValue>({
       }, {});
 
       const changedVocabularies = (data as any[]).filter((row) => {
-        if (deletedVocabularyIds.has((row as any).id)) return false;
+        if (deletedVocabularyIdsRef.current.has((row as any).id)) return false;
         const originalRow = initialDataById[(row as any).id];
         if (!originalRow) {
           return false;
@@ -254,8 +246,8 @@ export function DataTable<TData, TValue>({
       });
 
       const deletePromise =
-        deletedVocabularyIds.size > 0
-          ? deleteVocabularies(topicId, Array.from(deletedVocabularyIds))
+        deletedVocabularyIdsRef.current.size > 0
+          ? deleteVocabularies(topicId, Array.from(deletedVocabularyIdsRef.current))
           : Promise.resolve();
 
       const updatePromise =
@@ -266,8 +258,8 @@ export function DataTable<TData, TValue>({
       await Promise.all([deletePromise, updatePromise]);
 
       let messages = [];
-      if (deletedVocabularyIds.size > 0) {
-        messages.push(`${deletedVocabularyIds.size} vocabularies deleted`);
+      if (deletedVocabularyIdsRef.current.size > 0) {
+        messages.push(`${deletedVocabularyIdsRef.current.size} vocabularies deleted`);
       }
       if (changedVocabularies.length > 0) {
         messages.push(`${changedVocabularies.length} vocabularies updated`);
@@ -282,14 +274,16 @@ export function DataTable<TData, TValue>({
       toast.error("Failed to update vocabularies");
     } finally {
       setIsEditing(false);
-      setDeletedVocabularyIds(new Set());
+      deletedVocabularyIdsRef.current.clear();
+      selectedKanjiWordRef.current = null;
     }
   };
 
   const handleCancel = () => {
     setData(initialData);
-    setDeletedVocabularyIds(new Set());
+    deletedVocabularyIdsRef.current.clear();
     setIsEditing(false);
+    selectedKanjiWordRef.current = null;
   };
 
   const handleSwitchView = (nextViewMode: "table" | "cards") => {
@@ -302,7 +296,8 @@ export function DataTable<TData, TValue>({
 
   const handleRowClick = (word: string) => {
     if (!isEditing) {
-      setSelectedKanjiWord(word);
+      selectedKanjiWordRef.current = word;
+      setIsGraphOpen(true);
     }
   };
 
@@ -662,9 +657,9 @@ export function DataTable<TData, TValue>({
       </Dialog>
 
       <KanjiDrawer
-        word={selectedKanjiWord}
-        isOpen={!!selectedKanjiWord}
-        onOpenChange={(open) => !open && setSelectedKanjiWord(null)}
+        word={selectedKanjiWordRef.current}
+        isOpen={!!selectedKanjiWordRef.current}
+        onOpenChange={(open) => !open && (selectedKanjiWordRef.current = null)}
       />
     </div>
   );

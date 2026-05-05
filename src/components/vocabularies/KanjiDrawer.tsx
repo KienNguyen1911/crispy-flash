@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer, useRef } from "react";
 import {
     Sheet,
     SheetContent,
@@ -19,60 +19,88 @@ interface KanjiDrawerProps {
     initialKanji?: string | null;
 }
 
+interface DrawerState {
+    kanjis: string[];
+    selectedKanji: string;
+    isLoading: boolean;
+    kanjiAliveData: any;
+    jdictData: any;
+}
+
+type DrawerAction = 
+    | { type: 'SET_KANJIS'; payload: string[] }
+    | { type: 'SET_SELECTED_KANJI'; payload: string }
+    | { type: 'SET_LOADING'; payload: boolean }
+    | { type: 'SET_KANJI_DATA'; payload: { kanjiAlive: any; jdict: any } }
+    | { type: 'RESET_DATA' };
+
+const drawerReducer = (state: DrawerState, action: DrawerAction): DrawerState => {
+    switch (action.type) {
+        case 'SET_KANJIS':
+            return { ...state, kanjis: action.payload };
+        case 'SET_SELECTED_KANJI':
+            return { ...state, selectedKanji: action.payload };
+        case 'SET_LOADING':
+            return { ...state, isLoading: action.payload };
+        case 'SET_KANJI_DATA':
+            return { ...state, kanjiAliveData: action.payload.kanjiAlive, jdictData: action.payload.jdict };
+        case 'RESET_DATA':
+            return { ...state, kanjiAliveData: null, jdictData: null };
+        default:
+            return state;
+    }
+};
+
 export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiDrawerProps) {
-    const [kanjis, setKanjis] = useState<string[]>([]);
-    const [selectedKanji, setSelectedKanji] = useState<string>("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [kanjiAliveData, setKanjiAliveData] = useState<any>(null);
-    const [jdictData, setJdictData] = useState<any>(null);
-    const [kanjiCache, setKanjiCache] = useState<Record<string, { kanjiAlive: any, jdict: any }>>({});
+    const [state, dispatch] = useReducer(drawerReducer, {
+        kanjis: [],
+        selectedKanji: "",
+        isLoading: false,
+        kanjiAliveData: null,
+        jdictData: null
+    });
+    const kanjiCacheRef = useRef<Record<string, { kanjiAlive: any, jdict: any }>>({});
 
     // Extract kanjis from the word when it changes
     useEffect(() => {
         if (word && isOpen) {
             const kanjiCharacters = word.match(/[\u4e00-\u9faf]/g) || [];
             const uniqueKanjis = Array.from(new Set(kanjiCharacters));
-            setKanjis(uniqueKanjis);
+            dispatch({ type: 'SET_KANJIS', payload: uniqueKanjis });
             if (uniqueKanjis.length > 0) {
                 // If initialKanji is provided and exists in the word, use it
                 // Otherwise use the first kanji
                 if (initialKanji && uniqueKanjis.includes(initialKanji)) {
-                    setSelectedKanji(initialKanji);
+                    dispatch({ type: 'SET_SELECTED_KANJI', payload: initialKanji });
                 } else {
-                    setSelectedKanji(uniqueKanjis[0]);
+                    dispatch({ type: 'SET_SELECTED_KANJI', payload: uniqueKanjis[0] });
                 }
             } else {
-                setSelectedKanji("");
-                setKanjiAliveData(null);
-                setJdictData(null);
+                dispatch({ type: 'SET_SELECTED_KANJI', payload: "" });
+                dispatch({ type: 'RESET_DATA' });
             }
-        } else if (!isOpen) {
-            // Optional: clear cache when drawer closes entirely to fetch fresh data next time,
-            // or keep it if you want to reuse it across different words with the same kanji.
-            // Let's keep it to maximize cache hits.
         }
     }, [word, isOpen, initialKanji]);
 
     // Fetch API data when selectedKanji changes
     useEffect(() => {
         const fetchKanjiData = async () => {
-            if (!selectedKanji || !isOpen) return;
+            if (!state.selectedKanji || !isOpen) return;
 
             // Check if we already have the data in cache
-            if (kanjiCache[selectedKanji]) {
-                setKanjiAliveData(kanjiCache[selectedKanji].kanjiAlive);
-                setJdictData(kanjiCache[selectedKanji].jdict);
+            if (kanjiCacheRef.current[state.selectedKanji]) {
+                const cached = kanjiCacheRef.current[state.selectedKanji];
+                dispatch({ type: 'SET_KANJI_DATA', payload: { kanjiAlive: cached.kanjiAlive, jdict: cached.jdict } });
                 return;
             }
 
-            setIsLoading(true);
-            setKanjiAliveData(null);
-            setJdictData(null);
+            dispatch({ type: 'SET_LOADING', payload: true });
+            dispatch({ type: 'RESET_DATA' });
 
             try {
                 const [kanjiAliveRes, jdictRes] = await Promise.allSettled([
-                    fetch(`/api/kanjialive/${selectedKanji}`),
-                    fetch(`https://api.jdict.net/api/v1/kanjis/${selectedKanji}`)
+                    fetch(`/api/kanjialive/${state.selectedKanji}`),
+                    fetch(`https://api.jdict.net/api/v1/kanjis/${state.selectedKanji}`)
                 ]);
 
                 let newKanjiAliveData = null;
@@ -88,36 +116,33 @@ export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiD
                             ex.japanese = ex.japanese.replace(/（.*?）/g, "");
                         });
                         newKanjiAliveData = data;
-                        setKanjiAliveData(data);
                     }
                 }
 
                 if (jdictRes.status === "fulfilled" && jdictRes.value.ok) {
                     const data = await jdictRes.value.json();
                     newJdictData = data;
-                    setJdictData(data);
                 }
 
                 // Update Cache
-                setKanjiCache(prev => ({
-                    ...prev,
-                    [selectedKanji]: {
-                        kanjiAlive: newKanjiAliveData,
-                        jdict: newJdictData
-                    }
-                }));
+                kanjiCacheRef.current[state.selectedKanji] = {
+                    kanjiAlive: newKanjiAliveData,
+                    jdict: newJdictData
+                };
+
+                dispatch({ type: 'SET_KANJI_DATA', payload: { kanjiAlive: newKanjiAliveData, jdict: newJdictData } });
 
             } catch (error) {
                 console.error("Error fetching Kanji data:", error);
             } finally {
-                setIsLoading(false);
+                dispatch({ type: 'SET_LOADING', payload: false });
             }
         };
 
         fetchKanjiData();
-    }, [selectedKanji, isOpen, kanjiCache]);
+    }, [state.selectedKanji, isOpen]);
 
-    if (!word || kanjis.length === 0) {
+    if (!word || state.kanjis.length === 0) {
         return (
             <Sheet open={isOpen} onOpenChange={onOpenChange}>
                 <SheetContent side="bottom" className="h-[80vh] sm:h-[60vh] rounded-t-xl">
@@ -141,13 +166,13 @@ export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiD
 
                 <div className="flex-1 flex flex-col min-h-0 pt-2 px-4">
                     <Tabs
-                        value={selectedKanji}
-                        onValueChange={setSelectedKanji}
+                        value={state.selectedKanji}
+                        onValueChange={(value) => dispatch({ type: 'SET_SELECTED_KANJI', payload: value })}
                         className="flex-1 flex flex-col"
                     >
-                        {kanjis.length > 1 && (
+                        {state.kanjis.length > 1 && (
                             <TabsList className="w-full shrink-0 flex flex-nowrap overflow-x-auto justify-start mb-4 bg-muted/50 p-1">
-                                {kanjis.map((k) => (
+                                {state.kanjis.map((k) => (
                                     <TabsTrigger
                                         key={k}
                                         value={k}
@@ -160,16 +185,16 @@ export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiD
                         )}
 
                         <div className="flex-1 relative pb-0">
-                            {kanjis.map((k) => (
+                            {state.kanjis.map((k) => (
                                 <TabsContent
                                     key={k}
                                     value={k}
                                     className="absolute inset-0 m-0 data-[state=inactive]:hidden"
                                 >
                                     <ScrollArea className="h-full pr-4">
-                                        {selectedKanji === k && (
+                                        {state.selectedKanji === k && (
                                             <div className="space-y-8 ">
-                                                {isLoading ? (
+                                                {state.isLoading ? (
                                                     <div className="flex flex-col items-center justify-center h-40 gap-4 text-muted-foreground">
                                                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                                                         <p>Loading details for {k}...</p>
@@ -188,22 +213,22 @@ export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiD
                                                                 <div>
                                                                     <div className="flex items-center gap-3 mb-2">
                                                                         <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Meaning</h4>
-                                                                        {jdictData?.hanviet && (
+                                                                        {state.jdictData?.hanviet && (
                                                                             <Badge variant="secondary" className="text-xs px-2 py-0.5 font-semibold uppercase tracking-wider">
-                                                                                {jdictData.hanviet}
+                                                                                {state.jdictData.hanviet}
                                                                             </Badge>
                                                                         )}
                                                                     </div>
-                                                                    <p className="text-xl font-medium text-foreground">{kanjiAliveData?.meaning || jdictData?.mean || "—"}</p>
+                                                                    <p className="text-xl font-medium text-foreground">{state.kanjiAliveData?.meaning || state.jdictData?.mean || "—"}</p>
                                                                 </div>
                                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                     <div className="bg-muted/30 p-4 rounded-md">
                                                                         <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mr-2"></span>Onyomi</h4>
-                                                                        <p className="font-japanese text-xl">{kanjiAliveData?.onyomi_ja || jdictData?.onyomi || "—"}</p>
+                                                                        <p className="font-japanese text-xl">{state.kanjiAliveData?.onyomi_ja || state.jdictData?.onyomi || "—"}</p>
                                                                     </div>
                                                                     <div className="bg-muted/30 p-4 rounded-md">
                                                                         <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center"><span className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-2"></span>Kunyomi</h4>
-                                                                        <p className="font-japanese text-xl">{kanjiAliveData?.kunyomi_ja || jdictData?.kunyomi || "—"}</p>
+                                                                        <p className="font-japanese text-xl">{state.kanjiAliveData?.kunyomi_ja || state.jdictData?.kunyomi || "—"}</p>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -214,23 +239,21 @@ export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiD
 
                                                             {/* Left Column: Radicals & Hint */}
                                                             <div className="space-y-6">
-                                                                {kanjiAliveData?.hint && (
+                                                                {state.kanjiAliveData?.hint && (
                                                                     <div>
                                                                         <h3 className="text-lg font-bold border-b pb-2 mb-4">Hint to remember</h3>
-                                                                        <div
-                                                                            className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground bg-primary/5 p-4 rounded-lg border border-primary/10 [&_img]:bg-white [&_img]:rounded-md [&_img]:p-0.5 [&_img]:inline-block [&_img]:w-6 [&_img]:h-6 [&_img]:align-text-bottom [&_img]:ml-1"
-                                                                            // @ts-expect-error dangerouslySetInnerHTML used for trusted kanji hint content from kanjiAliveData
-                                                                            dangerouslySetInnerHTML={{ __html: kanjiAliveData.hint }}
-                                                                        />
+                                                                        <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground bg-primary/5 p-4 rounded-lg border border-primary/10 [&_img]:bg-white [&_img]:rounded-md [&_img]:p-0.5 [&_img]:inline-block [&_img]:w-6 [&_img]:h-6 [&_img]:align-text-bottom [&_img]:ml-1">
+                                                                            {state.kanjiAliveData.hint}
+                                                                        </div>
                                                                     </div>
                                                                 )}
 
-                                                                {jdictData?.radicals && jdictData.radicals.length > 0 && (
+                                                                {state.jdictData?.radicals && state.jdictData.radicals.length > 0 && (
                                                                     <div>
                                                                         <h3 className="text-lg font-bold border-b pb-2 mb-4">Radicals</h3>
                                                                         <div className="flex flex-wrap gap-2">
-                                                                            {jdictData.radicals.map((rad: any, i: number) => (
-                                                                                <Badge key={`${rad.radical}-${i}`} variant="outline" className="flex items-center gap-1.5 py-1.5 px-3">
+                                                                            {state.jdictData.radicals.map((rad: any) => (
+                                                                                <Badge key={rad.radical} variant="outline" className="flex items-center gap-1.5 py-1.5 px-3">
                                                                                     <span className="font-japanese text-lg text-primary">{rad.radical}</span>
                                                                                     {rad.hanviet && <span className="text-xs text-muted-foreground border-l pl-1.5">{rad.hanviet}</span>}
                                                                                 </Badge>
@@ -249,10 +272,10 @@ export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiD
                                                                     </TabsList>
 
                                                                     <TabsContent value="vn" className="mt-4">
-                                                                        {jdictData?.related_words && jdictData.related_words.length > 0 ? (
+                                                                        {state.jdictData?.related_words && state.jdictData.related_words.length > 0 ? (
                                                                             <div className="grid gap-3">
-                                                                                {jdictData.related_words.slice(0, 5).map((ex: any, i: number) => (
-                                                                                    <div key={`vn-${ex.word}-${i}`} className="flex flex-col p-3 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors border border-transparent hover:border-border">
+                                                                                {state.jdictData.related_words.slice(0, 5).map((ex: any) => (
+                                                                                    <div key={`vn-${ex.word}`} className="flex flex-col p-3 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors border border-transparent hover:border-border">
                                                                                         <div className="flex items-baseline gap-2 mb-1">
                                                                                             <span className="font-bold text-lg text-primary font-japanese">{ex.word.replace("する", " する")}</span>
                                                                                             {ex.kana && <span className="text-sm text-muted-foreground font-japanese">{ex.kana}</span>}
@@ -269,10 +292,10 @@ export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiD
                                                                     </TabsContent>
 
                                                                     <TabsContent value="en" className="mt-4">
-                                                                        {kanjiAliveData?.examples && kanjiAliveData.examples.length > 0 ? (
+                                                                        {state.kanjiAliveData?.examples && state.kanjiAliveData.examples.length > 0 ? (
                                                                             <div className="grid gap-3">
-                                                                                {kanjiAliveData.examples.slice(0, 5).map((ex: any, i: number) => (
-                                                                                    <div key={`en-${ex.word}-${i}`} className="flex flex-col p-3 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors border border-transparent hover:border-border">
+                                                                                {state.kanjiAliveData.examples.slice(0, 5).map((ex: any) => (
+                                                                                    <div key={`en-${ex.word}`} className="flex flex-col p-3 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors border border-transparent hover:border-border">
                                                                                         <div className="flex items-baseline gap-2 mb-1">
                                                                                             <span className="font-bold text-lg text-primary font-japanese">{ex.japanese}</span>
                                                                                             {ex.reading && <span className="text-sm text-muted-foreground font-japanese">{ex.reading}</span>}

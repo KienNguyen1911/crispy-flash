@@ -106,9 +106,8 @@ function SystemLogsTab({ isActive }: { isActive: boolean }) {
   };
 
   useEffect(() => {
-    if (isActive) {
-      fetchLogs();
-    }
+    if (!isActive) return;
+    fetchLogs();
   }, [isActive, page, level]);
 
   const getLevelColor = (level: string) => {
@@ -169,8 +168,8 @@ function SystemLogsTab({ isActive }: { isActive: boolean }) {
                  </TableRow>
               ) : (
                 logs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="font-mono text-xs" suppressHydrationWarning>
+                  <TableRow key={log.id} suppressHydrationWarning>
+                    <TableCell className="font-mono text-xs">
                       {format(new Date(log.createdAt), "yyyy-MM-dd HH:mm:ss")}
                     </TableCell>
                     <TableCell>
@@ -238,9 +237,8 @@ function AiQueueTab({ isActive }: { isActive: boolean }) {
   };
 
   useEffect(() => {
-    if (isActive) {
-      fetchLogs();
-    }
+    if (!isActive) return;
+    fetchLogs();
   }, [isActive, page, status]);
 
   const getStatusColor = (status: string) => {
@@ -305,8 +303,8 @@ function AiQueueTab({ isActive }: { isActive: boolean }) {
                  </TableRow>
               ) : (
                 logs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="font-mono text-xs" suppressHydrationWarning>
+                  <TableRow key={log.id} suppressHydrationWarning>
+                    <TableCell className="font-mono text-xs">
                       {format(new Date(log.createdAt), "yyyy-MM-dd HH:mm:ss")}
                     </TableCell>
                     <TableCell className="font-medium">

@@ -291,8 +291,8 @@ export function DatabaseBackupPanel() {
             </p>
             <ScrollArea className="h-44 rounded-lg border border-border/50 bg-muted/30">
               <div className="p-3 font-mono text-xs space-y-1">
-                {logs.map((log, i) => (
-                  <div key={`${log.time}-${i}`} className="flex items-start gap-2">
+                {logs.map((log) => (
+                  <div key={log.time} className="flex items-start gap-2">
                     <span className="shrink-0 text-muted-foreground/60">
                       {log.time}
                     </span>

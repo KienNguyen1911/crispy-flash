@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useReducer } from 'react';
 import useSWR from 'swr';
 import { useAuth } from '@/context/AuthContext';
 import { 
@@ -32,38 +32,70 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 const fetcher = (url: string, token: string) => 
     fetch(url, { headers: { Authorization: `Bearer ${token}` } }).then((res) => res.json());
 
+interface GrantState {
+  plan: string;
+  duration: number;
+  selectedUser: string | null;
+  open: boolean;
+}
+
+type GrantAction = 
+  | { type: 'SET_PLAN'; payload: string }
+  | { type: 'SET_DURATION'; payload: number }
+  | { type: 'SET_USER'; payload: string | null }
+  | { type: 'SET_OPEN'; payload: boolean }
+  | { type: 'RESET' };
+
+const grantReducer = (state: GrantState, action: GrantAction): GrantState => {
+  switch (action.type) {
+    case 'SET_PLAN':
+      return { ...state, plan: action.payload };
+    case 'SET_DURATION':
+      return { ...state, duration: action.payload };
+    case 'SET_USER':
+      return { ...state, selectedUser: action.payload };
+    case 'SET_OPEN':
+      return { ...state, open: action.payload };
+    case 'RESET':
+      return { plan: 'PRO_MONTHLY', duration: 1, selectedUser: null, open: false };
+    default:
+      return state;
+  }
+};
+
 export default function AdminSubscriptionsPage() {
   const { token, isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
+  const [grantState, dispatch] = useReducer(grantReducer, {
+    plan: 'PRO_MONTHLY',
+    duration: 1,
+    selectedUser: null,
+    open: false
+  });
   const { data, isLoading, mutate } = useSWR(
     token ? [`${process.env.NEXT_PUBLIC_API_BASE}/admin/payment/orders?page=${page}&limit=10`, token] : null,
     ([url, t]) => fetcher(url, t)
   );
 
-  const [grantPlan, setGrantPlan] = useState('PRO_MONTHLY');
-  const [grantDuration, setGrantDuration] = useState(1);
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [grantOpen, setGrantOpen] = useState(false);
-
   const handleGrant = async () => {
-    if (!selectedUser || !token) return;
+    if (!grantState.selectedUser || !token) return;
 
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/payment/grant/${selectedUser}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/payment/grant/${grantState.selectedUser}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
-                plan: grantPlan,
-                durationMonths: Number(grantDuration),
+                plan: grantState.plan,
+                durationMonths: Number(grantState.duration),
             }),
         });
 
         if (res.ok) {
             toast.success('Subscription granted successfully');
-            setGrantOpen(false);
+            dispatch({ type: 'SET_OPEN', payload: false });
             mutate(); // Refresh list
         } else {
             toast.error('Failed to grant subscription');
@@ -79,8 +111,8 @@ export default function AdminSubscriptionsPage() {
         <h1 className="text-3xl font-bold">Subscription Management</h1>
         <div className="flex gap-2">
             <Button onClick={() => {
-                setSelectedUser(null);
-                setGrantOpen(true);
+                dispatch({ type: 'SET_USER', payload: null });
+                dispatch({ type: 'SET_OPEN', payload: true });
             }}>
                 Grant Subscription
             </Button>
@@ -115,7 +147,7 @@ export default function AdminSubscriptionsPage() {
                     </TableCell>
                 </TableRow>
             ) : data?.data?.map((order: any) => (
-              <TableRow key={order.id}>
+              <TableRow key={order.id} suppressHydrationWarning>
                 <TableCell className="font-medium">{order.id.slice(0, 8)}...</TableCell>
                 <TableCell>
                     <div className="flex flex-col">
@@ -143,8 +175,8 @@ export default function AdminSubscriptionsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => {
-                                setSelectedUser(order.userId);
-                                setGrantOpen(true);
+                                dispatch({ type: 'SET_USER', payload: order.userId });
+                                dispatch({ type: 'SET_OPEN', payload: true });
                             }}>
                                 Grant Subscription
                             </DropdownMenuItem>
@@ -165,7 +197,7 @@ export default function AdminSubscriptionsPage() {
         <Button variant="outline" onClick={() => setPage(p => p + 1)} disabled={!data || data.data.length < 10}>Next</Button>
       </div>
 
-      <Dialog open={grantOpen} onOpenChange={setGrantOpen}>
+      <Dialog open={grantState.open} onOpenChange={(open) => dispatch({ type: 'SET_OPEN', payload: open })}>
         <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
                 <DialogTitle>Grant Subscription</DialogTitle>
@@ -178,15 +210,15 @@ export default function AdminSubscriptionsPage() {
                     <Label htmlFor="userId" className="text-right">User ID</Label>
                     <Input 
                         id="userId" 
-                        value={selectedUser || ''} 
-                        onChange={(e) => setSelectedUser(e.target.value)} 
+                        value={grantState.selectedUser || ''} 
+                        onChange={(e) => dispatch({ type: 'SET_USER', payload: e.target.value })} 
                         className="col-span-3"
                         placeholder="User ID (UUID)"
                     />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="plan" className="text-right">Plan</Label>
-                    <Select value={grantPlan} onValueChange={setGrantPlan}>
+                    <Select value={grantState.plan} onValueChange={(value) => dispatch({ type: 'SET_PLAN', payload: value })}>
                         <SelectTrigger className="col-span-3">
                             <SelectValue placeholder="Select plan" />
                         </SelectTrigger>
@@ -199,7 +231,7 @@ export default function AdminSubscriptionsPage() {
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="duration" className="text-right">Months</Label>
-                    <Input id="duration" type="number" value={grantDuration} onChange={(e) => setGrantDuration(Number(e.target.value))} className="col-span-3" />
+                    <Input id="duration" type="number" value={grantState.duration} onChange={(e) => dispatch({ type: 'SET_DURATION', payload: Number(e.target.value) })} className="col-span-3" />
                 </div>
             </div>
             <DialogFooter>

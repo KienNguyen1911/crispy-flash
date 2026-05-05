@@ -6,7 +6,8 @@ import {
   useState,
   useEffect,
   ReactNode,
-  useCallback
+  useCallback,
+  useReducer
 } from "react";
 import { jwtDecode } from "jwt-decode";
 import AuthDialog from "@/components/auth/AuthDialog";
@@ -30,13 +31,43 @@ interface AuthContextType {
   isLoading: boolean;
 }
 
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  isLoading: boolean;
+  isAuthDialogOpen: boolean;
+}
+
+type AuthAction = 
+  | { type: 'SET_USER_AND_TOKEN'; payload: { user: User; token: string } }
+  | { type: 'CLEAR_AUTH' }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_AUTH_DIALOG_OPEN'; payload: boolean };
+
+const authReducer = (state: AuthState, action: AuthAction): AuthState => {
+  switch (action.type) {
+    case 'SET_USER_AND_TOKEN':
+      return { ...state, user: action.payload.user, token: action.payload.token, isAuthDialogOpen: false };
+    case 'CLEAR_AUTH':
+      return { ...state, user: null, token: null };
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload };
+    case 'SET_AUTH_DIALOG_OPEN':
+      return { ...state, isAuthDialogOpen: action.payload };
+    default:
+      return state;
+  }
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+  const [state, dispatch] = useReducer(authReducer, {
+    user: null,
+    token: null,
+    isLoading: true,
+    isAuthDialogOpen: false
+  });
 
   const logout = useCallback(async () => {
     try {
@@ -56,8 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       localStorage.removeItem("jwt_token");
       localStorage.removeItem("refresh_token");
-      setUser(null);
-      setToken(null);
+      dispatch({ type: 'CLEAR_AUTH' });
       window.location.href = "/";
     }
   }, []);
@@ -77,15 +107,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("jwt_token", accessToken);
         localStorage.setItem("refresh_token", refreshToken);
 
-        setUser({
-          id: decoded.sub,
-          email: decoded.email,
-          name: decoded.name,
-          picture: (decoded as any).picture || '',
-          role: decoded.role,
+        dispatch({ 
+          type: 'SET_USER_AND_TOKEN', 
+          payload: {
+            user: {
+              id: decoded.sub,
+              email: decoded.email,
+              name: decoded.name,
+              picture: (decoded as any).picture || '',
+              role: decoded.role,
+            },
+            token: accessToken
+          }
         });
-        setToken(accessToken);
-        setIsAuthDialogOpen(false);
       } catch (error) {
         console.error("Failed to decode token:", error);
         logout();
@@ -104,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const decoded = jwtDecode<{ exp: number; sub: string }>(storedAccessToken);
 
           if (decoded.exp * 1000 < Date.now()) {
-            // Access token expired, thu refresh refreshToken
+            // Access token expired, try refresh
             const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
             const res = await fetch(`${apiBase}/api/auth/refresh`, {
               method: 'POST',
@@ -131,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           logout();
         }
       }
-      setIsLoading(false);
+      dispatch({ type: 'SET_LOADING', payload: false });
     };
 
     initializeAuth();
@@ -143,26 +177,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(() => {
-    setIsAuthDialogOpen(true);
+    dispatch({ type: 'SET_AUTH_DIALOG_OPEN', payload: true });
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
-        user,
-        token,
-        isAuthenticated: !!token,
+        user: state.user,
+        token: state.token,
+        isAuthenticated: !!state.token,
         login,
         loginWithGoogle,
         logout,
         setAuthTokens,
-        isLoading
+        isLoading: state.isLoading
       }}
     >
       {children}
       <AuthDialog
-        open={isAuthDialogOpen}
-        onOpenChange={setIsAuthDialogOpen}
+        open={state.isAuthDialogOpen}
+        onOpenChange={(open) => dispatch({ type: 'SET_AUTH_DIALOG_OPEN', payload: open })}
         onGoogleLogin={loginWithGoogle}
         onQrAuthenticated={setAuthTokens}
       />

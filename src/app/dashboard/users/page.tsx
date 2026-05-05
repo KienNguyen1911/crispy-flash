@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useReducer } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
   Table,
@@ -40,14 +40,39 @@ interface Meta {
   totalPages: number;
 }
 
+interface FetchState {
+  users: User[];
+  meta: Meta | null;
+  loading: boolean;
+}
+
+type FetchAction = 
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_DATA'; payload: { users: User[]; meta: Meta } }
+  | { type: 'SET_ERROR' };
+
+const fetchReducer = (state: FetchState, action: FetchAction): FetchState => {
+  switch (action.type) {
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
+    case 'SET_DATA':
+      return { ...state, users: action.payload.users, meta: action.payload.meta, loading: false };
+    case 'SET_ERROR':
+      return { ...state, loading: false };
+    default:
+      return state;
+  }
+};
+
 export default function AdminUsersPage() {
   const { token } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
-  const [meta, setMeta] = useState<Meta | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [fetchState, dispatch] = useReducer(fetchReducer, {
+    users: [],
+    meta: null,
+    loading: true
+  });
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   // Debounce search
@@ -61,10 +86,10 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     try {
-      setLoading(true);
+      dispatch({ type: 'SET_LOADING', payload: true });
       const query = new URLSearchParams({
         page: page.toString(),
-        limit: limit.toString(),
+        limit: "10",
         ...(debouncedSearch && { search: debouncedSearch }),
       });
 
@@ -80,20 +105,17 @@ export default function AdminUsersPage() {
       if (!response.ok) throw new Error("Failed to fetch users");
 
       const data = await response.json();
-      setUsers(data.data);
-      setMeta(data.meta);
+      dispatch({ type: 'SET_DATA', payload: { users: data.data, meta: data.meta } });
     } catch (error) {
       toast.error("Error fetching users");
       console.error(error);
-    } finally {
-      setLoading(false);
+      dispatch({ type: 'SET_ERROR' });
     }
   };
 
   useEffect(() => {
-    if (token) {
-      fetchUsers();
-    }
+    if (!token) return;
+    fetchUsers();
   }, [token, page, debouncedSearch]);
 
   const updateRole = async (userId: string, newRole: "USER" | "ADMIN") => {
@@ -172,7 +194,7 @@ export default function AdminUsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
+            {fetchState.loading ? (
               <TableRow>
                 <TableCell colSpan={4} className="h-24 text-center">
                   <div className="flex justify-center items-center gap-2">
@@ -181,15 +203,15 @@ export default function AdminUsersPage() {
                   </div>
                 </TableCell>
               </TableRow>
-            ) : users.length === 0 ? (
+            ) : fetchState.users.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="h-24 text-center">
                   No users found.
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
+              fetchState.users.map((user) => (
+                <TableRow key={user.id} suppressHydrationWarning>
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="font-medium">{user.name}</span>
@@ -239,7 +261,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Pagination */}
-      {meta && meta.totalPages > 1 && (
+      {fetchState.meta && fetchState.meta.totalPages > 1 && (
         <div className="flex items-center justify-end space-x-2">
           <Button
             variant="outline"
@@ -250,13 +272,13 @@ export default function AdminUsersPage() {
             Previous
           </Button>
           <div className="text-sm text-muted-foreground">
-            Page {page} of {meta.totalPages}
+            Page {page} of {fetchState.meta.totalPages}
           </div>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
-            disabled={page === meta.totalPages}
+            onClick={() => setPage((p) => Math.min(fetchState.meta!.totalPages, p + 1))}
+            disabled={page === fetchState.meta.totalPages}
           >
             Next
           </Button>

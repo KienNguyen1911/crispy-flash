@@ -15,35 +15,30 @@ function CheckoutResultContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading');
 
   useEffect(() => {
-    if (!provider) {
+    const verifyPayment = async () => {
+      if (!provider) {
         setStatus('failed');
         return;
-    }
+      }
 
-    const verifyPayment = async () => {
-        try {
-            const queryString = searchParams.toString();
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/payment/verify?${queryString}`);
-            
-            if (!response.ok) {
-                throw new Error('Verification request failed');
-            }
-            
-            const data = await response.json();
-
-            if (data.status === 'SUCCESS') {
-                setStatus('success');
-            } else {
-                setStatus('failed');
-            }
-        } catch (error) {
-            console.error('Payment verification error:', error);
-            setStatus('failed');
+      try {
+        const queryString = searchParams.toString();
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/payment/verify?${queryString}`);
+        
+        if (!response.ok) {
+          throw new Error('Verification request failed');
         }
+        
+        const data = await response.json();
+        setStatus(data.status === 'SUCCESS' ? 'success' : 'failed');
+      } catch (error) {
+        console.error('Payment verification error:', error);
+        setStatus('failed');
+      }
     };
 
     verifyPayment();
-  }, [provider, searchParams]);
+  }, [provider, searchParams, setStatus]);
 
   return (
     <Card className="w-full max-w-md text-center">

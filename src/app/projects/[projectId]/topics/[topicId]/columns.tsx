@@ -36,32 +36,32 @@ const EditableCell = ({
   className,
 }: CellContext<Vocabulary, unknown> & { className?: string }) => {
   const initialValue = getValue();
-  const [value, setValue] = React.useState(initialValue);
+  const [editValue, setEditValue] = React.useState<string | null>(null);
 
   const isEditing = table.options.meta?.isEditing;
-
-  React.useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
+  
+  // Display the edited value if editing, otherwise the current value
+  const displayValue = isEditing && editValue !== null ? editValue : initialValue;
 
   if (isEditing) {
     return (
       <Input
-        value={value as string}
-        onChange={(e) => setValue(e.target.value)}
+        value={editValue ?? (initialValue as string)}
+        onChange={(e) => setEditValue(e.target.value)}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
         onBlur={() => {
-          if (table.options.meta?.updateData) {
-            table.options.meta.updateData(row.index, column.id, value);
+          if (table.options.meta?.updateData && editValue !== null) {
+            table.options.meta.updateData(row.index, column.id, editValue);
           }
+          setEditValue(null);
         }}
         className={className}
       />
     );
   }
 
-  return <span className={className}>{value as React.ReactNode}</span>;
+  return <span className={className}>{displayValue as React.ReactNode}</span>;
 };
 
 export const columns: ColumnDef<Vocabulary>[] = [

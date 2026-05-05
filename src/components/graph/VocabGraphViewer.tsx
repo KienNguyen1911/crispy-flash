@@ -105,7 +105,7 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
     return () => {
       isCancelled = true;
     };
-  }, [vocabulary, setNodes, setEdges, isMobile]);
+  }, [vocabulary, setNodes, setEdges, isMobile, showReading]);
 
   useEffect(() => {
     return () => {
