@@ -159,7 +159,7 @@ const LearnModePublic = ({
 
   const handleNext = () => {
     if (currentIndex < vocabulary.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex(prev => prev + 1);
       setIsFlipped(false);
     } else {
       setSessionCompleted(true);
@@ -168,7 +168,7 @@ const LearnModePublic = ({
 
   const handlePrev = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+      setCurrentIndex(prev => prev - 1);
       setIsFlipped(false);
     }
   };
@@ -186,7 +186,7 @@ const LearnModePublic = ({
     setIsFlipped(false);
 
     if (currentIndex < vocabulary.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex(prev => prev + 1);
       setTimeout(() => {
         setSwipeDirection(null);
         setPreviousIndex(null);
@@ -211,7 +211,7 @@ const LearnModePublic = ({
     setIsFlipped(false);
 
     if (currentIndex < vocabulary.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex(prev => prev + 1);
       setTimeout(() => {
         setSwipeDirection(null);
         setPreviousIndex(null);

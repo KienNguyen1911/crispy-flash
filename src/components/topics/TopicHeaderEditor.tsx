@@ -19,7 +19,7 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
   useEffect(() => {
     setTitle(topic.title);
     setDescription(topic.description ?? '');
-  }, [topic.title, topic.description]);
+  }, [topic.id]);
 
   const save = async () => {
     const nextTitle = title.trim();

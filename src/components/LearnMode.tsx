@@ -180,7 +180,7 @@ const LearnMode = ({
 
   const handleNext = () => {
     if (currentIndex < vocabularies.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex(prev => prev + 1);
       setIsFlipped(false);
     } else {
       setSessionCompleted(true);
@@ -190,7 +190,7 @@ const LearnMode = ({
 
   const handlePrev = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+      setCurrentIndex(prev => prev - 1);
       setIsFlipped(false);
     }
   };
@@ -207,7 +207,7 @@ const LearnMode = ({
     setIsFlipped(false);
 
     if (currentIndex < vocabularies.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex(prev => prev + 1);
       setTimeout(() => {
         setSwipeDirection(null);
         setPreviousIndex(null);
@@ -232,7 +232,7 @@ const LearnMode = ({
     setIsFlipped(false);
 
     if (currentIndex < vocabularies.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex(prev => prev + 1);
       setTimeout(() => {
         setSwipeDirection(null);
         setPreviousIndex(null);

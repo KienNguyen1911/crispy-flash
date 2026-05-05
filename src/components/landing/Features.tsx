@@ -3,21 +3,25 @@ import { Brain, Layers, BookOpen, Zap } from "lucide-react";
 export function Features() {
   const features = [
     {
+      id: "srs",
       title: "Spaced Repetition System",
       description: "Our intelligent algorithm predicts when you're about to forget a word and schedules it for review at the perfect moment.",
       icon: <Brain className="w-6 h-6 text-primary" />,
     },
     {
+      id: "org",
       title: "Project Organization",
       description: "Don't just learn random words. Group your vocabulary into projects and topics, making context-based learning effortless.",
       icon: <Layers className="w-6 h-6 text-primary" />,
     },
     {
+      id: "fetch",
       title: "Smart Fetching",
       description: "Paste a word and let us fetch the readings, meanings, and examples for you. Spend less time building cards, more time learning.",
       icon: <Zap className="w-6 h-6 text-primary" />,
     },
     {
+      id: "clean",
       title: "Clean & Distraction-Free",
       description: "A gorgeous, dark-themed UI that is easy on the eyes. We removed the clutter so you can focus 100% on mastery.",
       icon: <BookOpen className="w-6 h-6 text-primary" />,
@@ -36,9 +40,9 @@ export function Features() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {features.map((feature, idx) => (
+          {features.map((feature) => (
             <div 
-              key={idx} 
+              key={feature.id} 
               className="p-8 rounded-3xl bg-secondary/30 border border-border/50 hover:border-primary/30 transition-colors group"
             >
               <div className="w-12 h-12 rounded-2xl bg-background flex items-center justify-center mb-6 shadow-sm border border-border group-hover:scale-110 transition-transform">

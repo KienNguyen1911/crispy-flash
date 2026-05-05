@@ -321,7 +321,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
 
           {/* Answer Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {answerOptions.map((option, index) => {
+            {answerOptions.map((option) => {
               const isCorrect = option === correctAnswer;
               const isSelected = option === selectedAnswer;
 
@@ -340,7 +340,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
 
               return (
                 <Button
-                  key={index}
+                  key={option}
                   variant={buttonVariant}
                   size="lg"
                   onClick={() => handleAnswerSelect(option)}
