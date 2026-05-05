@@ -200,47 +200,51 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
         <div className="w-full md:w-[280px] bg-white h-auto md:h-full flex flex-col z-10 shrink-0 border-b-[3px] md:border-b-0 md:border-r-[3px] border-black md:shadow-[4px_0_15px_rgba(0,0,0,0.1)] relative">
           <div className="flex flex-col flex-1 overflow-x-auto md:overflow-y-auto p-3 md:p-4 bg-slate-50/50">
 
-            {/* Kanjis Section */}
-            {rootKanjis.length > 0 && (
-              <div className={categoryGroups.length > 0 ? "mb-6" : ""}>
-                <h4 className="text-xs font-black text-gray-500 mb-3 px-1 uppercase tracking-widest hidden md:block">Nhóm Kanji</h4>
-                <div className="flex flex-row md:flex-col gap-3 md:gap-4 pb-2 md:pb-0">
-                  {rootKanjis.map(k => (
-                    <div
-                      key={k.id}
-                      onClick={(e) => handleKanjiClick(k.id, e)}
-                      className="bg-white text-black border-[3px] border-black hover:-translate-y-1 hover:shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all cursor-pointer flex justify-between items-start rounded-sm min-w-[220px] md:min-w-0 flex-shrink-0"
-                    >
-                      <div className="px-3 py-2 flex flex-col justify-between h-full min-h-[70px]">
-                        <div className="text-3xl font-black">{k.word}</div>
-                        <div className="text-[11px] text-gray-600 uppercase font-bold tracking-wider pt-2">{k.meaning}</div>
-                      </div>
-                      <div className="px-2 py-1 mt-2 mr-2 bg-black text-white text-[10px] font-bold rounded-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[90px]">
-                        {k.pronunciation || "N/A"}
-                      </div>
+            {// Sidebar Directory Row - keep kanji roots and AI category chips on one mobile line
+            }
+            {(rootKanjis.length > 0 || categoryGroups.length > 0) && (
+              <div className="flex flex-row md:flex-col gap-3 md:gap-6 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+                {rootKanjis.length > 0 && (
+                  <div className={categoryGroups.length > 0 ? "md:mb-6" : ""}>
+                    <h4 className="text-xs font-black text-gray-500 mb-3 px-1 uppercase tracking-widest hidden md:block">Nhóm Kanji</h4>
+                    <div className="flex flex-row md:flex-col gap-3 md:gap-4 flex-nowrap overflow-x-auto md:overflow-visible">
+                      {rootKanjis.map(k => (
+                        <div
+                          key={k.id}
+                          onClick={(e) => handleKanjiClick(k.id, e)}
+                          className="bg-white text-black border-[3px] border-black hover:-translate-y-1 hover:shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all cursor-pointer flex justify-between items-start rounded-sm min-w-[220px] md:min-w-0 flex-shrink-0"
+                        >
+                          <div className="px-3 py-2 flex flex-col justify-between h-full min-h-[70px]">
+                            <div className="text-3xl font-black">{k.word}</div>
+                            <div className="text-[11px] text-gray-600 uppercase font-bold tracking-wider pt-2">{k.meaning}</div>
+                          </div>
+                          <div className="px-2 py-1 mt-2 mr-2 bg-black text-white text-[10px] font-bold rounded-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[90px]">
+                            {k.pronunciation || "N/A"}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                  </div>
+                )}
 
-            {/* Semantic Categories Section */}
-            {categoryGroups.length > 0 && (
-              <div>
-                <h4 className="text-xs font-black text-blue-600 mb-3 px-1 uppercase tracking-widest hidden md:block">Nhóm Từ Vựng AI</h4>
-                <div className="flex flex-row md:flex-col gap-3 md:gap-4 pb-2 md:pb-0">
-                  {categoryGroups.map(group => (
-                    <div
-                      key={group.id}
-                      onClick={(e) => handleGroupClick(group.id, e)}
-                      className="bg-[#bfdbfe] text-black border-[3px] border-black hover:-translate-y-1 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_rgba(0,0,0,1)] transition-all cursor-pointer rounded-sm min-w-[180px] md:min-w-0 flex-shrink-0 p-3"
-                    >
-                      <div className="font-black text-[13px] leading-tight break-words uppercase tracking-wider">
-                        {group.data.label as string}
-                      </div>
+                {categoryGroups.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-black text-blue-600 mb-3 px-1 uppercase tracking-widest hidden md:block">Nhóm Từ Vựng AI</h4>
+                    <div className="flex flex-row md:flex-col gap-3 md:gap-4 flex-nowrap md:overflow-visible">
+                      {categoryGroups.map(group => (
+                        <div
+                          key={group.id}
+                          onClick={(e) => handleGroupClick(group.id, e)}
+                          className="bg-[#bfdbfe] text-black border-[3px] border-black hover:-translate-y-1 hover:shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all cursor-pointer rounded-sm min-w-[180px] md:min-w-0 flex-shrink-0 p-3 min-h-[82px] flex items-center justify-center"
+                        >
+                          <div className="font-black text-[13px] leading-tight break-words whitespace-normal uppercase tracking-wider text-center">
+                            {group.data.label as string}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -250,13 +254,13 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
 
       {/* Main Canvas Area */}
       <div className="flex-1 relative w-full h-full">
-        <div className="absolute left-4 top-4 z-30">
+        <div className={`absolute top-4 z-30 ${isMobile ? 'right-4' : 'left-4'}`}>
           <button
             type="button"
             onClick={() => setShowReading(prev => !prev)}
             className="bg-white text-black border-[3px] border-black rounded-sm px-3 py-2 text-xs font-bold shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all"
           >
-            {showReading ? 'Ẩn reading' : 'Hiện reading'}
+            {showReading ? 'Reading: ON' : 'Reading: OFF'}
           </button>
         </div>
         {isCategorizing && (

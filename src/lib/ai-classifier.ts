@@ -1,6 +1,6 @@
 import { Vocabulary } from './types';
 
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+const DEEPSEEK_API_KEY = process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY;
 const CACHE_PREFIX = "vocab_categories_v3_";
 
 function hashString(str: string): string {
