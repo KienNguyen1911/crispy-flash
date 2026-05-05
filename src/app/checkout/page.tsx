@@ -56,7 +56,7 @@ export default function CheckoutPage() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payment/checkout`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/payment/checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

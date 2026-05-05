@@ -23,7 +23,7 @@ function CheckoutResultContent() {
     const verifyPayment = async () => {
         try {
             const queryString = searchParams.toString();
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payment/verify?${queryString}`);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/payment/verify?${queryString}`);
             
             if (!response.ok) {
                 throw new Error('Verification request failed');

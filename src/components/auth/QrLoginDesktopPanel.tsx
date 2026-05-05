@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import { Loader2, RefreshCw, Smartphone } from "lucide-react";
+import { Loader2, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
   API_BASE,
@@ -220,74 +220,47 @@ export default function QrLoginDesktopPanel({
     }
   }, [exchangeSession, status]);
 
+  useEffect(() => {
+    if (status !== "EXPIRED") {
+      return;
+    }
+
+    // Auto refresh QR code after 1 second when expired
+    const timer = window.setTimeout(() => {
+      createSession();
+    }, 1000);
+
+    return () => window.clearTimeout(timer);
+  }, [status, createSession]);
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Badge variant={status === "EXPIRED" ? "destructive" : "secondary"}>
-            {badgeLabel}
-          </Badge>
-          {session ? (
-            <span className="text-sm text-muted-foreground">{secondsLeft}s</span>
-          ) : null}
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={createSession}
-          disabled={status === "CREATING" || isExchanging}
-          className="h-9"
-        >
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh
-        </Button>
-      </div>
-
-      {error ? (
-        <Alert variant="destructive">
-          <AlertTitle>QR login unavailable</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : null}
-
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px] md:items-start">
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Open Lingofy on your phone, go to <span className="font-medium text-foreground">Profile</span>, then use
-            the mobile QR sign-in scanner to approve this browser.
-          </p>
-
-          <div className="rounded-md border bg-muted/30 p-4">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Smartphone className="h-4 w-4" />
-              Mobile flow
-            </div>
-            <ol className="mt-3 space-y-2 text-sm text-muted-foreground">
-              <li>1. Open the installed PWA on your smartphone.</li>
-              <li>2. Go to Profile and open Mobile QR Sign-In.</li>
-              <li>3. Scan this code and tap Confirm on the phone.</li>
-            </ol>
+      <div className="rounded-3xl border border-border bg-background p-5 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-base font-semibold text-foreground">Scan with Lingofy PWA</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Open Lingofy on your phone and scan to approve.
+            </p>
           </div>
-
-          {status === "APPROVED" || isExchanging ? (
-            <div className="flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-primary">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Finishing sign-in...
-            </div>
-          ) : null}
+          <div className="flex items-center gap-2">
+            {session ? <span className="text-xs text-muted-foreground">{secondsLeft}s</span> : null}
+            <Badge variant={status === "EXPIRED" ? "destructive" : "secondary"}>
+              {badgeLabel}
+            </Badge>
+          </div>
         </div>
 
-        <div className="mx-auto w-full max-w-[220px] rounded-md border bg-white p-3">
+        <div className="mt-4 mx-auto max-w-xs rounded-2xl bg-white p-3 shadow-sm">
           {status === "CREATING" ? (
-            <div className="flex aspect-square items-center justify-center text-sm text-slate-500">
+            <div className="flex aspect-square items-center justify-center text-slate-500">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
           ) : qrImageUrl ? (
             <img
               src={qrImageUrl}
               alt="QR code for Lingofy login"
-              className="aspect-square w-full"
+              className="aspect-square w-full rounded-lg object-cover"
             />
           ) : (
             <div className="flex aspect-square items-center justify-center text-sm text-slate-500">
@@ -295,7 +268,22 @@ export default function QrLoginDesktopPanel({
             </div>
           )}
         </div>
+
+
       </div>
+
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription className="text-xs">{error}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {status === "APPROVED" || isExchanging ? (
+        <div className="flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Finishing sign-in...
+        </div>
+      ) : null}
     </div>
   );
 }

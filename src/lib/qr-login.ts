@@ -23,7 +23,7 @@ export interface QrLoginSessionView {
 }
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
-export const SOCKET_BASE = process.env.NEXT_PUBLIC_API_URL || API_BASE;
+export const SOCKET_BASE = process.env.NEXT_PUBLIC_API_BASE || API_BASE;
 
 export function getQrImageUrl(qrPayload: string, size = 280) {
   const encoded = encodeURIComponent(qrPayload);

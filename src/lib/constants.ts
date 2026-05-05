@@ -7,7 +7,7 @@ export const TOAST_DURATION = 3000; // 3 seconds
 export const TOAST_REMOVE_DELAY = 1000000; // 1000 seconds (from use-toast)
 
 // API configuration
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3001';
 
 // Pagination
 export const DEFAULT_PAGE_SIZE = 10;

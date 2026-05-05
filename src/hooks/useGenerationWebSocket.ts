@@ -25,7 +25,7 @@ export function useGenerationWebSocket(
     if (!userId) return;
 
     const socket: Socket = io(
-      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+      process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3001',
       {
         reconnection: true,
         reconnectionDelay: 1000,

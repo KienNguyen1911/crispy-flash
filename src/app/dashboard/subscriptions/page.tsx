@@ -36,7 +36,7 @@ export default function AdminSubscriptionsPage() {
   const { token, isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
   const { data, isLoading, mutate } = useSWR(
-    token ? [`${process.env.NEXT_PUBLIC_API_URL}/admin/payment/orders?page=${page}&limit=10`, token] : null,
+    token ? [`${process.env.NEXT_PUBLIC_API_BASE}/admin/payment/orders?page=${page}&limit=10`, token] : null,
     ([url, t]) => fetcher(url, t)
   );
 
@@ -49,7 +49,7 @@ export default function AdminSubscriptionsPage() {
     if (!selectedUser || !token) return;
 
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/payment/grant/${selectedUser}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/payment/grant/${selectedUser}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
