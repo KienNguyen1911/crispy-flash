@@ -14,9 +14,9 @@ export default function KanjiNode({ data, selected }: { data: { vocab: Vocabular
       <Handle type="source" position={Position.Right} id="right" className="opacity-0" />
       <Handle type="source" position={Position.Bottom} id="bottom" className="opacity-0" />
       <Handle type="source" position={Position.Left} id="left" className="opacity-0" />
-      <div className="absolute top-0 right-0 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 mt-[-10px] mr-[-10px] border-2 border-black">
+      {/* <div className="absolute top-0 right-0 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 mt-[-10px] mr-[-10px] border-2 border-black">
         KANJI
-      </div>
+      </div> */}
 
       <div className="flex flex-col items-center justify-center space-y-1">
         <span className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">

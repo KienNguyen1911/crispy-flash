@@ -1,8 +1,9 @@
 import { Handle, Position } from '@xyflow/react';
 import { Vocabulary } from '@/lib/types';
 
-export default function VocabNode({ data, selected }: { data: { vocab: Vocabulary }, selected?: boolean }) {
+export default function VocabNode({ data, selected }: { data: { vocab: Vocabulary; showReading?: boolean }, selected?: boolean }) {
   const { word, pronunciation, meaning } = data.vocab;
+  const showReading = data.showReading ?? true;
 
   const borderClass = selected ? "border-blue-500" : "border-black";
   const shadowClass = selected ? "shadow-[4px_4px_0px_#3b82f6]" : "shadow-[4px_4px_0px_rgba(0,0,0,1)]";
@@ -22,7 +23,9 @@ export default function VocabNode({ data, selected }: { data: { vocab: Vocabular
 
       <div className="flex flex-col">
         <span className="text-2xl font-bold break-words">{word}</span>
-        <span className="text-[11px] text-muted-foreground font-medium mb-1 break-words">{pronunciation}</span>
+        {showReading && pronunciation ? (
+          <span className="text-[11px] text-muted-foreground font-medium mb-1 break-words">{pronunciation}</span>
+        ) : null}
 
         <div className="border-t border-dotted border-gray-400 mt-1 pt-1">
           <span className="text-sm font-semibold text-blue-600 leading-tight break-words">
