@@ -25,15 +25,8 @@ export default function StoryDisplay({
 }: StoryDisplayProps) {
   const [showTranslation, setShowTranslation] = useState(false);
 
-  if (!stories || stories.length === 0) {
-    return (
-      <div className="p-4 text-center text-muted-foreground">
-        No stories available
-      </div>
-    );
-  }
-
   // Create a map of words to their vocabulary details for quick lookup
+  // Must be before any early return to satisfy Rules of Hooks
   const vocabularyMap = useMemo(() => {
     const map = new Map<string, Vocabulary>();
     vocabularyList.forEach((vocab) => {
@@ -42,6 +35,14 @@ export default function StoryDisplay({
     });
     return map;
   }, [vocabularyList]);
+
+  if (!stories || stories.length === 0) {
+    return (
+      <div className="p-4 text-center text-muted-foreground">
+        No stories available
+      </div>
+    );
+  }
 
   // Function to highlight vocabulary words in the story
   const highlightVocabulary = (content: string, targetWords: string[]) => {

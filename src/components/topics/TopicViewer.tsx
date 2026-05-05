@@ -39,6 +39,32 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VocabGraphViewer from '@/components/graph/VocabGraphViewer';
 
+function LearnDialog({ projectId, topicId }: { projectId: string; topicId: string }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>
+          <BrainCircuit className="mr-2 h-4 w-4" /> Learn
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Choose vocabulary set</DialogTitle>
+          <DialogDescription>Select which set to study with flashcards.</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-2 mt-4">
+          <Button asChild>
+            <Link href={`/projects/${projectId}/topics/${topicId}/learn`}>All vocabularies</Link>
+          </Button>
+          <Button asChild>
+            <Link href={`/projects/${projectId}/topics/${topicId}/learn?filter=not_remembered`}>Not remembered</Link>
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function TopicViewer({ projectId, topic, projectName }: { projectId: string; topic: any; projectName: string }) {
   const { updateTopic } = useContext(TopicContext) as any;
   const { updateVocabulary, deleteVocabulary } = useContext(VocabularyContext);
@@ -188,30 +214,6 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
       return v.status === statusFilter;
     });
 
-  const LearnDialog = () => (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button>
-          <BrainCircuit className="mr-2 h-4 w-4" /> Learn
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Choose vocabulary set</DialogTitle>
-          <DialogDescription>Select which set to study with flashcards.</DialogDescription>
-        </DialogHeader>
-        <div className="flex flex-col gap-2 mt-4">
-          <Button asChild>
-            <Link href={`/projects/${projectId}/topics/${topic.id}/learn`}>All vocabularies</Link>
-          </Button>
-          <Button asChild>
-            <Link href={`/projects/${projectId}/topics/${topic.id}/learn?filter=not_remembered`}>Not remembered</Link>
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-
   return (
     <div className="container mx-auto max-w-5xl py-8 px-4">
       {/* Breadcrumb and Header */}
@@ -234,7 +236,7 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
           />
           <div className="block md:hidden">
             {/* Learn chooser dialog: pick All or Not Remembered */}
-            <LearnDialog />
+            <LearnDialog projectId={projectId} topicId={topic.id} />
           </div>
         </div>
         <div className="flex w-full md:w-auto items-center gap-2">
@@ -265,7 +267,7 @@ export default function TopicViewer({ projectId, topic, projectName }: { project
               </Button>
               <div className="hidden md:block">
                 {/* Learn chooser dialog: pick All or Not Remembered */}
-                <LearnDialog />
+                <LearnDialog projectId={projectId} topicId={topic.id} />
               </div>
             </>
           ) : (
