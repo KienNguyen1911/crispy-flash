@@ -1,7 +1,5 @@
-import { VocabularyWithSrs, DueReviewCount, ReviewFeedbackDto } from '@/types/srs';
-
 // Re-export SRS types for convenience
-export type { VocabularyWithSrs, DueReviewCount, ReviewFeedbackDto };
+// (Note: These are re-exported from @/types/srs if needed by consumers)
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
 
@@ -9,11 +7,9 @@ export function apiUrl(path: string): string {
   return `${API_BASE}${path}`;
 }
 
-export interface ApiOptions extends RequestInit { }
-
 // Flag và queue để tránh nhiều refresh request chạy đồng thời và xử lý race conditions
 let isRefreshing = false;
-let failedQueue: { resolve: (value: any) => void; reject: (reason?: any) => void; options: ApiOptions & { url?: string } }[] = [];
+let failedQueue: { resolve: (value: any) => void; reject: (reason?: any) => void; options: RequestInit & { url?: string } }[] = [];
 
 const processQueue = (error: Error | null, token: string | null = null) => {
   failedQueue.forEach(prom => {
@@ -38,11 +34,11 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 
 export async function apiClient<T = any>(
   path: string,
-  options: ApiOptions = {}
+  options: RequestInit = {}
 ): Promise<T> {
   const url = apiUrl(path);
   // Store url in options for queueing
-  const fetchOptions: ApiOptions & { url?: string } = { ...options, url };
+  const fetchOptions: RequestInit & { url?: string } = { ...options, url };
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',

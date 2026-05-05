@@ -172,6 +172,7 @@ export default function PageLoader() {
         </>
       )}
 
+      {/* @ts-expect-error styled-jsx attributes */}
       <style jsx global>{`
         @keyframes gradient-shift {
           0%,

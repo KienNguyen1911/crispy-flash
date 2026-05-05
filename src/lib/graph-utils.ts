@@ -1,12 +1,7 @@
 import { Vocabulary } from '@/lib/types';
 import { Edge, Node, MarkerType } from '@xyflow/react';
 
-export type GraphDataType = {
-  nodes: Node[];
-  edges: Edge[];
-};
-
-export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boolean = false, categoryMap: Record<string, string> = {}): GraphDataType => {
+export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boolean = false, categoryMap: Record<string, string> = {}): { nodes: Node[]; edges: Edge[] } => {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 

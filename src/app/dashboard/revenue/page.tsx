@@ -149,6 +149,7 @@ export default function RevenuePage() {
                         if (value.length === 7) return value; 
                         return new Date(value).toLocaleDateString("en-US", { day: 'numeric', month: 'numeric'});
                     }}
+                    suppressHydrationWarning
                   />
                   <YAxis
                     stroke="#888888"

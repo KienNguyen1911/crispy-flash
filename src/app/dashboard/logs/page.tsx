@@ -170,7 +170,7 @@ function SystemLogsTab({ isActive }: { isActive: boolean }) {
               ) : (
                 logs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="font-mono text-xs" suppressHydrationWarning>
                       {format(new Date(log.createdAt), "yyyy-MM-dd HH:mm:ss")}
                     </TableCell>
                     <TableCell>
@@ -306,7 +306,7 @@ function AiQueueTab({ isActive }: { isActive: boolean }) {
               ) : (
                 logs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="font-mono text-xs" suppressHydrationWarning>
                       {format(new Date(log.createdAt), "yyyy-MM-dd HH:mm:ss")}
                     </TableCell>
                     <TableCell className="font-medium">

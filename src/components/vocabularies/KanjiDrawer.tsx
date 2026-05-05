@@ -219,6 +219,7 @@ export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiD
                                                                         <h3 className="text-lg font-bold border-b pb-2 mb-4">Hint to remember</h3>
                                                                         <div
                                                                             className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground bg-primary/5 p-4 rounded-lg border border-primary/10 [&_img]:bg-white [&_img]:rounded-md [&_img]:p-0.5 [&_img]:inline-block [&_img]:w-6 [&_img]:h-6 [&_img]:align-text-bottom [&_img]:ml-1"
+                                                                            // @ts-expect-error dangerouslySetInnerHTML used for trusted kanji hint content from kanjiAliveData
                                                                             dangerouslySetInnerHTML={{ __html: kanjiAliveData.hint }}
                                                                         />
                                                                     </div>
@@ -229,7 +230,7 @@ export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiD
                                                                         <h3 className="text-lg font-bold border-b pb-2 mb-4">Radicals</h3>
                                                                         <div className="flex flex-wrap gap-2">
                                                                             {jdictData.radicals.map((rad: any, i: number) => (
-                                                                                <Badge key={i} variant="outline" className="flex items-center gap-1.5 py-1.5 px-3">
+                                                                                <Badge key={`${rad.radical}-${i}`} variant="outline" className="flex items-center gap-1.5 py-1.5 px-3">
                                                                                     <span className="font-japanese text-lg text-primary">{rad.radical}</span>
                                                                                     {rad.hanviet && <span className="text-xs text-muted-foreground border-l pl-1.5">{rad.hanviet}</span>}
                                                                                 </Badge>
@@ -251,7 +252,7 @@ export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiD
                                                                         {jdictData?.related_words && jdictData.related_words.length > 0 ? (
                                                                             <div className="grid gap-3">
                                                                                 {jdictData.related_words.slice(0, 5).map((ex: any, i: number) => (
-                                                                                    <div key={i} className="flex flex-col p-3 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors border border-transparent hover:border-border">
+                                                                                    <div key={`vn-${ex.word}-${i}`} className="flex flex-col p-3 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors border border-transparent hover:border-border">
                                                                                         <div className="flex items-baseline gap-2 mb-1">
                                                                                             <span className="font-bold text-lg text-primary font-japanese">{ex.word.replace("する", " する")}</span>
                                                                                             {ex.kana && <span className="text-sm text-muted-foreground font-japanese">{ex.kana}</span>}
@@ -271,7 +272,7 @@ export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiD
                                                                         {kanjiAliveData?.examples && kanjiAliveData.examples.length > 0 ? (
                                                                             <div className="grid gap-3">
                                                                                 {kanjiAliveData.examples.slice(0, 5).map((ex: any, i: number) => (
-                                                                                    <div key={i} className="flex flex-col p-3 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors border border-transparent hover:border-border">
+                                                                                    <div key={`en-${ex.word}-${i}`} className="flex flex-col p-3 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors border border-transparent hover:border-border">
                                                                                         <div className="flex items-baseline gap-2 mb-1">
                                                                                             <span className="font-bold text-lg text-primary font-japanese">{ex.japanese}</span>
                                                                                             {ex.reading && <span className="text-sm text-muted-foreground font-japanese">{ex.reading}</span>}

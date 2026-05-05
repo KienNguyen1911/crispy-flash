@@ -160,7 +160,7 @@ function HistoryDialog({
                   </div>
                   <StatusBadge result={item.result} />
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground" suppressHydrationWarning>
                   <span>{new Date(item.reviewedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>
                   {item.responseTimeMs !== null && (
                     <span>{(item.responseTimeMs / 1000).toFixed(1)}s</span>

@@ -218,7 +218,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
         // This is a kanji character - make it clickable
         parts.push(
           <span
-            key={index}
+            key={`kanji-${index}`}
             className="cursor-pointer hover:text-blue-500 hover:scale-110 transition-all inline-block mx-0.5"
             onClick={() => handleKanjiClick(word, char)}
           >
@@ -227,7 +227,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
         );
       } else {
         // This is not a kanji (hiragana, katakana, etc.)
-        parts.push(<span key={index}>{char}</span>);
+        parts.push(<span key={`char-${index}`}>{char}</span>);
       }
     });
 
@@ -419,7 +419,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
               <ChevronLeft className="h-4 w-4 mr-2" />
               Stop
             </Button>
-            <div className="text-sm md:text-base text-muted-foreground">
+            <div className="text-sm md:text-base text-muted-foreground" suppressHydrationWarning>
               Last Review:{" "}
               {currentVocab.lastReviewDate
                 ? new Date(currentVocab.lastReviewDate).toLocaleDateString(

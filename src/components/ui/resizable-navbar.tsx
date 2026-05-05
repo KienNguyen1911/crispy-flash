@@ -65,9 +65,9 @@ export const ResizableNavbar = ({
       </div>
 
       <div className="flex items-center gap-6">
-        {navItems.map((navItem, idx: number) => (
+        {navItems.map((navItem) => (
           <Link
-            key={`link=${idx}`}
+            key={navItem.link}
             href={navItem.link}
             className={cn(
               "relative text-sm font-medium text-foreground hover:text-primary transition-colors"

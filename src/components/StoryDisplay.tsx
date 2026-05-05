@@ -59,10 +59,11 @@ export default function StoryDisplay({
       const cleanWord = part.trim().toLowerCase();
       const isTargetWord = targetWordSet.has(cleanWord);
       const vocabDetails = vocabularyMap.get(cleanWord);
+      const partKey = `${part}-${index}`; // Unique key combining content and position
 
       if (isTargetWord && vocabDetails) {
         return (
-          <TooltipProvider key={index}>
+          <TooltipProvider key={partKey}>
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
                 <span className="relative inline cursor-pointer font-semibold text-primary underline decoration-primary/30 decoration-2 underline-offset-2 transition-colors hover:text-primary/80 hover:decoration-primary/50">
@@ -112,7 +113,7 @@ export default function StoryDisplay({
         );
       }
 
-      return <span key={index}>{part}</span>;
+      return <span key={partKey}>{part}</span>;
     });
   };
 

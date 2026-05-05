@@ -129,8 +129,8 @@ export default function CheckoutPage() {
                 {plan.id !== 'lifetime' && <span className="text-sm font-normal text-muted-foreground">/{plan.id.includes('monthly') ? 'mo' : 'yr'}</span>}
               </div>
               <ul className="space-y-2">
-                {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-center text-sm">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-center text-sm">
                     <Check className="w-4 h-4 mr-2 text-green-500" />
                     {feature}
                   </li>

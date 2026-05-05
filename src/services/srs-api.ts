@@ -7,9 +7,6 @@ import {
   WeakWordItem,
 } from '@/types/srs';
 
-// Re-export SRS types for convenience
-export type { VocabularyWithSrs, DueReviewCount, ReviewFeedbackDto };
-
 // Import the base service and apiClient
 import { BaseApiService } from './base-api-service';
 import { apiClient } from '@/lib/api';

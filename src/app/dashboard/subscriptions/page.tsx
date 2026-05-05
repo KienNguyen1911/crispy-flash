@@ -132,7 +132,7 @@ export default function AdminSubscriptionsPage() {
                         {order.status.toLowerCase()}
                     </span>
                 </TableCell>
-                <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell suppressHydrationWarning>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

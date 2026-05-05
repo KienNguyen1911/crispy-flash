@@ -218,7 +218,7 @@ export default function AdminUsersPage() {
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>
+                  <TableCell suppressHydrationWarning>
                     {format(new Date(user.createdAt), "PPP")}
                   </TableCell>
                   <TableCell className="text-right">

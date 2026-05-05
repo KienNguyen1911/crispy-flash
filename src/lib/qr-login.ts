@@ -1,4 +1,4 @@
-export type QrLoginStatus =
+type QrLoginStatus =
   | "PENDING"
   | "SCANNED"
   | "APPROVED"
@@ -30,7 +30,7 @@ export function getQrImageUrl(qrPayload: string, size = 280) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}`;
 }
 
-export function formatQrLoginStatus(status: QrLoginStatus) {
+export function formatQrLoginStatus(status: "PENDING" | "SCANNED" | "APPROVED" | "CONSUMED" | "EXPIRED" | "CANCELLED") {
   switch (status) {
     case "PENDING":
       return "Waiting for scan";

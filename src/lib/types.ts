@@ -46,9 +46,3 @@ export type AIGeneratedStory = {
 export type AIGeneratedContent = {
   stories: AIGeneratedStory[];
 };
-
-export type ContentGenerationResponse = {
-  ok: boolean;
-  content?: AIGeneratedContent;
-  error?: string;
-};

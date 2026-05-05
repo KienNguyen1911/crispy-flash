@@ -13,9 +13,7 @@ function hashString(str: string): string {
   return hash.toString(36);
 }
 
-export type CategoryMap = Record<string, string>;
-
-export async function categorizeVocabularies(vocabs: Vocabulary[]): Promise<CategoryMap> {
+export async function categorizeVocabularies(vocabs: Vocabulary[]): Promise<Record<string, string>> {
   if (!vocabs || vocabs.length === 0) return {};
 
   const simplified = vocabs.map(v => ({ id: v.id, w: v.word, m: v.meaning }));

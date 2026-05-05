@@ -1,12 +1,3 @@
-export interface SrsData {
-  interval: number;
-  repetitions: number;
-  easinessFactor: number;
-  nextReviewDate: Date;
-  lastReviewDate: Date | null;
-  isReviewed: boolean;
-}
-
 export interface ReviewFeedbackDto {
   quality: number; // 0-5
   status: 'UNKNOWN' | 'REMEMBERED' | 'NOT_REMEMBERED';
@@ -14,22 +5,6 @@ export interface ReviewFeedbackDto {
   result: 'CORRECT' | 'INCORRECT' | 'TIMEOUT';
   responseTimeMs?: number;
   sessionKey?: string;
-}
-
-export interface CandidateKanjiReading {
-  kanji: string;
-  readings: string[];
-}
-
-export interface ReadingForms {
-  surfaceReading: string;
-  surfaceWord: string;
-  okuriganaSuffix: string;
-  hasOkurigana: boolean;
-  kanjiCount: number;
-  readingType: 'KANJI_OKURIGANA' | 'COMPOUND_KANJI' | 'HIRAGANA_ONLY' | 'OTHER';
-  candidateKanjiReadings: CandidateKanjiReading[];
-  requiresContext: boolean;
 }
 
 export interface VocabularyWithSrs {
@@ -52,7 +27,7 @@ export interface VocabularyWithSrs {
   promptQuestion?: string;
   promptContext?: string | null;
   correctAnswer?: string;
-  readingForms?: ReadingForms | null;
+  readingForms?: { surfaceReading: string; surfaceWord: string; okuriganaSuffix: string; hasOkurigana: boolean; kanjiCount: number; readingType: 'KANJI_OKURIGANA' | 'COMPOUND_KANJI' | 'HIRAGANA_ONLY' | 'OTHER'; candidateKanjiReadings: { kanji: string; readings: string[] }[]; requiresContext: boolean } | null;
 }
 
 export interface DueReviewCount {

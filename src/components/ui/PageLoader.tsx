@@ -149,6 +149,7 @@ export default function PageLoader() {
         </>
       )}
 
+      {/* @ts-expect-error styled-jsx attributes */}
       <style jsx global>{`
         @keyframes logo-piece-1 {
           0%,
