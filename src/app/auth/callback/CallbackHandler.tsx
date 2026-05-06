@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Suspense } from 'react';
 
 function CallbackContent() {
-  const searchParams = useSearchParams();
+  const { get } = useSearchParams();
   const { push } = useRouter();
   const { setAuthTokens } = useAuth();
   const hasProcessed = useRef(false);
@@ -14,8 +14,8 @@ function CallbackContent() {
   useEffect(() => {
     if (hasProcessed.current) return;
     
-    const token = searchParams.get('token');
-    const refreshToken = searchParams.get('refreshToken');
+    const token = get('token');
+    const refreshToken = get('refreshToken');
     
     hasProcessed.current = true;
     

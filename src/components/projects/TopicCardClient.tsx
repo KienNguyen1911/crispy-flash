@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useState, useRef, useEffect, useReducer } from "react";
+import { useContext, useState, useRef, useEffect, useReducer } from "react";
 import Link from "next/link";
 import type { Project } from "@/lib/types";
 import {

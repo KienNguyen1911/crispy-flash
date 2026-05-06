@@ -13,31 +13,17 @@ export default function PWATestClient() {
   });
 
   useEffect(() => {
-    const checkPWAStatus = async () => {
-      const status = {
-        serviceWorker: 'serviceWorker' in navigator,
-        manifest: false,
-        standalone: window.matchMedia('(display-mode: standalone)').matches,
-        installable: false,
-        userAgent: navigator.userAgent,
-        platform: navigator.platform
-      };
-
-      try {
-        const manifestLink = document.querySelector('link[rel="manifest"]');
-        if (manifestLink) {
-          const response = await fetch(manifestLink.href);
-          status.manifest = response.ok;
-        }
-      } catch (error) {
-        console.error('Manifest check failed:', error);
-      }
-
-      status.installable = status.serviceWorker && status.manifest && !status.standalone;
-      setPwaStatus(status);
+    const status = {
+      serviceWorker: 'serviceWorker' in navigator,
+      manifest: Boolean(document.querySelector('link[rel="manifest"]')),
+      standalone: window.matchMedia('(display-mode: standalone)').matches,
+      installable: false,
+      userAgent: navigator.userAgent,
+      platform: navigator.platform
     };
 
-    checkPWAStatus();
+    status.installable = status.serviceWorker && status.manifest && !status.standalone;
+    setPwaStatus(status);
   }, []);
 
   return (

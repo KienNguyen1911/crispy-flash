@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, ReactNode, useContext } from 'react';
+import { createContext, ReactNode, useContext } from 'react';
 import type { Vocabulary } from '@/lib/types';
 import { ProjectContext } from '@/context/ProjectContext';
 import { useToast } from '@/hooks/use-toast';

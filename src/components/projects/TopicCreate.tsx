@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, X } from "lucide-react";
 import { TopicForm } from "@/components/topics/TopicForm";

@@ -86,7 +86,7 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [isEditing, setIsEditing] = React.useState(false);
+  const isEditingRef = React.useRef(false);
   const dataRef = React.useRef<TData[]>(initialData);
   const [, forceUpdate] = React.useState({});
   const deletedVocabularyIdsRef = React.useRef<Set<string>>(new Set());
@@ -117,12 +117,12 @@ export function DataTable<TData, TValue>({
       }
     };
     return [...columns, actionColumn];
-  }, [columns, isEditing]);
+  }, [columns]);
 
   // Compute visibility based on responsive state and editing mode
   const computedColumnVisibility = {
     status: isDesktop,
-    actions: isEditing
+    actions: isEditingRef.current
   };
 
   const visibleData = React.useMemo(
@@ -272,7 +272,7 @@ export function DataTable<TData, TValue>({
     } catch (error) {
       toast.error("Failed to update vocabularies");
     } finally {
-      setIsEditing(false);
+      isEditingRef.current = false;
       deletedVocabularyIdsRef.current.clear();
       selectedKanjiWordRef.current = null;
     }
@@ -281,13 +281,13 @@ export function DataTable<TData, TValue>({
   const handleCancel = () => {
     dataRef.current = initialData;
     deletedVocabularyIdsRef.current.clear();
-    setIsEditing(false);
+    isEditingRef.current = false;
     selectedKanjiWordRef.current = null;
     forceUpdate({});
   };
 
   const handleSwitchView = (nextViewMode: "table" | "cards") => {
-    if (nextViewMode === "cards" && isEditing) {
+    if (nextViewMode === "cards" && isEditingRef.current) {
       return;
     }
 
@@ -370,10 +370,10 @@ export function DataTable<TData, TValue>({
         </Button>
       </div>
       {viewMode === "table" ? (
-        isEditing ? (
+        isEditingRef.current ? (
           null
         ) : (
-          <Button variant="outline" onClick={() => setIsEditing(true)} className="w-full sm:w-auto">
+          <Button variant="outline" onClick={() => { isEditingRef.current = true; forceUpdate({}); }} className="w-full sm:w-auto">
             <Pen className="mr-2 h-4 w-4" />
             Edit table
           </Button>

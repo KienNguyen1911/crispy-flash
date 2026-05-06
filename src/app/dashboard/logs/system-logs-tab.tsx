@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
 import { Loader2, RefreshCcw } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -45,36 +46,22 @@ interface InitialData {
 }
 
 export function SystemLogsTab({ initialData }: { initialData: InitialData }) {
-  const [logs, setLogs] = useState<SystemLog[]>([]);
-  const [meta, setMeta] = useState<Meta | null>(null);
-  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [level, setLevel] = useState("ALL");
 
-  useEffect(() => {
-    setLogs(initialData.data);
-    setMeta(initialData.meta);
-  }, [initialData]);
-
-  const fetchLogs = async () => {
-    try {
-      setLoading(true);
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["system-logs", page, level],
+    queryFn: async () => {
       const data = await apiClient<{ data: SystemLog[]; meta: Meta }>(
         `/system-logs?page=${page}&limit=20&level=${level}`
       );
-      setMeta(data as any); 
-      setLogs((data as any).data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data as { data: SystemLog[]; meta: Meta };
+    },
+    initialData: page === 1 && level === "ALL" ? initialData : undefined,
+  });
 
-  useEffect(() => {
-    if (page === 1 && level === "ALL") return;
-    fetchLogs();
-  }, [page, level]);
+  const logs = data?.data || [];
+  const meta = data?.meta || null;
 
   const getLevelColor = (level: string) => {
     switch (level) {
@@ -104,7 +91,7 @@ export function SystemLogsTab({ initialData }: { initialData: InitialData }) {
                         <SelectItem value="INFO">Info</SelectItem>
                     </SelectContent>
                 </Select>
-                <Button variant="outline" size="icon" onClick={() => fetchLogs()}>
+            <Button variant="outline" size="icon" onClick={() => refetch()}>
                     <RefreshCcw className="h-4 w-4" />
                 </Button>
             </div>
@@ -122,7 +109,7 @@ export function SystemLogsTab({ initialData }: { initialData: InitialData }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {isLoading ? (
                  <TableRow>
                     <TableCell colSpan={4} className="h-24 text-center">
                         <Loader2 className="h-6 w-6 animate-spin mx-auto" />

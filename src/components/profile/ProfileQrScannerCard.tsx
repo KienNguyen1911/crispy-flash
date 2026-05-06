@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useReducer } from "react";
 import { Camera, CameraOff, CheckCircle2, Loader2, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -10,14 +10,52 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+interface ScannerState {
+  qrPayload: string | null;
+  isCameraActive: boolean;
+  isProcessing: boolean;
+  scanError: string | null;
+  cameraSupported: boolean;
+  sessionInfo: QrLoginSessionView | null;
+}
+
+type ScannerAction =
+  | { type: 'SET_QR_PAYLOAD'; payload: string | null }
+  | { type: 'SET_CAMERA_ACTIVE'; payload: boolean }
+  | { type: 'SET_PROCESSING'; payload: boolean }
+  | { type: 'SET_SCAN_ERROR'; payload: string | null }
+  | { type: 'SET_CAMERA_SUPPORTED'; payload: boolean }
+  | { type: 'SET_SESSION_INFO'; payload: QrLoginSessionView | null };
+
+const scannerReducer = (state: ScannerState, action: ScannerAction): ScannerState => {
+  switch (action.type) {
+    case 'SET_QR_PAYLOAD':
+      return { ...state, qrPayload: action.payload };
+    case 'SET_CAMERA_ACTIVE':
+      return { ...state, isCameraActive: action.payload };
+    case 'SET_PROCESSING':
+      return { ...state, isProcessing: action.payload };
+    case 'SET_SCAN_ERROR':
+      return { ...state, scanError: action.payload };
+    case 'SET_CAMERA_SUPPORTED':
+      return { ...state, cameraSupported: action.payload };
+    case 'SET_SESSION_INFO':
+      return { ...state, sessionInfo: action.payload };
+    default:
+      return state;
+  }
+};
+
 export default function ProfileQrScannerCard() {
   const { isAuthenticated, login, token } = useAuth();
-  const [qrPayload, setQrPayload] = useState<string | null>(null);
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [scanError, setScanError] = useState<string | null>(null);
-  const [cameraSupported, setCameraSupported] = useState(false);
-  const [sessionInfo, setSessionInfo] = useState<QrLoginSessionView | null>(null);
+  const [state, dispatch] = useReducer(scannerReducer, {
+    qrPayload: null,
+    isCameraActive: false,
+    isProcessing: false,
+    scanError: null,
+    cameraSupported: false,
+    sessionInfo: null,
+  });
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const frameRef = useRef<number | null>(null);
@@ -25,8 +63,8 @@ export default function ProfileQrScannerCard() {
   const lastPayloadRef = useRef<string | null>(null);
 
   const statusText = useMemo(
-    () => (sessionInfo ? formatQrLoginStatus(sessionInfo.status) : "Ready"),
-    [sessionInfo],
+    () => (state.sessionInfo ? formatQrLoginStatus(state.sessionInfo.status) : "Ready"),
+    [state.sessionInfo],
   );
 
   const stopCamera = useCallback(() => {
@@ -44,12 +82,12 @@ export default function ProfileQrScannerCard() {
       videoRef.current.srcObject = null;
     }
 
-    setIsCameraActive(false);
+    dispatch({ type: 'SET_CAMERA_ACTIVE', payload: false });
   }, []);
 
   const scanPayload = useCallback(async (qrPayload: string) => {
-    setScanError(null);
-    setIsProcessing(true);
+    dispatch({ type: 'SET_SCAN_ERROR', payload: null });
+    dispatch({ type: 'SET_PROCESSING', payload: true });
 
     try {
       const response = await fetch(`${API_BASE}/api/auth/qr-login/scan`, {
@@ -65,21 +103,21 @@ export default function ProfileQrScannerCard() {
       }
 
       const data = (await response.json()) as QrLoginSessionView;
-      setSessionInfo(data);
-      setQrPayload(qrPayload);
+      dispatch({ type: 'SET_SESSION_INFO', payload: data });
+      dispatch({ type: 'SET_QR_PAYLOAD', payload: qrPayload });
       lastPayloadRef.current = qrPayload;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to scan QR code";
-      setScanError(message);
+      dispatch({ type: 'SET_SCAN_ERROR', payload: message });
       toast.error("QR code is not valid for Lingofy sign-in.");
     } finally {
-      setIsProcessing(false);
+      dispatch({ type: 'SET_PROCESSING', payload: false });
     }
   }, []);
 
   const confirmSession = useCallback(async () => {
-    if (!qrPayload) {
-      setScanError("No valid Lingofy QR code has been scanned yet.");
+    if (!state.qrPayload) {
+      dispatch({ type: 'SET_SCAN_ERROR', payload: "No valid Lingofy QR code has been scanned yet." });
       return;
     }
 
@@ -88,8 +126,8 @@ export default function ProfileQrScannerCard() {
       return;
     }
 
-    setIsProcessing(true);
-    setScanError(null);
+    dispatch({ type: 'SET_PROCESSING', payload: true });
+    dispatch({ type: 'SET_SCAN_ERROR', payload: null });
 
     try {
       const response = await fetch(`${API_BASE}/api/auth/qr-login/confirm`, {
@@ -98,7 +136,7 @@ export default function ProfileQrScannerCard() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ qrPayload }),
+        body: JSON.stringify({ qrPayload: state.qrPayload }),
       });
 
       if (!response.ok) {
@@ -106,31 +144,31 @@ export default function ProfileQrScannerCard() {
       }
 
       const data = (await response.json()) as QrLoginSessionView;
-      setSessionInfo(data);
+      dispatch({ type: 'SET_SESSION_INFO', payload: data });
       toast.success("Desktop sign-in approved.");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to confirm QR login";
-      setScanError(message);
+      dispatch({ type: 'SET_SCAN_ERROR', payload: message });
       toast.error(message);
     } finally {
-      setIsProcessing(false);
+      dispatch({ type: 'SET_PROCESSING', payload: false });
     }
-  }, [login, qrPayload, token]);
+  }, [login, state.qrPayload, token]);
 
   const beginCameraScan = useCallback(async () => {
     if (typeof window === "undefined" || !window.BarcodeDetector) {
-      setScanError("This browser does not support camera QR scanning.");
+      dispatch({ type: 'SET_SCAN_ERROR', payload: "This browser does not support camera QR scanning." });
       toast.error("This browser does not support camera QR scanning.");
       return;
     }
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setScanError("Camera access is not available in this browser.");
+      dispatch({ type: 'SET_SCAN_ERROR', payload: "Camera access is not available in this browser." });
       toast.error("Camera access is not available in this browser.");
       return;
     }
 
-    setScanError(null);
+    dispatch({ type: 'SET_SCAN_ERROR', payload: null });
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -147,9 +185,9 @@ export default function ProfileQrScannerCard() {
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
       detectorRef.current = new window.BarcodeDetector({ formats: ["qr_code"] });
-      setSessionInfo(null);
-      setQrPayload(null);
-      setIsCameraActive(true);
+      dispatch({ type: 'SET_SESSION_INFO', payload: null });
+      dispatch({ type: 'SET_QR_PAYLOAD', payload: null });
+      dispatch({ type: 'SET_CAMERA_ACTIVE', payload: true });
 
       const detectFrame = async () => {
         if (!videoRef.current || !detectorRef.current) {
@@ -175,14 +213,14 @@ export default function ProfileQrScannerCard() {
       frameRef.current = requestAnimationFrame(detectFrame);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unable to access camera";
-      setScanError(message);
+      dispatch({ type: 'SET_SCAN_ERROR', payload: message });
       toast.error(message);
       stopCamera();
     }
   }, [scanPayload, stopCamera]);
 
   useEffect(() => {
-    setCameraSupported(Boolean(typeof window !== "undefined" && window.BarcodeDetector));
+    dispatch({ type: 'SET_CAMERA_SUPPORTED', payload: Boolean(typeof window !== "undefined" && window.BarcodeDetector) });
     return () => stopCamera();
   }, [stopCamera]);
 
@@ -199,25 +237,25 @@ export default function ProfileQrScannerCard() {
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="flex flex-wrap items-center gap-3">
-          <Badge variant={sessionInfo?.status === "APPROVED" ? "default" : "secondary"}>
+          <Badge variant={state.sessionInfo?.status === "APPROVED" ? "default" : "secondary"}>
             {statusText}
           </Badge>
-          {sessionInfo ? (
-            <span className="text-sm text-muted-foreground">Target: {sessionInfo.requesterDevice}</span>
+          {state.sessionInfo ? (
+            <span className="text-sm text-muted-foreground">Target: {state.sessionInfo.requesterDevice}</span>
           ) : null}
         </div>
 
-        {scanError ? (
+        {state.scanError ? (
           <Alert variant="destructive">
             <AlertTitle>Scan failed</AlertTitle>
-            <AlertDescription>{scanError}</AlertDescription>
+            <AlertDescription>{state.scanError}</AlertDescription>
           </Alert>
         ) : null}
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
           <div className="space-y-4">
             <div className="flex flex-wrap gap-3">
-              <Button type="button" onClick={beginCameraScan} disabled={isCameraActive || isProcessing}>
+              <Button type="button" onClick={beginCameraScan} disabled={state.isCameraActive || state.isProcessing}>
                 <Camera className="mr-2 h-4 w-4" />
                 Start camera
               </Button>
@@ -225,14 +263,14 @@ export default function ProfileQrScannerCard() {
                 type="button"
                 variant="outline"
                 onClick={stopCamera}
-                disabled={!isCameraActive}
+                disabled={!state.isCameraActive}
               >
                 <CameraOff className="mr-2 h-4 w-4" />
                 Stop
               </Button>
             </div>
 
-            {!cameraSupported ? (
+            {!state.cameraSupported ? (
               <Alert>
                 <AlertTitle>Camera unsupported</AlertTitle>
                 <AlertDescription>
@@ -245,9 +283,9 @@ export default function ProfileQrScannerCard() {
               <Button
                 type="button"
                 onClick={confirmSession}
-                disabled={!sessionInfo || !qrPayload || isProcessing || sessionInfo.status === "APPROVED"}
+                disabled={!state.sessionInfo || !state.qrPayload || state.isProcessing || state.sessionInfo.status === "APPROVED"}
               >
-                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                {state.isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
                 {isAuthenticated ? "Confirm sign-in" : "Login to confirm"}
               </Button>
             </div>

@@ -70,33 +70,21 @@ export function PWAInstall() {
     console.log('PWAInstall: Safari detected:', isSafari);
     console.log('PWAInstall: User agent:', navigator.userAgent);
 
-    // Check if PWA criteria is met (for debugging)
-    const checkPWACriteria = async () => {
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.ready;
-        console.log('PWAInstall: Service Worker ready:', registration);
-      }
-      
-      // Check manifest
-      const manifestLink = document.querySelector('link[rel="manifest"]');
-      console.log('PWAInstall: Manifest link found:', manifestLink);
-      
-      if (manifestLink) {
-        try {
-          const response = await fetch(manifestLink.href);
-          const manifest = await response.json();
-          console.log('PWAInstall: Manifest loaded:', manifest);
-        } catch (error) {
-          console.error('PWAInstall: Manifest loading failed:', error);
-        }
-      }
-    };
-    
-    checkPWACriteria();
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
     };
+  }, []);
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(registration => {
+        console.log('PWAInstall: Service Worker ready:', registration);
+      });
+    }
+    
+    // Check manifest
+    const manifestLink = document.querySelector('link[rel="manifest"]');
+    console.log('PWAInstall: Manifest link found:', manifestLink);
   }, []);
 
   const handleInstallClick = async () => {

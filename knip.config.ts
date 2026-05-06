@@ -1,7 +1,8 @@
 import type { KnipConfig } from 'knip';
 
 const config: KnipConfig = {
-  ignore: ['public/sw.js'],
+  project: ['src/**/*.{ts,tsx}'],
+  entry: ['src/**/*.{ts,tsx}'],
 };
 
 export default config;

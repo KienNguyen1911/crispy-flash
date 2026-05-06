@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
 import { Loader2, RefreshCcw } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -36,36 +37,22 @@ interface InitialData {
 }
 
 export function AiQueueTab({ initialData }: { initialData: InitialData }) {
-  const [logs, setLogs] = useState<GenerationLog[]>([]);
-  const [meta, setMeta] = useState<Meta | null>(null);
-  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("ALL");
 
-  useEffect(() => {
-    setLogs(initialData.data);
-    setMeta(initialData.meta);
-  }, [initialData]);
-
-  const fetchLogs = async () => {
-    try {
-      setLoading(true);
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["generation-logs", page, status],
+    queryFn: async () => {
       const data = await apiClient(
         `/system-logs/generation?page=${page}&limit=20&status=${status}`
       );
-      setLogs((data as any).data);
-      setMeta(data as any);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data as { data: GenerationLog[]; meta: Meta };
+    },
+    initialData: page === 1 && status === "ALL" ? initialData : undefined,
+  });
 
-  useEffect(() => {
-    if (page === 1 && status === "ALL") return;
-    fetchLogs();
-  }, [page, status]);
+  const logs = data?.data || [];
+  const meta = data?.meta || null;
 
   const getStatusColor = (status: string) => {
       switch (status) {
@@ -98,7 +85,7 @@ export function AiQueueTab({ initialData }: { initialData: InitialData }) {
                         <SelectItem value="TIMEOUT">Timeout</SelectItem>
                     </SelectContent>
                 </Select>
-                <Button variant="outline" size="icon" onClick={() => fetchLogs()}>
+                <Button variant="outline" size="icon" onClick={() => refetch()}>
                     <RefreshCcw className="h-4 w-4" />
                 </Button>
             </div>
@@ -117,7 +104,7 @@ export function AiQueueTab({ initialData }: { initialData: InitialData }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {isLoading ? (
                  <TableRow>
                     <TableCell colSpan={5} className="h-24 text-center">
                         <Loader2 className="h-6 w-6 animate-spin mx-auto" />
