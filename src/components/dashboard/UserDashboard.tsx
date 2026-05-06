@@ -52,15 +52,16 @@ export function UserDashboard() {
   } = useSWRInfinite(getKey, fetcher);
 
   const projects = projectPages
-    ? projectPages
-        .flatMap((p: any) => p.projects ?? [])
-        .map((proj: any) => ({
+    ? projectPages.reduce<any[]>((acc, p: any) => {
+        const pageProjects = (p.projects ?? []).map((proj: any) => ({
           id: proj.id,
           name: proj.title ?? proj.name ?? "",
           description: proj.description ?? "",
           topicsCount: proj.topicsCount ?? 0,
           wordsCount: proj.wordsCount ?? 0,
-        }))
+        }));
+        return acc.concat(pageProjects);
+      }, [])
     : [];
 
   const lastPage =

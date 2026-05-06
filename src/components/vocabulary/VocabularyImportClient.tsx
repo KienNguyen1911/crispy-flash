@@ -103,17 +103,15 @@ export default function VocabularyImportClient() {
       const filtered = lines.filter(
         (l) => !/^\|?\s*-{1,}\s*(\|\s*-{1,}\s*)+$/i.test(l)
       );
-      return filtered
-        .map((line) => {
-          return line
-            .split("|")
-            .map((c) => c.trim())
-            .filter(
-              (c, i) =>
-                c !== "" || (i !== 0 && i !== line.split("|").length - 1)
-            ); // drop empty leading/trailing
-        })
-        .map((cells) => cells.filter((cell) => cell !== ""));
+      return filtered.reduce<ParsedRow[]>((acc, line) => {
+        const parts = line.split("|");
+        const cells = parts
+          .map((c) => c.trim())
+          .filter((c, i) => c !== "" || (i !== 0 && i !== parts.length - 1))
+          .filter((cell) => cell !== "");
+        acc.push(cells);
+        return acc;
+      }, []);
     }
 
     // Otherwise, try splitting by tab first, then slashes, then multiple spaces
@@ -227,14 +225,18 @@ export default function VocabularyImportClient() {
 
     // Prepare basic vocab data
     const vocabToSave: Omit<Vocabulary, "id" | "topicId" | "status">[] =
-      parsedData
-        .map((row) => ({
+      parsedData.reduce<Omit<Vocabulary, "id" | "topicId" | "status">[]>((acc, row) => {
+        const item = {
           word: row[Number(wordIndex)],
           pronunciation: row[Number(pronunciationIndex)],
           meaning: row[Number(meaningIndex)],
           part_of_speech: partOfSpeechIndex ? row[Number(partOfSpeechIndex)] : undefined
-        }))
-        .filter((item) => item.word && item.pronunciation && item.meaning);
+        };
+        if (item.word && item.pronunciation && item.meaning) {
+          acc.push(item);
+        }
+        return acc;
+      }, []);
 
     console.log(`Prepared ${vocabToSave.length} vocabulary items for saving`);
     addVocabulary(topicId, vocabToSave);

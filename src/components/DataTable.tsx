@@ -162,20 +162,21 @@ export function DataTable<TData, TValue>({
     );
 
     return new Set(
-      (data as any[])
-        .filter((row) => {
-          if (deletedVocabularyIdsRef.current.has((row as any).id)) {
-            return false;
-          }
+      (data as any[]).reduce<string[]>((acc, row) => {
+        if (deletedVocabularyIdsRef.current.has((row as any).id)) {
+          return acc;
+        }
 
-          const originalRow = initialDataById[(row as any).id];
-          if (!originalRow) {
-            return false;
-          }
+        const originalRow = initialDataById[(row as any).id];
+        if (!originalRow) {
+          return acc;
+        }
 
-          return JSON.stringify(row) !== JSON.stringify(originalRow);
-        })
-        .map((row) => (row as any).id)
+        if (JSON.stringify(row) !== JSON.stringify(originalRow)) {
+          acc.push((row as any).id);
+        }
+        return acc;
+      }, [])
     );
   }, [data, initialData]);
 

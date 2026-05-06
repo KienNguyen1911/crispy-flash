@@ -77,17 +77,17 @@ export default function ProjectPage() {
     : null;
 
   const topics = topicPages
-    ? topicPages
-        .flatMap((page: any) => page.topics ?? [])
-        .map((t: any) => ({
+    ? topicPages.reduce((acc: any[], page: any) => {
+        const pageTopics = (page.topics ?? []).map((t: any) => ({
           id: t.id,
           title: t.title,
           description: "",
           vocabularyCount: t.wordsCount ?? 0,
           learnedCount: t.learnedCount ?? 0,
           createdAt: t.createdAt ?? new Date().toISOString()
-        }))
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        }));
+        return acc.concat(pageTopics);
+      }, []).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     : [];
 
   // Group topics by date
