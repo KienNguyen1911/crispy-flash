@@ -25,7 +25,7 @@ export default function MoveTopicDialog({
 }) {
   const { moveTopic } = useContext(TopicContext);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [selectedProjectName, setSelectedProjectName] = useState<string>("");
+  const selectedProjectNameRef = useRef<string>("");
   const [isMoving, setIsMoving] = useState(false);
   const [open, setOpen] = useState(true);
 
@@ -42,7 +42,7 @@ export default function MoveTopicDialog({
       await moveTopic(topicId, selectedProjectId);
       setOpen(false);
       setSelectedProjectId("");
-      setSelectedProjectName("");
+      selectedProjectNameRef.current = "";
       onTopicMoved?.();
     } catch (error) {
       console.error("Failed to move topic:", error);
@@ -54,7 +54,7 @@ export default function MoveTopicDialog({
   const closeDialog = () => {
     setOpen(false);
     setSelectedProjectId("");
-    setSelectedProjectName("");
+    selectedProjectNameRef.current = "";
     onOpenChange?.(false);
   };
 
@@ -123,7 +123,7 @@ export default function MoveTopicDialog({
                               key={project.id}
                               onClick={() => {
                                 setSelectedProjectId(project.id);
-                                setSelectedProjectName(project.title);
+                                selectedProjectNameRef.current = project.title;
                               }}
                               className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center justify-between border-b last:border-b-0 ${
                                 selectedProjectId === project.id

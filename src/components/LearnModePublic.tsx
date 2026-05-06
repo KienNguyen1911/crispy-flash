@@ -41,12 +41,12 @@ const LearnModePublic = ({
   const [isFlipped, setIsFlipped] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
-  const [showWordFirst, setShowWordFirst] = useState(true);
-  const [showPronunciation, setShowPronunciation] = useState(true);
+  const showWordFirstRef = useRef(true);
+  const showPronunciationRef = useRef(true);
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(
     null,
   );
-  const [previousIndex, setPreviousIndex] = useState<number | null>(null);
+  const previousIndexRef = useRef<number | null>(null);
   const [localStatus, setLocalStatus] = useState<Record<string, string>>({});
 
   const currentVocab = useMemo(
@@ -60,14 +60,14 @@ const LearnModePublic = ({
         className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
         style={{ backfaceVisibility: "hidden" }}
       >
-        {showWordFirst ? (
+        {showWordFirstRef.current ? (
           <>
             {vocab.word && (
               <h2 className="text-5xl font-bold mb-2 text-center">
                 {vocab.word}
               </h2>
             )}
-            {vocab.pronunciation && showPronunciation && (
+            {vocab.pronunciation && showPronunciationRef.current && (
               <p className="text-xl text-muted-foreground">
                 {vocab.pronunciation}
               </p>
@@ -105,7 +105,7 @@ const LearnModePublic = ({
           transform: "rotateY(180deg)",
         }}
       >
-        {showWordFirst ? (
+        {showWordFirstRef.current ? (
           <>
             <p className="text-2xl font-semibold text-center">
               {vocab.meaning}
@@ -182,7 +182,7 @@ const LearnModePublic = ({
       [currentVocab.id]: "REMEMBERED",
     }));
 
-    setPreviousIndex(currentIndex);
+    previousIndexRef.current = currentIndex;
     setSwipeDirection("right");
     setIsFlipped(false);
 
@@ -190,7 +190,7 @@ const LearnModePublic = ({
       setCurrentIndex(prev => prev + 1);
       setTimeout(() => {
         setSwipeDirection(null);
-        setPreviousIndex(null);
+        previousIndexRef.current = null;
       }, 400);
     } else {
       setTimeout(() => {

@@ -37,14 +37,16 @@ export const ProjectContext = createContext<ProjectContextType>({
 });
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const projectsRef = useRef<Project[]>([]);
+  const [, forceUpdate] = useState({});
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
 
   const reloadProjects = async () => {
     // Only load projects if user is authenticated
     if (!isAuthenticated) {
-      setProjects([]);
+      projectsRef.current = [];
+      forceUpdate({});
       return;
     }
 
@@ -62,7 +64,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         wordsCount: p.wordsCount
       }));
 
-      setProjects(loadedProjects);
+      projectsRef.current = loadedProjects;
+      forceUpdate({});
 
       // Show toast if user has no projects
       if (loadedProjects.length === 0) {
@@ -113,12 +116,13 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }, [pathname, isAuthenticated]);
 
   const getProjectById = (projectId: string) =>
-    projects.find((p) => p.id === projectId);
+    projectsRef.current.find((p) => p.id === projectId);
 
   const setProjectTopics = (projectId: string, topics: any[]) => {
-    setProjects((prev) =>
-      prev.map((p) => (p.id === projectId ? { ...p, topics } : p))
+    projectsRef.current = projectsRef.current.map((p) =>
+      p.id === projectId ? { ...p, topics } : p
     );
+    forceUpdate({});
   };
 
   const addProject = async (
@@ -153,7 +157,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         description: createdRaw.description ?? projectData.description ?? "",
         topics: []
       };
-      setProjects((prev) => [...prev, created]);
+      projectsRef.current = [...projectsRef.current, created];
+      forceUpdate({});
       toast({ title: "Project Created", description: `${created.name}`, duration: TOAST_DURATION });
       return true;
     } catch (err: any) {
@@ -182,20 +187,22 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       description: updatedRaw.description ?? projectData.description ?? "",
       topics: []
     };
-    setProjects((prev) =>
-      prev.map((p) => (p.id === projectId ? { ...p, ...updated } : p))
+    projectsRef.current = projectsRef.current.map((p) =>
+      p.id === projectId ? { ...p, ...updated } : p
     );
+    forceUpdate({});
     toast({ title: "Project Updated", duration: TOAST_DURATION });
   };
 
   const deleteProject = async (projectId: string) => {
     await deleteProject(projectId);
-    setProjects((prev) => prev.filter((p) => p.id !== projectId));
+    projectsRef.current = projectsRef.current.filter((p) => p.id !== projectId);
+    forceUpdate({});
     toast({ title: "Project Deleted", variant: "destructive", duration: TOAST_DURATION });
   };
 
   const value = {
-    projects,
+    projects: projectsRef.current,
     reloadProjects,
     addProject,
     updateProject,

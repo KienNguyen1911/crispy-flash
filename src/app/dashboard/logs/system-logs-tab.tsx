@@ -45,11 +45,16 @@ interface InitialData {
 }
 
 export function SystemLogsTab({ initialData }: { initialData: InitialData }) {
-  const [logs, setLogs] = useState<SystemLog[]>(initialData.data);
-  const [meta, setMeta] = useState<Meta>(initialData.meta);
+  const [logs, setLogs] = useState<SystemLog[]>([]);
+  const [meta, setMeta] = useState<Meta | null>(null);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [level, setLevel] = useState("ALL");
+
+  useEffect(() => {
+    setLogs(initialData.data);
+    setMeta(initialData.meta);
+  }, [initialData]);
 
   const fetchLogs = async () => {
     try {

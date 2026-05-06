@@ -76,7 +76,7 @@ interface SubscriptionsPageProps {
 export default function AdminSubscriptionsPage({ initialOrders }: SubscriptionsPageProps) {
   const { token } = useAuth();
   const [page, setPage] = useState(1);
-  const [orders, setOrders] = useState(initialOrders);
+  const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [isLoading, setIsLoading] = useState(false);
   const [grantState, dispatch] = useReducer(grantReducer, {
     plan: 'PRO_MONTHLY',

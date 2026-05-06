@@ -87,12 +87,15 @@ export function DataTable<TData, TValue>({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [isEditing, setIsEditing] = React.useState(false);
-  const [data, setData] = React.useState<TData[]>(initialData);
+  const dataRef = React.useRef<TData[]>(initialData);
+  const [, forceUpdate] = React.useState({});
   const deletedVocabularyIdsRef = React.useRef<Set<string>>(new Set());
   const [viewMode, setViewMode] = React.useState<"table" | "cards">("cards");
   const [isGraphOpen, setIsGraphOpen] = React.useState(false);
   const selectedKanjiWordRef = React.useRef<string | null>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  const data = dataRef.current;
 
   const augmentedColumns = React.useMemo(() => {
     const actionColumn: ColumnDef<TData, TValue> = {
@@ -206,23 +209,21 @@ export function DataTable<TData, TValue>({
     meta: {
       isEditing,
       updateData: (rowIndex: number, columnId: string, value: unknown) => {
-        setData((old) =>
-          old.map((row, index) => {
-            if (index === rowIndex) {
-              return {
-                ...old[rowIndex],
-                [columnId]: value
-              };
-            }
-            return row;
-          })
-        );
+        dataRef.current = dataRef.current.map((row, index) => {
+          if (index === rowIndex) {
+            return {
+              ...dataRef.current[rowIndex],
+              [columnId]: value
+            };
+          }
+          return row;
+        });
+        forceUpdate({});
       },
       deleteRow: (rowIndex: number) => {
         const idToDelete = (visibleData[rowIndex] as any).id;
         deletedVocabularyIdsRef.current.add(idToDelete);
-        // Force re-render by updating a state
-        setData(d => [...d]);
+        forceUpdate({});
       }
     } as any
   });
@@ -278,10 +279,11 @@ export function DataTable<TData, TValue>({
   };
 
   const handleCancel = () => {
-    setData(initialData);
+    dataRef.current = initialData;
     deletedVocabularyIdsRef.current.clear();
     setIsEditing(false);
     selectedKanjiWordRef.current = null;
+    forceUpdate({});
   };
 
   const handleSwitchView = (nextViewMode: "table" | "cards") => {

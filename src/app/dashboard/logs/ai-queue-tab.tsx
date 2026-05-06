@@ -36,11 +36,16 @@ interface InitialData {
 }
 
 export function AiQueueTab({ initialData }: { initialData: InitialData }) {
-  const [logs, setLogs] = useState<GenerationLog[]>(initialData.data);
-  const [meta, setMeta] = useState<Meta>(initialData.meta);
+  const [logs, setLogs] = useState<GenerationLog[]>([]);
+  const [meta, setMeta] = useState<Meta | null>(null);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("ALL");
+
+  useEffect(() => {
+    setLogs(initialData.data);
+    setMeta(initialData.meta);
+  }, [initialData]);
 
   const fetchLogs = async () => {
     try {

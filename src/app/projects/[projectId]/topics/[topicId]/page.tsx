@@ -86,7 +86,7 @@ export default function TopicDetailPage() {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [generatedContent, setGeneratedContent] =
     useState<AIGeneratedContent | null>(null);
-  const [shouldListenWebSocket, setShouldListenWebSocket] = useState(false);
+  const shouldListenWebSocketRef = useRef(false);
   const fetcher = useAuthFetcher();
   const { toast } = useToast();
   const { mutate } = useSWRConfig();
@@ -177,7 +177,7 @@ export default function TopicDetailPage() {
         });
 
         // Enable WebSocket listener
-        setShouldListenWebSocket(true);
+        shouldListenWebSocketRef.current = true;
       } catch (error) {
         console.error("Content generation error:", error);
         setIsGenerating(false);
@@ -196,12 +196,12 @@ export default function TopicDetailPage() {
 
   // WebSocket listener for real-time generation updates
   useGenerationWebSocket(
-    shouldListenWebSocket && project?.ownerId ? project.ownerId : undefined,
+    shouldListenWebSocketRef.current && project?.ownerId ? project.ownerId : undefined,
     topicId,
     async (content) => {
       // On complete
       setIsGenerating(false);
-      setShouldListenWebSocket(false);
+      shouldListenWebSocketRef.current = false;
       await mutateTopic();
       setGeneratedContent(content as AIGeneratedContent);
       setIsDrawerOpen(true);
@@ -209,7 +209,7 @@ export default function TopicDetailPage() {
     (error) => {
       // On error
       setIsGenerating(false);
-      setShouldListenWebSocket(false);
+      shouldListenWebSocketRef.current = false;
       toast({
         title: "Generation failed",
         description: error,
