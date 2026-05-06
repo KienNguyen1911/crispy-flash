@@ -2,11 +2,6 @@
 
 import { useState, useEffect } from 'react';
 
-export const metadata = {
-  title: "PWA Test",
-  description: "Test Progressive Web App installation and features"
-};
-
 export default function PWATest() {
   const [pwaStatus, setPwaStatus] = useState({
     serviceWorker: false,
