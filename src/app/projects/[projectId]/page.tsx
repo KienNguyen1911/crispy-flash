@@ -18,6 +18,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
+
+export const metadata = {
+  title: "Project Details",
+  description: "View and manage project topics and vocabulary",
+};
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";

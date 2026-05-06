@@ -8,6 +8,12 @@ import dynamic from "next/dynamic";
 import { useAuthFetcher } from "@/hooks/useAuthFetcher";
 import { useGenerationWebSocket } from "@/hooks/useGenerationWebSocket";
 import { Card } from "@/components/ui/card";
+
+// Metadata is defined in layout.tsx for this route
+export const metadata = {
+  title: 'Topic Learning',
+  description: 'Learn vocabulary with interactive flashcards.',
+};
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2, BookOpenCheck } from "lucide-react";
 import { columns } from "./columns";

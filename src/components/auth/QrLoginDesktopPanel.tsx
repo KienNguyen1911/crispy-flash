@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useReducer } from "react";
+import Image from "next/image";
 import { io } from "socket.io-client";
 import { Loader2, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -292,9 +293,11 @@ export default function QrLoginDesktopPanel({
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
           ) : qrImageUrl ? (
-            <img
+            <Image
               src={qrImageUrl}
               alt="QR code for Lingofy login"
+              width={400}
+              height={400}
               className="aspect-square w-full rounded-lg object-cover"
             />
           ) : (

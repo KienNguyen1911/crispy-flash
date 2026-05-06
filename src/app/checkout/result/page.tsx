@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense } from 'react';
@@ -8,6 +7,12 @@ import { CheckCircle, Loader2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
+// Metadata is defined in layout.tsx for this route
+export const metadata = {
+  title: 'Payment Result',
+  description: 'View your payment verification result.',
+};
 
 function CheckoutResultContent() {
   const searchParams = useSearchParams();

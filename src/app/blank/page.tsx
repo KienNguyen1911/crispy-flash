@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Blank Page | Lingofy',
+  description: 'Blank page for testing and development.',
+};
+
 export default function BlankPage() {
     return (
         <>

@@ -6,6 +6,12 @@ import { GuideContent } from "./GuideContent";
 import { ResizableNavbar } from "@/components/ui/resizable-navbar";
 import { Footer } from "@/components/landing/Footer";
 
+// Metadata is defined in layout.tsx for this route
+export const metadata = {
+  title: 'Learning Guide',
+  description: 'Learn how to use the Flashcard Learning System effectively.',
+};
+
 function PublicGuidePage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground w-full overflow-x-hidden pt-20">

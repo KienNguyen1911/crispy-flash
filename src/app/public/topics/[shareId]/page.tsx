@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import Image from "next/image";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,6 +9,11 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import PublicTopicActions from "@/components/topics/PublicTopicActions";
+
+export const metadata = {
+  title: 'Public Topic',
+  description: 'View and learn from shared flashcard topics.',
+};
 
 async function getTopic(shareId: string) {
   const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
@@ -102,9 +108,11 @@ export default async function PublicTopicPage(
                     </div>
                     {vocab.image && (
                       <div>
-                        <img
+                        <Image
                           src={vocab.image}
                           alt={vocab.word}
+                          width={400}
+                          height={128}
                           className="w-full h-32 object-cover rounded"
                         />
                       </div>

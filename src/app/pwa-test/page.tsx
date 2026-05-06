@@ -2,6 +2,12 @@
 
 import { useState, useEffect } from 'react';
 
+// Metadata is defined in layout.tsx for this route
+export const metadata = {
+  title: 'PWA Test',
+  description: 'Test Progressive Web App installation and features.',
+};
+
 export default function PWATest() {
   const [pwaStatus, setPwaStatus] = useState({
     serviceWorker: false,

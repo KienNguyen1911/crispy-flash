@@ -1,10 +1,12 @@
-
-'use client';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { XCircle } from 'lucide-react';
 import Link from 'next/link';
+
+export const metadata = {
+  title: 'Payment Cancelled',
+  description: 'Your payment was cancelled. No charges were made.',
+};
 
 export default function CheckoutCancelPage() {
   return (

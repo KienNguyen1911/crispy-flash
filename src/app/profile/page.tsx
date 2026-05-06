@@ -6,6 +6,12 @@ import ApiKeyManagement from "@/components/profile/ApiKeyManagement";
 import ProfileQrScannerCard from "@/components/profile/ProfileQrScannerCard";
 import { useUserLearningStats, useUserInfo } from "@/hooks/use-analytics";
 
+// Metadata is defined in layout.tsx for this route
+export const metadata = {
+  title: 'User Profile',
+  description: 'Manage your profile, activity, and API settings.',
+};
+
 const UserProfilePage = () => {
   // Fetch data at parent level to prevent re-fetching when switching tabs
   const userInfo = useUserInfo();
