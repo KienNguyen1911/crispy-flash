@@ -32,7 +32,7 @@ for file in "${FILES[@]}"; do
   echo "🤖 Running Kiro..."
 
   # STREAM OUTPUT REALTIME
-  kiro-cli chat --no-interactive --trust-all-tools <<EOF
+  kiro-cli chat --trust-all-tools <<EOF
 You are a senior React/Next.js engineer.
 
 Fix issues from this report:

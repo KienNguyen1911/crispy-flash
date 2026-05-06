@@ -114,11 +114,11 @@ export default function MoveTopicDialog({
                     </p>
                   ) : (
                     <>
-                      <label className="space-y-2">
+                      <label htmlFor="project-select" className="space-y-2">
                         <span className="text-sm font-medium">
                           Select a project
                         </span>
-                        <div className="border border-border rounded-md overflow-y-auto max-h-[250px]">
+                        <div id="project-select" className="border border-border rounded-md overflow-y-auto max-h-[250px]">
                           {availableProjects.map((project) => (
                             <button
                               key={project.id}

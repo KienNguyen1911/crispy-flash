@@ -27,7 +27,7 @@ export function Hero() {
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-headline tracking-tight leading-[1.15]">
               Master Vocabulary with <br className="hidden lg:block" />
-              <span className="bg-gradient-to-r from-primary via-teal-400 to-primary/80 bg-clip-text text-transparent pb-1 block mt-1">
+              <span className="text-primary pb-1 block mt-1">
                 Intelligent Flashcards
               </span>
             </h1>

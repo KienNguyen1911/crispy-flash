@@ -205,7 +205,7 @@ export function KanjiDrawer({ word, isOpen, onOpenChange, initialKanji }: KanjiD
                                                         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-card rounded-lg border p-6 shadow-sm">
                                                             {/* Character */}
                                                             <div className="md:col-span-3 lg:col-span-2 flex flex-col items-center justify-center space-y-2 border-b md:border-b-0 md:border-r pb-6 md:pb-0">
-                                                                <span className="text-7xl font-bold bg-gradient-to-br from-primary to-primary/60 bg-clip-text text-transparent pb-2">{k}</span>
+                                                                <span className="text-7xl font-bold text-primary pb-2">{k}</span>
                                                             </div>
 
                                                             {/* Readings & Meanings */}
