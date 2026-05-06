@@ -8,7 +8,7 @@ import { LogIn, LogOut, User } from 'lucide-react';
 export function AuthIcon() {
   const { isAuthenticated, isLoading, login, logout } = useAuth();
 
-  const handleClick = (e: React.MouseEvent) => {
+  const toggleAuth = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (isAuthenticated) {
@@ -28,7 +28,7 @@ export function AuthIcon() {
 
   return (
     <Button
-      onClick={handleClick}
+      onClick={toggleAuth}
       variant="outline"
       className="h-10 w-10 flex items-center justify-center"
     >

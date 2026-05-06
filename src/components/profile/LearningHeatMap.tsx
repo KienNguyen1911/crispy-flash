@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { useUserHeatmapData } from "@/hooks/use-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HeatmapData } from "@/lib/types";
+import { useState, useEffect } from "react";
 
 /**
  * Learning Heatmap Component
@@ -35,14 +36,16 @@ import { HeatmapData } from "@/lib/types";
 const LearningHeatMap: React.FC = () => {
   const { theme } = useTheme();
   const { data, loading, error } = useUserHeatmapData();
+  const [dateRange, setDateRange] = useState({ from: '', to: '' });
 
-  const today = new Date();
-  const currentYear = today.getFullYear();
-
-  // Show from start of current year to today
-  // Use local date to avoid timezone issues
-  const from = `${currentYear}-01-01`;
-  const to = today.toISOString().split('T')[0];
+  useEffect(() => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    setDateRange({
+      from: `${currentYear}-01-01`,
+      to: today.toISOString().split('T')[0],
+    });
+  }, []);
 
   // Dark theme: Use brighter, more visible colors
   // Light theme: Use green gradient
@@ -62,27 +65,43 @@ const LearningHeatMap: React.FC = () => {
     );
   }
 
+  const containerStyle = {
+    height: '280px',
+    overflowX: 'auto' as const,
+    overflowY: 'auto' as const,
+    borderRadius: '8px',
+    background: theme === 'dark' ? '#0f172a' : '#f8f9fa',
+    padding: '16px 0 0',
+    margin: '0px 0',
+    width: '100%',
+  };
+
+  const innerStyle = { minWidth: '1000px', height: '100%' };
+
+  const tooltipStyle = {
+    background: theme === 'dark' ? '#1f2937' : '#ffffff',
+    color: theme === 'dark' ? '#ffffff' : '#000000',
+    padding: '8px 12px',
+    borderRadius: '6px',
+    border: `1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`,
+    fontSize: '12px',
+    fontWeight: '500',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    minWidth: '150px'
+  };
+
   return (
     <div className="w-full overflow-hidden">
       {/* Scrollable container for heatmap */}
       <div 
-        style={{ 
-          height: '280px',
-          overflowX: 'auto',
-          overflowY: 'auto',
-          borderRadius: '8px',
-          background: theme === 'dark' ? '#0f172a' : '#f8f9fa',
-          padding: '16px 0 0',
-          margin: '0px 0',
-          width: '100%',
-        }}
+        style={containerStyle}
         className="scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800"
       >
-        <div style={{ minWidth: '1000px', height: '100%' }}>
+        <div style={innerStyle}>
           <ResponsiveCalendar
             data={data as HeatmapData[]}
-            from={from}
-            to={to}
+            from={dateRange.from}
+            to={dateRange.to}
             emptyColor={theme === 'dark' ? "#1f2937" : "#eeeeee"}
             colors={colors}
             margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
@@ -93,17 +112,7 @@ const LearningHeatMap: React.FC = () => {
             // @ts-ignore
             tooltip={({ day, value }) => (
               <div
-                style={{
-                  background: theme === 'dark' ? '#1f2937' : '#ffffff',
-                  color: theme === 'dark' ? '#ffffff' : '#000000',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  border: `1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`,
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                  minWidth: '150px'
-                }}
+                style={tooltipStyle}
               >
                 {day}: {value}
               </div>

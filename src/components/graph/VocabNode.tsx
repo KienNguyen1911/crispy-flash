@@ -34,8 +34,8 @@ export default function VocabNode({ data, selected }: { data: { vocab: Vocabular
         </div>
       </div>
 
-      <Handle type="source" position={Position.Right} className="!bg-black w-2.5 h-2.5 !rounded-sm" />
-      <Handle type="source" position={Position.Bottom} className="!bg-black w-2.5 h-2.5 !rounded-sm" />
+      <Handle type="source" position={Position.Right} className="!bg-gray-950 w-2.5 h-2.5 !rounded-sm" />
+      <Handle type="source" position={Position.Bottom} className="!bg-gray-950 w-2.5 h-2.5 !rounded-sm" />
     </div>
   );
 }

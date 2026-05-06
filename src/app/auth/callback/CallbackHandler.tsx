@@ -1,24 +1,39 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { Suspense } from 'react';
 
-export default function CallbackHandler() {
+function CallbackContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const { setAuthTokens } = useAuth();
+  const hasProcessed = useRef(false);
 
   useEffect(() => {
+    if (hasProcessed.current) return;
+    
     const token = searchParams.get('token');
     const refreshToken = searchParams.get('refreshToken');
+    
+    hasProcessed.current = true;
+    
     if (token && refreshToken) {
-      setAuthTokens(token, refreshToken); // Lưu vao localStorage qua AuthContext
-      router.replace('/'); // replace để token không còn trong browser history
+      setAuthTokens(token, refreshToken);
+      redirect('/');
     } else {
-      router.replace('/?error=Authentication-failed');
+      redirect('/?error=Authentication-failed');
     }
-  }, [searchParams, router, setAuthTokens]);
+  }, [searchParams, setAuthTokens]);
 
   return <div>Loading...</div>;
+}
+
+export default function CallbackHandler() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <CallbackContent />
+    </Suspense>
+  );
 }

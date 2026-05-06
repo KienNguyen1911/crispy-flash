@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useReducer, useMemo, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { LazyMotion, m } from "framer-motion";
 import { domAnimation } from "framer-motion/m";
@@ -28,6 +28,50 @@ interface LearnModeProps {
   mutateProjectTopics?: () => Promise<any>;
 }
 
+interface LearnState {
+  vocabularies: Vocabulary[];
+  currentIndex: number;
+  isFlipped: boolean;
+  isFlipping: boolean;
+  showWordFirst: boolean;
+  showPronunciation: boolean;
+  swipeDirection: "left" | "right" | null;
+  previousIndex: number | null;
+}
+
+type LearnAction =
+  | { type: "SET_VOCABULARIES"; payload: Vocabulary[] }
+  | { type: "SET_CURRENT_INDEX"; payload: number }
+  | { type: "TOGGLE_FLIP" }
+  | { type: "SET_FLIPPING"; payload: boolean }
+  | { type: "TOGGLE_WORD_FIRST" }
+  | { type: "TOGGLE_PRONUNCIATION" }
+  | { type: "SET_SWIPE"; payload: { direction: "left" | "right" | null; previousIndex: number | null } }
+  | { type: "RESET" };
+
+const learnReducer = (state: LearnState, action: LearnAction): LearnState => {
+  switch (action.type) {
+    case "SET_VOCABULARIES":
+      return { ...state, vocabularies: action.payload };
+    case "SET_CURRENT_INDEX":
+      return { ...state, currentIndex: action.payload };
+    case "TOGGLE_FLIP":
+      return { ...state, isFlipped: !state.isFlipped };
+    case "SET_FLIPPING":
+      return { ...state, isFlipping: action.payload };
+    case "TOGGLE_WORD_FIRST":
+      return { ...state, showWordFirst: !state.showWordFirst };
+    case "TOGGLE_PRONUNCIATION":
+      return { ...state, showPronunciation: !state.showPronunciation };
+    case "SET_SWIPE":
+      return { ...state, swipeDirection: action.payload.direction, previousIndex: action.payload.previousIndex };
+    case "RESET":
+      return { ...state, currentIndex: 0, isFlipped: false, vocabularies: JSON.parse(JSON.stringify(state.vocabularies)) };
+    default:
+      return state;
+  }
+};
+
 const LearnMode = ({
   topicId,
   projectId,
@@ -36,23 +80,22 @@ const LearnMode = ({
   mutateTopic,
   mutateProjectTopics,
 }: LearnModeProps) => {
-  const [vocabularies, setVocabularies] = useState<Vocabulary[]>(() =>
-    JSON.parse(JSON.stringify(initialVocab)),
-  );
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [isFlipping, setIsFlipping] = useState(false);
-  const [sessionCompleted, setSessionCompleted] = useState(false);
-  const [showWordFirst, setShowWordFirst] = useState(true);
-  const [showPronunciation, setShowPronunciation] = useState(true);
-  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(
-    null,
-  );
-  const [previousIndex, setPreviousIndex] = useState<number | null>(null);
+  const [state, dispatch] = useReducer(learnReducer, {
+    vocabularies: JSON.parse(JSON.stringify(initialVocab)),
+    currentIndex: 0,
+    isFlipped: false,
+    isFlipping: false,
+    showWordFirst: true,
+    showPronunciation: true,
+    swipeDirection: null,
+    previousIndex: null,
+  });
+
+  const sessionCompletedRef = useRef(false);
 
   const currentVocab = useMemo(
-    () => vocabularies[currentIndex],
-    [vocabularies, currentIndex],
+    () => state.vocabularies[state.currentIndex],
+    [state.vocabularies, state.currentIndex],
   );
 
   const renderCard = (vocab: Vocabulary) => (
@@ -61,14 +104,14 @@ const LearnMode = ({
         className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
         style={{ backfaceVisibility: "hidden" }}
       >
-        {showWordFirst ? (
+        {state.showWordFirst ? (
           <>
             {vocab.word && (
               <h2 className="text-5xl font-bold mb-2 text-center">
                 {vocab.word}
               </h2>
             )}
-            {vocab.pronunciation && showPronunciation && (
+            {vocab.pronunciation && state.showPronunciation && (
               <p className="text-xl text-muted-foreground">
                 {vocab.pronunciation}
               </p>
@@ -106,7 +149,7 @@ const LearnMode = ({
           transform: "rotateY(180deg)",
         }}
       >
-        {showWordFirst ? (
+        {state.showWordFirst ? (
           <>
             <p className="text-2xl font-semibold text-center">
               {vocab.meaning}
@@ -124,7 +167,7 @@ const LearnMode = ({
                 {vocab.word}
               </h2>
             )}
-            {vocab.pronunciation && showPronunciation && (
+            {vocab.pronunciation && state.showPronunciation && (
               <p className="text-xl text-muted-foreground">
                 {vocab.pronunciation}
               </p>
@@ -168,7 +211,7 @@ const LearnMode = ({
   };
 
   const handleClose = async () => {
-    onClose(vocabularies);
+    onClose(state.vocabularies);
   };
 
   const playAudio = (text: string) => {
@@ -180,91 +223,87 @@ const LearnMode = ({
   };
 
   const handleNext = () => {
-    if (currentIndex < vocabularies.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-      setIsFlipped(false);
+    if (state.currentIndex < state.vocabularies.length - 1) {
+      dispatch({ type: "SET_CURRENT_INDEX", payload: state.currentIndex + 1 });
+      dispatch({ type: "TOGGLE_FLIP" });
     } else {
-      setSessionCompleted(true);
+      sessionCompletedRef.current = true;
       saveProgress(true);
     }
   };
 
   const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1);
-      setIsFlipped(false);
+    if (state.currentIndex > 0) {
+      dispatch({ type: "SET_CURRENT_INDEX", payload: state.currentIndex - 1 });
+      dispatch({ type: "TOGGLE_FLIP" });
     }
   };
 
   const handleRemembered = () => {
-    if (swipeDirection) return;
+    if (state.swipeDirection) return;
 
-    const newVocabs = [...vocabularies];
-    newVocabs[currentIndex].status = "REMEMBERED";
-    setVocabularies(newVocabs);
+    const newVocabs = [...state.vocabularies];
+    newVocabs[state.currentIndex].status = "REMEMBERED";
+    dispatch({ type: "SET_VOCABULARIES", payload: newVocabs });
 
-    setPreviousIndex(currentIndex);
-    setSwipeDirection("right");
-    setIsFlipped(false);
+    dispatch({ type: "SET_SWIPE", payload: { direction: "right", previousIndex: state.currentIndex } });
+    dispatch({ type: "TOGGLE_FLIP" });
 
-    if (currentIndex < vocabularies.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+    if (state.currentIndex < state.vocabularies.length - 1) {
+      dispatch({ type: "SET_CURRENT_INDEX", payload: state.currentIndex + 1 });
       setTimeout(() => {
-        setSwipeDirection(null);
-        setPreviousIndex(null);
+        dispatch({ type: "SET_SWIPE", payload: { direction: null, previousIndex: null } });
       }, 400);
     } else {
       setTimeout(() => {
-        setSessionCompleted(true);
+        sessionCompletedRef.current = true;
         saveProgress(true);
       }, 400);
     }
   };
 
   const handleNotRemembered = () => {
-    if (swipeDirection) return;
+    if (state.swipeDirection) return;
 
-    const newVocabs = [...vocabularies];
-    newVocabs[currentIndex].status = "NOT_REMEMBERED";
-    setVocabularies(newVocabs);
+    const newVocabs = [...state.vocabularies];
+    newVocabs[state.currentIndex].status = "NOT_REMEMBERED";
+    dispatch({ type: "SET_VOCABULARIES", payload: newVocabs });
 
-    setPreviousIndex(currentIndex);
-    setSwipeDirection("left");
-    setIsFlipped(false);
+    dispatch({ type: "SET_SWIPE", payload: { direction: "left", previousIndex: state.currentIndex } });
+    dispatch({ type: "TOGGLE_FLIP" });
 
-    if (currentIndex < vocabularies.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+    if (state.currentIndex < state.vocabularies.length - 1) {
+      dispatch({ type: "SET_CURRENT_INDEX", payload: state.currentIndex + 1 });
       setTimeout(() => {
         setSwipeDirection(null);
         setPreviousIndex(null);
+        dispatch({ type: "SET_SWIPE", payload: { direction: null, previousIndex: null } });
       }, 400);
     } else {
       setTimeout(() => {
-        setSessionCompleted(true);
+        sessionCompletedRef.current = true;
         saveProgress(true);
       }, 400);
     }
   };
 
   const handleRestart = () => {
-    setCurrentIndex(0);
-    setIsFlipped(false);
-    setSessionCompleted(false);
-    setVocabularies(JSON.parse(JSON.stringify(initialVocab)));
+    dispatch({ type: "RESET" });
+    sessionCompletedRef.current = false;
   };
 
   const toggleShowMode = () => {
-    setShowWordFirst(!showWordFirst);
-    setIsFlipped(false);
+    dispatch({ type: "TOGGLE_WORD_FIRST" });
+    dispatch({ type: "TOGGLE_FLIP" });
   };
 
   const togglePronunciation = () => {
-    setShowPronunciation(!showPronunciation);
+    dispatch({ type: "TOGGLE_PRONUNCIATION" });
   };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (sessionCompleted) return;
+      if (sessionCompletedRef.current) return;
 
       if (event.code === "Space") {
         event.preventDefault();
@@ -282,9 +321,9 @@ const LearnMode = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleNext, handlePrev, sessionCompleted]);
+  }, [handleNext, handlePrev]);
 
-  if (sessionCompleted) {
+  if (sessionCompletedRef.current) {
     return (
       <LazyMotion features={domAnimation}>
         <m.div
@@ -394,17 +433,17 @@ const LearnMode = ({
       >
         <div className="flex justify-center mb-4">
           <p className="text-sm md:text-base text-muted-foreground">
-            {currentIndex + 1} / {vocabularies.length}
+            {state.currentIndex + 1} / {state.vocabularies.length}
           </p>
         </div>
 
         <div className="relative aspect-[3/3] w-full">
           {/* Background cards (stack effect) */}
           {[2, 1].map((offset) => {
-            const cardIndex = currentIndex + offset;
-            if (cardIndex >= vocabularies.length) return null;
+            const cardIndex = state.currentIndex + offset;
+            if (cardIndex >= state.vocabularies.length) return null;
 
-            const adjustedOffset = swipeDirection ? offset - 1 : offset;
+            const adjustedOffset = state.swipeDirection ? offset - 1 : offset;
 
             return (
               <m.div
@@ -428,42 +467,42 @@ const LearnMode = ({
           })}
 
           {/* Previous card (swiping out) */}
-          {previousIndex !== null && (
+          {state.previousIndex !== null && (
             <m.div
-              key={`prev-${previousIndex}`}
+              key={`prev-${state.previousIndex}`}
               className="absolute w-full h-full cursor-pointer"
               style={{ transformStyle: "preserve-3d", zIndex: 11 }}
               initial={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
               animate={{
-                x: swipeDirection === "left" ? -1000 : 1000,
+                x: state.swipeDirection === "left" ? -1000 : 1000,
                 y: 100,
-                rotate: swipeDirection === "left" ? -15 : 15,
+                rotate: state.swipeDirection === "left" ? -15 : 15,
                 opacity: 0,
               }}
               transition={{ duration: 0.3 }}
             >
-              {renderCard(vocabularies[previousIndex])}
+              {renderCard(state.vocabularies[state.previousIndex])}
             </m.div>
           )}
 
           {/* Current card */}
           <m.div
-            key={currentIndex}
+            key={state.currentIndex}
             className="absolute w-full h-full cursor-pointer"
             style={{ transformStyle: "preserve-3d", zIndex: 10 }}
             initial={
-              swipeDirection
+              state.swipeDirection
                 ? { scale: 0.97, opacity: 0.7, top: 8 }
                 : { scale: 1, opacity: 1 }
             }
             animate={{
-              rotateY: isFlipped ? 180 : 0,
-              scale: isFlipping ? 1.08 : 1,
+              rotateY: state.isFlipped ? 180 : 0,
+              scale: state.isFlipping ? 1.08 : 1,
               opacity: 1,
               top: 0,
             }}
             transition={{
-              duration: swipeDirection ? 0.3 : 0.4,
+              duration: state.swipeDirection ? 0.3 : 0.4,
               scale: {
                 duration: 0.15,
                 ease: "easeOut",
@@ -474,12 +513,12 @@ const LearnMode = ({
               },
             }}
             onClick={() => {
-              if (swipeDirection) return;
-              setIsFlipping(true);
+              if (state.swipeDirection) return;
+              dispatch({ type: "SET_FLIPPING", payload: true });
               setTimeout(() => {
-                setIsFlipped((f) => !f);
+                dispatch({ type: "TOGGLE_FLIP" });
                 setTimeout(() => {
-                  setIsFlipping(false);
+                  dispatch({ type: "SET_FLIPPING", payload: false });
                 }, 200);
               }, 150);
             }}
@@ -496,17 +535,17 @@ const LearnMode = ({
         >
           <Button
             onClick={toggleShowMode}
-            variant={showWordFirst ? "warning" : "outline"}
+            variant={state.showWordFirst ? "warning" : "outline"}
             size="sm"
           >
-            {showWordFirst ? "Meaning First" : "Word First"}
+            {state.showWordFirst ? "Meaning First" : "Word First"}
           </Button>
           <Button
             onClick={togglePronunciation}
-            variant={showPronunciation ? "warning" : "outline"}
+            variant={state.showPronunciation ? "warning" : "outline"}
             size="sm"
           >
-            {showPronunciation ? "Hide" : "Show"} Pronunciation
+            {state.showPronunciation ? "Hide" : "Show"} Pronunciation
           </Button>
         </m.div>
 

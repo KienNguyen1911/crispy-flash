@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Info } from 'lucide-react';
 
 export function PWADesktopInstall() {
-  const [showManualInstall, setShowManualInstall] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const showManualInstallRef = useRef(false);
 
   useEffect(() => {
     console.log('PWADesktopInstall: Checking desktop conditions...');
@@ -22,7 +22,7 @@ export function PWADesktopInstall() {
       setIsInstalled(true);
     } else if (isDesktop) {
       // Show manual install option for desktop
-      setShowManualInstall(true);
+      showManualInstallRef.current = true;
     }
   }, []);
 
@@ -31,7 +31,7 @@ export function PWADesktopInstall() {
     alert('Để cài đặt Lingofy trên desktop:\n\n1. Chrome/Edge: Nhấn nút ba chấm (⋮) ở góc trên phải → "Cài đặt ứng dụng"\n2. Firefox: Không hỗ trợ cài đặt PWA\n3. Safari Mac: Không hỗ trợ cài đặt PWA\n\nHoặc tìm "Cài đặt Lingofy" trong menu của trình duyệt.');
   };
 
-  if (isInstalled || !showManualInstall) {
+  if (isInstalled || !showManualInstallRef.current) {
     return null;
   }
 
@@ -42,7 +42,7 @@ export function PWADesktopInstall() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setShowManualInstall(false)}
+          onClick={() => { showManualInstallRef.current = false; }}
           className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
         >
           ×

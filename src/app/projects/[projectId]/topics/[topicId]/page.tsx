@@ -8,12 +8,6 @@ import dynamic from "next/dynamic";
 import { useAuthFetcher } from "@/hooks/useAuthFetcher";
 import { useGenerationWebSocket } from "@/hooks/useGenerationWebSocket";
 import { Card } from "@/components/ui/card";
-
-// Metadata is defined in layout.tsx for this route
-export const metadata = {
-  title: 'Topic Learning',
-  description: 'Learn vocabulary with interactive flashcards.',
-};
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2, BookOpenCheck } from "lucide-react";
 import { columns } from "./columns";
@@ -43,6 +37,11 @@ import StoryDisplay from "@/components/StoryDisplay";
 import ShareTopicDialog from "@/components/ShareTopicDialog";
 import { AnimatePresence, motion } from "motion/react";
 import { Share2 } from "lucide-react";
+
+export const metadata = {
+  title: "Topic Details",
+  description: "View and manage vocabulary for your topic"
+};
 
 // Dynamic imports to split heavy client bundles
 const DataTable = dynamic(

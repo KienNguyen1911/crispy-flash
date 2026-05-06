@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import CallbackHandler from './CallbackHandler';
 
 export const metadata = {
@@ -6,14 +5,8 @@ export const metadata = {
   description: 'Processing your authentication...',
 };
 
-function LoadingFallback() {
-  return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-}
+export const dynamic = 'force-dynamic';
 
 export default function AuthCallbackPage() {
-  return (
-    <Suspense fallback={<LoadingFallback />}>
-      <CallbackHandler />
-    </Suspense>
-  );
+  return <CallbackHandler />;
 }

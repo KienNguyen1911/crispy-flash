@@ -4,17 +4,17 @@ import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export function BackButton() {
-  const router = useRouter();
+  const { back } = useRouter();
 
-  const handleClick = (e: React.MouseEvent) => {
+  const goBack = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    router.back();
+    back();
   };
 
   return (
     <button
-      onClick={handleClick}
+      onClick={goBack}
       className="h-full w-full flex items-center justify-center"
     >
       <ArrowLeft className="h-4 w-4" />

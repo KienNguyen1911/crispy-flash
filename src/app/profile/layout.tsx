@@ -1,8 +1,8 @@
-import type { Metadata } from 'next';
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'User Profile',
-  description: 'Manage your profile, activity, and API settings.',
+  title: "Profile | Flashcard",
+  description: "Manage your account and learning statistics",
 };
 
 export default function ProfileLayout({

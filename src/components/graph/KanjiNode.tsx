@@ -28,9 +28,9 @@ export default function KanjiNode({ data, selected }: { data: { vocab: Vocabular
         </span>
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="!bg-black w-3 h-3 !rounded-sm" />
-      <Handle type="source" position={Position.Right} className="!bg-black w-3 h-3 !rounded-sm" />
-      <Handle type="source" position={Position.Left} className="!bg-black w-3 h-3 !rounded-sm" />
+      <Handle type="source" position={Position.Bottom} className="!bg-gray-950 w-3 h-3 !rounded-sm" />
+      <Handle type="source" position={Position.Right} className="!bg-gray-950 w-3 h-3 !rounded-sm" />
+      <Handle type="source" position={Position.Left} className="!bg-gray-950 w-3 h-3 !rounded-sm" />
     </div>
   );
 }

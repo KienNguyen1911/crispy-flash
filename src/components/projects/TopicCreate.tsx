@@ -19,7 +19,7 @@ export default function TopicCreate({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const { addTopic } = useContext(TopicContext);
-  const router = useRouter();
+  const { refresh } = useRouter();
 
   const handleSubmit = async (data: any) => {
     await addTopic(projectId, data);
@@ -27,7 +27,7 @@ export default function TopicCreate({
     setIsOpen(false);
     // refresh server-rendered data so the new topic appears immediately
     try {
-      router.refresh();
+      refresh();
     } catch (e) {
       /* noop */
     }

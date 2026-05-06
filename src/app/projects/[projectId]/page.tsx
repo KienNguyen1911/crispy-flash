@@ -19,16 +19,17 @@ import {
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
 
-export const metadata = {
-  title: "Project Details",
-  description: "View and manage project topics and vocabulary",
-};
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { Project } from "@/lib/types";
 import MoveTopicDialog from "@/components/projects/MoveTopicDialog";
+
+export const metadata = {
+  title: "Project Topics",
+  description: "Manage topics and vocabulary for your learning project"
+};
 
 export default function ProjectPage() {
   const params = useParams();

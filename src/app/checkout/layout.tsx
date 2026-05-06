@@ -1,8 +1,8 @@
-import type { Metadata } from 'next';
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Checkout',
-  description: 'Choose your subscription plan and complete payment.',
+  title: "Checkout | Flashcard",
+  description: "Choose your subscription plan",
 };
 
 export default function CheckoutLayout({

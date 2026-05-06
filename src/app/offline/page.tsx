@@ -1,9 +1,8 @@
 'use client';
 
-// Metadata is defined in layout.tsx for this route
 export const metadata = {
-  title: 'Offline',
-  description: 'You are currently offline. Please check your internet connection.',
+  title: "Offline",
+  description: "You are currently offline. Please check your internet connection."
 };
 
 export default function OfflinePage() {

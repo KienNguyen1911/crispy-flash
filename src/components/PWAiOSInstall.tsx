@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Share2, Download } from 'lucide-react';
 
 export function PWAiOSInstall() {
-  const [showInstallBanner, setShowInstallBanner] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const showInstallBannerRef = useRef(false);
 
   useEffect(() => {
     console.log('PWAiOSInstall: Checking iOS conditions...');
@@ -23,7 +23,7 @@ export function PWAiOSInstall() {
     // Show banner if it's iOS Safari and not installed
     if (isIOS && isSafari && !isStandalone) {
       console.log('PWAiOSInstall: Showing install banner');
-      setShowInstallBanner(true);
+      showInstallBannerRef.current = true;
     }
     
     if (isStandalone) {
@@ -32,10 +32,10 @@ export function PWAiOSInstall() {
   }, []);
 
   const handleClose = () => {
-    setShowInstallBanner(false);
+    showInstallBannerRef.current = false;
   };
 
-  if (isInstalled || !showInstallBanner) {
+  if (isInstalled || !showInstallBannerRef.current) {
     return null;
   }
 

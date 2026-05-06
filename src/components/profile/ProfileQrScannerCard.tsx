@@ -253,7 +253,7 @@ export default function ProfileQrScannerCard() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-md border bg-black">
+          <div className="overflow-hidden rounded-md border bg-gray-950">
             <video
               ref={videoRef}
               className="aspect-[3/4] w-full object-cover"

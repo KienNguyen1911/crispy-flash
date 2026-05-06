@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, X } from "lucide-react";
 import { ProjectForm } from "@/components/projects/ProjectForm";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { LazyMotion, m, AnimatePresence, domAnimation } from "framer-motion";
 
 export default function ProjectCreate({
   onProjectCreated,
@@ -15,7 +15,7 @@ export default function ProjectCreate({
   onSubmit: (data: any) => Promise<boolean>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
+  const { refresh } = useRouter();
 
   const handleSubmit = async (data: any) => {
     const success = await onSubmit(data);
@@ -24,7 +24,7 @@ export default function ProjectCreate({
       setIsOpen(false);
       // refresh server-rendered data so the new project appears immediately
       try {
-        router.refresh();
+        refresh();
       } catch (e) {
         /* noop */
       }
@@ -33,31 +33,32 @@ export default function ProjectCreate({
   };
 
   return (
-    <>
-      <Button onClick={() => setIsOpen(true)}>
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Add Project
-      </Button>
+    <LazyMotion features={domAnimation}>
+      <>
+        <Button onClick={() => setIsOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Project
+        </Button>
 
-      <AnimatePresence mode="wait">
-        {isOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
-              onClick={() => setIsOpen(false)}
-            />
+        <AnimatePresence mode="wait">
+          {isOpen && (
+            <>
+              {/* Backdrop */}
+              <m.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+                onClick={() => setIsOpen(false)}
+              />
 
-            {/* Drawer */}
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{
+              {/* Drawer */}
+              <m.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{
                 type: "spring",
                 damping: 30,
                 stiffness: 300,
@@ -94,10 +95,11 @@ export default function ProjectCreate({
                   />
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>
-    </>
+      </>
+    </LazyMotion>
   );
 }

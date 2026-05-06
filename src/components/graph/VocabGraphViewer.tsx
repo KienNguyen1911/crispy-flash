@@ -225,7 +225,7 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
                             <div className="text-3xl font-black">{k.word}</div>
                             <div className="text-[11px] text-gray-600 uppercase font-bold tracking-wider pt-2">{k.meaning}</div>
                           </div>
-                          <div className="px-2 py-1 mt-2 mr-2 bg-black text-white text-[10px] font-bold rounded-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[90px]">
+                          <div className="px-2 py-1 mt-2 mr-2 bg-gray-950 text-white text-[10px] font-bold rounded-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[90px]">
                             {k.pronunciation || "N/A"}
                           </div>
                         </div>

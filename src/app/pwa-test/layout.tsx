@@ -1,8 +1,8 @@
-import type { Metadata } from 'next';
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'PWA Test',
-  description: 'Test Progressive Web App installation and features.',
+  title: "PWA Test | Flashcard",
+  description: "Test Progressive Web App installation status",
 };
 
 export default function PWATestLayout({

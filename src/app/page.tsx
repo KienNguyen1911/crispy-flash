@@ -7,7 +7,7 @@ import { UserDashboard } from "@/components/dashboard/UserDashboard";
 
 export const metadata = {
   title: "Flashcard Learning System",
-  description: "Create projects, organize topics, and learn vocabulary with interactive flashcards",
+  description: "Learn vocabulary effectively with interactive flashcards"
 };
 
 export default function Page() {

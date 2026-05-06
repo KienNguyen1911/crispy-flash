@@ -12,10 +12,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
-// Metadata is defined in layout.tsx for this route
 export const metadata = {
-  title: 'Checkout',
-  description: 'Choose your subscription plan and complete payment.',
+  title: "Checkout",
+  description: "Choose a subscription plan and complete your purchase"
 };
 
 const plans = [

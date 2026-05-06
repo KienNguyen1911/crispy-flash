@@ -3,7 +3,6 @@ import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 import { AppProviders } from './providers';
 import { Toaster } from '@/components/ui/toaster';
-import { FloatingDockClient } from '@/components/ui/floating-dock-client';
 import { MainContent } from '@/components/ui/main-content';
 import PageLoader from '@/components/ui/PageLoader';
 import { Analytics } from "@vercel/analytics/next"
@@ -11,6 +10,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import { PWAInstall } from '@/components/PWAInstall';
 import { PWAiOSInstall } from '@/components/PWAiOSInstall';
 import { PWADesktopInstall } from '@/components/PWADesktopInstall';
+import { RootLayoutClient } from './root-layout-client';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
@@ -58,11 +58,10 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${outfit.variable} font-body antialiased`}>
         <AppProviders>
-          <div className="relative flex min-h-screen flex-col">
+          <RootLayoutClient>
             <PageLoader />
             <MainContent>{children}</MainContent>
-            <FloatingDockClient />
-          </div>
+          </RootLayoutClient>
           <Toaster />
           <PWAInstall />
           <PWAiOSInstall />

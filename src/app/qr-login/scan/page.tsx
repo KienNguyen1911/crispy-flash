@@ -2,10 +2,9 @@
 
 import ProfileQrScannerCard from "@/components/profile/ProfileQrScannerCard";
 
-// Metadata is defined in layout.tsx for this route
 export const metadata = {
-  title: 'QR Login',
-  description: 'Scan QR code to login to your account.',
+  title: "QR Login",
+  description: "Scan QR code to sign in on another device"
 };
 
 export default function QrLoginScanPage() {

@@ -12,7 +12,7 @@ import { getProjects } from "@/services/projects-api";
 
 export const metadata = {
   title: "Smart Review",
-  description: "Review vocabulary with spaced repetition learning",
+  description: "Review vocabulary using spaced repetition algorithm"
 };
 
 export default function ReviewPage() {

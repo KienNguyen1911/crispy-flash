@@ -1,8 +1,8 @@
-import type { Metadata } from 'next';
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Topic Learning',
-  description: 'Learn vocabulary with interactive flashcards.',
+  title: "Topic Details | Flashcard",
+  description: "View and manage vocabulary in your topic",
 };
 
 export default function TopicLayout({

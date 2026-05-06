@@ -12,7 +12,7 @@ export function Footer() {
   }, []);
 
   return (
-    <footer className="w-full bg-card/50 border-t border-border mt-auto" suppressHydrationWarning>
+    <footer className="w-full bg-card/50 border-t border-border mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           
@@ -40,7 +40,7 @@ export function Footer() {
           
         </div>
         
-        <div className="mt-8 text-center text-sm text-muted-foreground opacity-60">
+        <div className="mt-8 text-center text-sm text-muted-foreground opacity-60" suppressHydrationWarning>
           &copy; {year || new Date().getFullYear()} Lingofy. All rights reserved.
         </div>
       </div>

@@ -1,11 +1,11 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Learning Guide | Flashcard",
-  description: "Learn how to use the flashcard system effectively",
+  title: "Project | Flashcard",
+  description: "Manage your project topics and vocabulary",
 };
 
-export default function GuideLayout({
+export default function ProjectLayout({
   children,
 }: {
   children: React.ReactNode;
