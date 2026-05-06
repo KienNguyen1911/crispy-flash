@@ -212,6 +212,13 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
                         <div
                           key={k.id}
                           onClick={(e) => handleKanjiClick(k.id, e)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              handleKanjiClick(k.id, e);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
                           className="bg-white text-black border-[3px] border-black hover:-translate-y-1 hover:shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all cursor-pointer flex justify-between items-start rounded-sm min-w-[220px] md:min-w-0 flex-shrink-0"
                         >
                           <div className="px-3 py-2 flex flex-col justify-between h-full min-h-[70px]">
@@ -235,6 +242,13 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
                         <div
                           key={group.id}
                           onClick={(e) => handleGroupClick(group.id, e)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              handleGroupClick(group.id, e);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
                           className="bg-[#bfdbfe] text-black border-[3px] border-black hover:-translate-y-1 hover:shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all cursor-pointer rounded-sm min-w-[180px] md:min-w-0 flex-shrink-0 p-3 min-h-[82px] flex items-center justify-center"
                         >
                           <div className="font-black text-[13px] leading-tight break-words whitespace-normal uppercase tracking-wider text-center">

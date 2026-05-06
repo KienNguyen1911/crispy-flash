@@ -23,16 +23,16 @@ export function Footer() {
 
           <div className="flex gap-6 text-sm text-muted-foreground">
             <Link href="/guide" className="hover:text-primary transition-colors">Guide</Link>
-            <a href="#" className="hover:text-primary transition-colors">Privacy</a>
-            <a href="#" className="hover:text-primary transition-colors">Terms</a>
+            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
           </div>
 
           <div className="flex gap-4">
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="https://twitter.com" className="text-muted-foreground hover:text-primary transition-colors">
               <Twitter className="w-5 h-5" />
               <span className="sr-only">Twitter</span>
             </a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="https://github.com" className="text-muted-foreground hover:text-primary transition-colors">
               <Github className="w-5 h-5" />
               <span className="sr-only">GitHub</span>
             </a>

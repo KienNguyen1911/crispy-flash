@@ -115,12 +115,20 @@ export default function ProjectHeaderEditor({ project }: { project: { id: string
           {state.editing ? (
             <input className="text-3xl font-bold font-headline w-full bg-transparent outline-none" value={state.name} onChange={(e) => dispatch({ type: 'SET_NAME', payload: e.target.value })} />
           ) : (
-            <h1 onClick={() => dispatch({ type: 'SET_EDITING', payload: true })} className="text-3xl font-bold font-headline cursor-text">{displayName}</h1>
+            <h1 onClick={() => dispatch({ type: 'SET_EDITING', payload: true })} onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                dispatch({ type: 'SET_EDITING', payload: true });
+              }
+            }} role="button" tabIndex={0} className="text-3xl font-bold font-headline cursor-text">{displayName}</h1>
           )}
           {state.editing ? (
             <textarea className="text-lg text-muted-foreground w-full mt-1 bg-transparent outline-none" value={state.description} onChange={(e) => dispatch({ type: 'SET_DESCRIPTION', payload: e.target.value })} />
           ) : (
-            <p onClick={() => dispatch({ type: 'SET_EDITING', payload: true })} className="text-lg text-muted-foreground mt-1 cursor-text">{displayDescription}</p>
+            <p onClick={() => dispatch({ type: 'SET_EDITING', payload: true })} onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                dispatch({ type: 'SET_EDITING', payload: true });
+              }
+            }} role="button" tabIndex={0} className="text-lg text-muted-foreground mt-1 cursor-text">{displayDescription}</p>
           )}
         </div>
       </div>

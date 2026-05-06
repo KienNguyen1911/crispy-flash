@@ -240,6 +240,13 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
             key={`${word}-${char}-kanji`}
             className="cursor-pointer hover:text-blue-500 hover:scale-110 transition-all inline-block mx-0.5"
             onClick={() => handleKanjiClick(word, char)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleKanjiClick(word, char);
+              }
+            }}
+            role="button"
+            tabIndex={0}
           >
             {char}
           </span>
