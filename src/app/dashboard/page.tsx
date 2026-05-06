@@ -1,10 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, CreditCard, Activity, DollarSign } from "lucide-react"
 import { apiClient } from "@/lib/api";
 import { DatabaseBackupPanel } from "@/components/admin/DatabaseBackupPanel";
+
+const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
 export default function AdminDashboardPage() {
   const [summary, setSummary] = useState({
@@ -43,7 +45,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(summary.totalRevenue)}
+                 {currencyFormatter.format(summary.totalRevenue)}
             </div>
             <p className="text-xs text-muted-foreground">
                Lifetime revenue

@@ -33,10 +33,20 @@ export default function ShareTopicDialog({
   const { toast } = useToast();
   const fetcher = useAuthFetcher();
 
+  const getToken = useCallback(() => localStorage.getItem("jwt_token"), []);
+
   const handleCreateShare = useCallback(async () => {
     startTransition(async () => {
       try {
-        const token = localStorage.getItem("jwt_token");
+        const token = getToken();
+        if (!token) {
+          toast({
+            title: "Error",
+            description: "Authentication token not found",
+            variant: "destructive",
+          });
+          return;
+        }
         const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
         const response = await fetch(`${apiBase}/api/topic-share/${topicId}`, {
           method: "POST",
@@ -66,7 +76,7 @@ export default function ShareTopicDialog({
         });
       }
     });
-  }, [topicId, toast]);
+  }, [topicId, toast, getToken]);
 
   const handleCopyLink = useCallback(() => {
     if (shareUrl) {
@@ -83,7 +93,7 @@ export default function ShareTopicDialog({
   const handleDeleteShare = useCallback(async () => {
     startTransition(async () => {
       try {
-        const token = localStorage.getItem("jwt_token");
+        const token = getToken();
         if (!token) return;
         const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
         const response = await fetch(`${apiBase}/api/topic-share/${topicId}`, {
@@ -113,7 +123,7 @@ export default function ShareTopicDialog({
         });
       }
     });
-  }, [topicId, toast]);
+  }, [topicId, toast, getToken]);
 
   const handleOpenChange = useCallback(
     (open: boolean) => {

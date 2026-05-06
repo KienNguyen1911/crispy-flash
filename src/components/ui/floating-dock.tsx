@@ -10,11 +10,11 @@ import { IconLayoutNavbarCollapse } from "@tabler/icons-react";
 import {
   AnimatePresence,
   MotionValue,
-  motion,
   useMotionValue,
   useSpring,
   useTransform,
-} from "motion/react";
+} from "framer-motion";
+import { LazyMotion, m, domAnimation } from "@/lib/framer-motion";
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";

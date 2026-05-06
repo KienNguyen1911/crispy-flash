@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { LazyMotion, m } from "framer-motion";
+import { domAnimation } from "framer-motion/m";
 import {
   ChevronLeft,
   ChevronRight,
@@ -285,8 +286,9 @@ const LearnMode = ({
 
   if (sessionCompleted) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
+      <LazyMotion features={domAnimation}>
+        <m.div
+          initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
@@ -297,7 +299,7 @@ const LearnMode = ({
           backgroundSize: "20px 20px",
         }}
       >
-        <motion.div
+        <m.div
           initial={{ opacity: 0, scale: 0.8, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{
@@ -306,9 +308,9 @@ const LearnMode = ({
           }}
           className="text-center"
         >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+          <m.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{
               delay: 0.2,
               duration: 0.5,
@@ -319,24 +321,24 @@ const LearnMode = ({
               className="w-16 h-16 mx-auto mb-4"
               style={{ color: "hsl(var(--clr-success-a10))" }}
             />
-          </motion.div>
-          <motion.h2
+          </m.div>
+          <m.h2
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.3 }}
             className="text-2xl font-bold mb-2"
           >
             Session Complete!
-          </motion.h2>
-          <motion.p
+          </m.h2>
+          <m.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.3 }}
             className="text-muted-foreground mb-6"
           >
             You have reviewed all the flashcards.
-          </motion.p>
-          <motion.div
+          </m.p>
+          <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.3 }}
@@ -347,15 +349,17 @@ const LearnMode = ({
               Restart
             </Button>
             <Button onClick={handleClose}>Close</Button>
-          </motion.div>
-        </motion.div>
-      </motion.div>
+          </m.div>
+        </m.div>
+        </m.div>
+      </LazyMotion>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
+    <LazyMotion features={domAnimation}>
+      <m.div
+        initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
@@ -366,7 +370,7 @@ const LearnMode = ({
         backgroundSize: "20px 20px",
       }}
     >
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1, duration: 0.2 }}
@@ -379,9 +383,9 @@ const LearnMode = ({
         >
           <X className="h-6 w-6" />
         </Button>
-      </motion.div>
+      </m.div>
 
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
@@ -403,7 +407,7 @@ const LearnMode = ({
             const adjustedOffset = swipeDirection ? offset - 1 : offset;
 
             return (
-              <motion.div
+              <m.div
                 key={cardIndex}
                 className="absolute w-full h-full bg-card border border-border rounded-lg"
                 animate={{
@@ -425,7 +429,7 @@ const LearnMode = ({
 
           {/* Previous card (swiping out) */}
           {previousIndex !== null && (
-            <motion.div
+            <m.div
               key={`prev-${previousIndex}`}
               className="absolute w-full h-full cursor-pointer"
               style={{ transformStyle: "preserve-3d", zIndex: 11 }}
@@ -439,11 +443,11 @@ const LearnMode = ({
               transition={{ duration: 0.3 }}
             >
               {renderCard(vocabularies[previousIndex])}
-            </motion.div>
+            </m.div>
           )}
 
           {/* Current card */}
-          <motion.div
+          <m.div
             key={currentIndex}
             className="absolute w-full h-full cursor-pointer"
             style={{ transformStyle: "preserve-3d", zIndex: 10 }}
@@ -481,10 +485,10 @@ const LearnMode = ({
             }}
           >
             {renderCard(currentVocab)}
-          </motion.div>
+          </m.div>
         </div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.3 }}
@@ -504,9 +508,9 @@ const LearnMode = ({
           >
             {showPronunciation ? "Hide" : "Show"} Pronunciation
           </Button>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.3 }}
@@ -537,16 +541,17 @@ const LearnMode = ({
           >
             <Check style={{ width: "2rem", height: "2rem" }} />
           </Button>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.3 }}
           className="mt-4 flex justify-center"
-        ></motion.div>
-      </motion.div>
-    </motion.div>
+        ></m.div>
+      </m.div>
+    </m.div>
+    </LazyMotion>
   );
 };
 

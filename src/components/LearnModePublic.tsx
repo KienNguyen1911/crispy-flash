@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { LazyMotion, m } from "framer-motion";
+import { domAnimation } from "framer-motion/m";
 import {
   ChevronLeft,
   ChevronRight,
@@ -298,8 +299,8 @@ const LearnModePublic = ({
           className="text-center"
         >
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{
               delay: 0.2,
               duration: 0.5,

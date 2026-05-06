@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useState, useReducer } from "react";
+import dynamic from "next/dynamic";
 import { DateRange } from "react-day-picker";
 import { addDays, startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 import { Loader2 } from "lucide-react";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { useAuth } from "@/context/AuthContext";
 import { apiClient } from "@/lib/api";
+
+const RevenueChart = dynamic(() => import('@/components/analytics/RevenueChart'), { ssr: false });
 
 interface RevenueStats {
   date: string;
@@ -40,6 +42,8 @@ const revenueReducer = (state: RevenueState, action: RevenueAction): RevenueStat
       return state;
   }
 };
+
+const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
 export default function RevenuePage() {
   const { user } = useAuth();
@@ -114,7 +118,7 @@ export default function RevenuePage() {
           <CardContent>
             <div className="text-2xl font-bold">
                 {revenueState.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 
-                new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(revenueState.totalRevenue)}
+                currencyFormatter.format(revenueState.totalRevenue)}
             </div>
             <p className="text-xs text-muted-foreground">
               {dateRange?.from && dateRange?.to ? 
@@ -142,7 +146,7 @@ export default function RevenuePage() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {revenueState.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 
-                new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stat.amount)}
+                currencyFormatter.format(stat.amount)}
               </div>
               <p className="text-xs text-muted-foreground">
                 Revenue from {stat.provider}
@@ -164,49 +168,7 @@ export default function RevenuePage() {
                 </div>
             ) : (
               <div suppressHydrationWarning>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={revenueState.stats}>
-                  <XAxis
-                    dataKey="date"
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => {
-                        // If grouping by month (YYYY-MM), format as MMM YYYY
-                        // If day (YYYY-MM-DD), format as d/M
-                        if (value.length === 7) return value; 
-                        return new Date(value).toLocaleDateString("en-US", { day: 'numeric', month: 'numeric'});
-                    }}
-                  />
-                  <YAxis
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `${value / 1000}k`}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                        backgroundColor: "hsl(var(--popover))",
-                        borderColor: "hsl(var(--border))",
-                        color: "hsl(var(--popover-foreground))",
-                        borderRadius: "var(--radius)",
-                    }}
-                    itemStyle={{ color: "hsl(var(--popover-foreground))" }}
-                    labelStyle={{ color: "hsl(var(--muted-foreground))" }}
-                    cursor={{ fill: "hsl(var(--muted)/0.2)" }}
-                    formatter={(value: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)}
-                    labelFormatter={(label) => label}
-                  />
-                  <Bar
-                    dataKey="amount"
-                    fill="currentColor"
-                    radius={[4, 4, 0, 0]}
-                    className="fill-primary"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+                <RevenueChart data={revenueState.stats} currencyFormatter={currencyFormatter} />
               </div>
             )}
         </CardContent>

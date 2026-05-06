@@ -7,7 +7,8 @@ import {
   useEffect,
   ReactNode,
   useCallback,
-  useReducer
+  useReducer,
+  useRef
 } from "react";
 import { jwtDecode } from "jwt-decode";
 import AuthDialog from "@/components/auth/AuthDialog";
@@ -69,17 +70,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthDialogOpen: false
   });
 
-  const logout = useCallback(async () => {
+  // Cache refresh token to avoid multiple localStorage reads
+  const refreshTokenRef = useRef<string | null>(null);
+
+  const logout = useCallback(async (refreshToken?: string) => {
     try {
-      const refreshToken = localStorage.getItem("refresh_token");
-      if (refreshToken) {
+      const token = refreshToken || refreshTokenRef.current;
+      if (token) {
         // Revoke refresh token trên BE (xóa khỏi Redis)
         await fetch(`${process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001"}/api/auth/logout`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ refreshToken }),
+          body: JSON.stringify({ refreshToken: token }),
         });
       }
     } catch {
@@ -87,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       localStorage.removeItem("jwt_token");
       localStorage.removeItem("refresh_token");
+      refreshTokenRef.current = null;
       dispatch({ type: 'CLEAR_AUTH' });
       window.location.href = "/";
     }
@@ -106,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Lưu vào localStorage theo yêu cầu của user
         localStorage.setItem("jwt_token", accessToken);
         localStorage.setItem("refresh_token", refreshToken);
+        refreshTokenRef.current = refreshToken;
 
         dispatch({ 
           type: 'SET_USER_AND_TOKEN', 
@@ -132,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       const storedAccessToken = localStorage.getItem("jwt_token");
       const storedRefreshToken = localStorage.getItem("refresh_token");
+      refreshTokenRef.current = storedRefreshToken;
 
       if (storedAccessToken && storedRefreshToken) {
         try {
@@ -154,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } else {
               // Refresh token khong hop le (bi xoa trong Redis hoac maxAge het)
               console.log("Refresh token is invalid or expired in server. Logging out.");
-              logout();
+              logout(storedRefreshToken);
             }
           } else {
             // Còn hạn, set normal
@@ -162,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } catch (error) {
           console.error("Token verification error:", error);
-          logout();
+          logout(storedRefreshToken);
         }
       }
       dispatch({ type: 'SET_LOADING', payload: false });

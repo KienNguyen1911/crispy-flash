@@ -5,7 +5,8 @@ import type { Project } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { X, Check } from "lucide-react";
 import { TopicContext } from "@/context/TopicContext";
-import { AnimatePresence, motion } from "framer-motion";
+import { LazyMotion, m, AnimatePresence } from "framer-motion";
+import { domAnimation } from "framer-motion/m";
 
 export default function MoveTopicDialog({
   topicId,
@@ -51,36 +52,37 @@ export default function MoveTopicDialog({
   };
 
   return (
-    <AnimatePresence mode="wait">
-      {open && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
-            onClick={() => {
-              setOpen(false);
-              setSelectedProjectId("");
-              setSelectedProjectName("");
-              onOpenChange?.(false);
-            }}
-          />
+    <LazyMotion features={domAnimation}>
+      <AnimatePresence mode="wait">
+        {open && (
+          <>
+            {/* Backdrop */}
+            <m.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+              onClick={() => {
+                setOpen(false);
+                setSelectedProjectId("");
+                setSelectedProjectName("");
+                onOpenChange?.(false);
+              }}
+            />
 
-          {/* Drawer */}
-          <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{
-              type: "spring",
-              damping: 30,
-              stiffness: 300,
-            }}
-            className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-2xl"
-          >
+            {/* Drawer */}
+            <m.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{
+                type: "spring",
+                damping: 30,
+                stiffness: 300,
+              }}
+              className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-2xl"
+            >
             <div className="rounded-t-2xl border border-border bg-card shadow-lg">
               {/* Header */}
               <div className="flex items-center justify-between border-b border-border p-6">
@@ -166,9 +168,10 @@ export default function MoveTopicDialog({
                 </div>
               </div>
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            </m.div>
+          </>
+        )}
+      </AnimatePresence>
+    </LazyMotion>
   );
 }

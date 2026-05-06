@@ -7,7 +7,8 @@ import { TopicForm } from "@/components/topics/TopicForm";
 import { useContext } from "react";
 import { TopicContext } from "@/context/TopicContext";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { LazyMotion, m, AnimatePresence } from "framer-motion";
+import { domAnimation } from "framer-motion/m";
 
 export default function TopicCreate({
   projectId,
@@ -33,7 +34,7 @@ export default function TopicCreate({
   };
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
       <Button onClick={() => setIsOpen(true)}>
         <PlusCircle className="mr-2 h-4 w-4" />
         New Topic
@@ -43,7 +44,7 @@ export default function TopicCreate({
         {isOpen && (
           <>
             {/* Backdrop */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -53,7 +54,7 @@ export default function TopicCreate({
             />
 
             {/* Drawer */}
-            <motion.div
+            <m.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
@@ -94,10 +95,10 @@ export default function TopicCreate({
                   />
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>
-    </>
+    </LazyMotion>
   );
 }

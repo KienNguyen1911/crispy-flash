@@ -2,15 +2,17 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import { useAuthFetcher } from '@/hooks/useAuthFetcher';
 import { getProjectProgress, getUserLearningStats } from '@/services/analytics-api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import PageLoader from '@/components/ui/PageLoader';
+
+const AnalyticsChart = dynamic(() => import('@/components/analytics/AnalyticsChart'), { ssr: false });
 
 const AnalyticsPage = () => {
   const params = useParams();
@@ -103,16 +105,7 @@ const AnalyticsPage = () => {
           </CardHeader>
           <CardContent>
             {dailyReviewCounts && dailyReviewCounts.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={dailyReviewCounts}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="count" fill="#8884d8" name="Reviews" />
-                </BarChart>
-              </ResponsiveContainer>
+              <AnalyticsChart data={dailyReviewCounts} />
             ) : (
               <div className="flex h-[300px] items-center justify-center text-center text-muted-foreground">
                 <p>

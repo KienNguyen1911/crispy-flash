@@ -40,6 +40,8 @@ const plans = [
   },
 ];
 
+const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+
 export default function CheckoutPage() {
   const { token, isAuthenticated } = useAuth();
   const router = useRouter();
@@ -125,7 +127,7 @@ export default function CheckoutPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold mb-4">
-                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(plan.price)}
+                {currencyFormatter.format(plan.price)}
                 {plan.id !== 'lifetime' && <span className="text-sm font-normal text-muted-foreground">/{plan.id.includes('monthly') ? 'mo' : 'yr'}</span>}
               </div>
               <ul className="space-y-2">
@@ -182,7 +184,7 @@ export default function CheckoutPage() {
         </CardContent>
         <CardFooter>
             <Button className="w-full" size="lg" onClick={handleCheckout} disabled={loading}>
-                {loading ? 'Processing...' : `Pay ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedPlan.price)}`}
+                {loading ? 'Processing...' : `Pay ${currencyFormatter.format(selectedPlan.price)}`}
             </Button>
         </CardFooter>
       </Card>

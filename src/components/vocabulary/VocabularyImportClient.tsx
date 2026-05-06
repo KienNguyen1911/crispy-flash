@@ -89,10 +89,11 @@ export default function VocabularyImportClient() {
    * - Markdown table (format 3)
    */
   const parseInputToRows = (raw: string): ParsedRow[] => {
-    const lines = raw
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
+    const lines = raw.split("\n").reduce<string[]>((acc, l) => {
+      const trimmed = l.trim();
+      if (trimmed.length > 0) acc.push(trimmed);
+      return acc;
+    }, []);
 
     // Detect markdown table (lines starting and ending with | or containing | separators)
     const isMarkdownTable = lines.every(
@@ -105,10 +106,13 @@ export default function VocabularyImportClient() {
       );
       return filtered.reduce<ParsedRow[]>((acc, line) => {
         const parts = line.split("|");
-        const cells = parts
-          .map((c) => c.trim())
-          .filter((c, i) => c !== "" || (i !== 0 && i !== parts.length - 1))
-          .filter((cell) => cell !== "");
+        const cells = parts.reduce<string[]>((cellAcc, c, i) => {
+          const trimmed = c.trim();
+          if (trimmed !== "" && !(i === 0 || i === parts.length - 1)) {
+            cellAcc.push(trimmed);
+          }
+          return cellAcc;
+        }, []);
         acc.push(cells);
         return acc;
       }, []);
@@ -116,24 +120,34 @@ export default function VocabularyImportClient() {
 
     // Otherwise, try splitting by tab first, then slashes, then multiple spaces
     const rows: ParsedRow[] = [];
+    const tabRegex = /\t/;
+    const pipeRegex = /\|/;
+    const slashRegex = /\//;
+    
     for (const line of lines) {
+      const hasTab = tabRegex.test(line);
+      const hasPipe = pipeRegex.test(line);
+      const hasSlash = slashRegex.test(line);
+
       // If line contains tabs, split by tab
-      if (line.includes("\t")) {
+      if (hasTab) {
         rows.push(
-          line
-            .split("\t")
-            .map((s) => s.trim())
-            .filter((s) => s !== "")
+          line.split("\t").reduce<string[]>((acc, s) => {
+            const trimmed = s.trim();
+            if (trimmed !== "") acc.push(trimmed);
+            return acc;
+          }, [])
         );
         continue;
       }
 
       // If line contains pipe-separated but not starting with | (some authors omit outer pipes)
-      if (line.includes("|")) {
-        const cells = line
-          .split("|")
-          .map((s) => s.trim())
-          .filter((s) => s !== "");
+      if (hasPipe) {
+        const cells = line.split("|").reduce<string[]>((acc, s) => {
+          const trimmed = s.trim();
+          if (trimmed !== "") acc.push(trimmed);
+          return acc;
+        }, []);
         if (cells.length > 1) {
           rows.push(cells);
           continue;
@@ -141,18 +155,20 @@ export default function VocabularyImportClient() {
       }
 
       // If line contains slash separators like 'にち / ひ' or uses tabs and slashes, split on slash or multiple spaces
-      if (line.includes("/")) {
-        const parts = line
-          .split("/")
-          .map((s) => s.trim())
-          .filter((s) => s !== "");
+      if (hasSlash) {
+        const parts = line.split("/").reduce<string[]>((acc, s) => {
+          const trimmed = s.trim();
+          if (trimmed !== "") acc.push(trimmed);
+          return acc;
+        }, []);
         // Also split the first segment by tab or spaces to separate word and pronunciation if needed
         if (parts.length >= 2) {
           // Try breaking first part by whitespace to get word and pronunciation when line like "夕\tゆう / せき\tBuổi chiều"
-          const preParts = parts[0]
-            .split(/\s+/)
-            .map((s) => s.trim())
-            .filter((s) => s !== "");
+          const preParts = parts[0].split(/\s+/).reduce<string[]>((acc, s) => {
+            const trimmed = s.trim();
+            if (trimmed !== "") acc.push(trimmed);
+            return acc;
+          }, []);
           if (preParts.length > 1) {
             rows.push([
               preParts[0],
@@ -167,19 +183,21 @@ export default function VocabularyImportClient() {
       }
 
       // Fallback: split by two-or-more spaces or single tab or single space
-      const byTwoSpaces = line
-        .split(/\s{2,}/)
-        .map((s) => s.trim())
-        .filter((s) => s !== "");
+      const byTwoSpaces = line.split(/\s{2,}/).reduce<string[]>((acc, s) => {
+        const trimmed = s.trim();
+        if (trimmed !== "") acc.push(trimmed);
+        return acc;
+      }, []);
       if (byTwoSpaces.length > 1) {
         rows.push(byTwoSpaces);
         continue;
       }
 
-      const bySpace = line
-        .split(/\s+/)
-        .map((s) => s.trim())
-        .filter((s) => s !== "");
+      const bySpace = line.split(/\s+/).reduce<string[]>((acc, s) => {
+        const trimmed = s.trim();
+        if (trimmed !== "") acc.push(trimmed);
+        return acc;
+      }, []);
       rows.push(bySpace);
     }
 
@@ -195,18 +213,17 @@ export default function VocabularyImportClient() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    const wordIndex = Object.keys(columnMapping).find(
-      (key) => columnMapping[Number(key)] === "word"
-    );
-    const pronunciationIndex = Object.keys(columnMapping).find(
-      (key) => columnMapping[Number(key)] === "pronunciation"
-    );
-    const meaningIndex = Object.keys(columnMapping).find(
-      (key) => columnMapping[Number(key)] === "meaning"
-    );
-    const partOfSpeechIndex = Object.keys(columnMapping).find(
-      (key) => columnMapping[Number(key)] === "part_of_speech"
-    );
+    
+    // Build index map in single pass
+    const indexMap = Object.entries(columnMapping).reduce<Record<string, string | undefined>>((acc, [key, val]) => {
+      acc[val] = key;
+      return acc;
+    }, {});
+    
+    const wordIndex = indexMap["word"];
+    const pronunciationIndex = indexMap["pronunciation"];
+    const meaningIndex = indexMap["meaning"];
+    const partOfSpeechIndex = indexMap["part_of_speech"];
 
     if (
       wordIndex === undefined ||
