@@ -75,28 +75,30 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
         title: nextTitle,
         description: nextDescription
       });
-      await mutate(
-        `/api/topics/${topic.id}`,
-        (currentTopic?: {
-          id: string;
-          title: string;
-          description?: string;
-          vocabulary?: unknown[];
-        }) => {
-          if (!currentTopic) {
-            return updatedTopic;
-          }
+      await Promise.all([
+        mutate(
+          `/api/topics/${topic.id}`,
+          (currentTopic?: {
+            id: string;
+            title: string;
+            description?: string;
+            vocabulary?: unknown[];
+          }) => {
+            if (!currentTopic) {
+              return updatedTopic;
+            }
 
-          return {
-            ...currentTopic,
-            ...updatedTopic,
-            vocabulary: currentTopic.vocabulary ?? []
-          };
-        },
-        false
-      );
-      await mutate(`/api/topics/${topic.id}`);
-      await mutate(`/api/projects/${projectId}/topics`);
+            return {
+              ...currentTopic,
+              ...updatedTopic,
+              vocabulary: currentTopic.vocabulary ?? []
+            };
+          },
+          false
+        ),
+        mutate(`/api/topics/${topic.id}`),
+        mutate(`/api/projects/${projectId}/topics`)
+      ]);
       toast.success('Topic updated successfully!');
       dispatch({ type: 'SET_EDITING', payload: false });
     } catch (error) {

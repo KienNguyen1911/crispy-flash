@@ -91,8 +91,10 @@ export function TopicProvider({ children }: { children: ReactNode }) {
       await updateTopicApi(topicId, topicData);
 
       // Invalidate the project cache to refresh topics
-      await mutate(`/api/projects/${projectId}/topics`);
-      await mutate(`/api/topics/${topicId}`);
+      await Promise.all([
+        mutate(`/api/projects/${projectId}/topics`),
+        mutate(`/api/topics/${topicId}`)
+      ]);
 
       toast({ title: "Topic Updated", duration: TOAST_DURATION });
     } catch (err) {
@@ -130,8 +132,10 @@ export function TopicProvider({ children }: { children: ReactNode }) {
       await moveTopicApi(topicId, targetProjectId);
 
       // Invalidate both old and new project caches
-      await mutate(`/api/projects/${targetProjectId}/topics`);
-      await reloadProjects();
+      await Promise.all([
+        mutate(`/api/projects/${targetProjectId}/topics`),
+        reloadProjects()
+      ]);
 
       toast({ title: "Topic Moved", duration: TOAST_DURATION });
     } catch (err) {
