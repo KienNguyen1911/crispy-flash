@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { redirect } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Suspense } from 'react';
 
 function CallbackContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { setAuthTokens } = useAuth();
   const hasProcessed = useRef(false);
 
@@ -21,11 +21,11 @@ function CallbackContent() {
     
     if (token && refreshToken) {
       setAuthTokens(token, refreshToken);
-      redirect('/');
+      router.push('/');
     } else {
-      redirect('/?error=Authentication-failed');
+      router.push('/?error=Authentication-failed');
     }
-  }, [searchParams, setAuthTokens]);
+  }, [searchParams, setAuthTokens, router]);
 
   return <div>Loading...</div>;
 }

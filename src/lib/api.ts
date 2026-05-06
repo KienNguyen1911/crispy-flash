@@ -7,6 +7,13 @@ export function apiUrl(path: string): string {
   return `${API_BASE}${path}`;
 }
 
+// Dispatch logout event for AuthContext to handle
+const dispatchLogoutEvent = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('auth:logout'));
+  }
+};
+
 // Flag và queue để tránh nhiều refresh request chạy đồng thời và xử lý race conditions
 let isRefreshing = false;
 let failedQueue: { resolve: (value: any) => void; reject: (reason?: any) => void; options: RequestInit & { url?: string } }[] = [];
@@ -108,7 +115,7 @@ export async function apiClient<T = any>(
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('refresh_token');
     processQueue(new Error('Session expired'), null);
-    window.location.href = '/';
+    dispatchLogoutEvent();
     throw new Error('Session expired. Please log in again.');
   }
 

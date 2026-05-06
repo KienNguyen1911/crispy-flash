@@ -10,6 +10,7 @@ import {
   useReducer,
   useRef
 } from "react";
+import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import AuthDialog from "@/components/auth/AuthDialog";
 
@@ -72,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Cache refresh token to avoid multiple localStorage reads
   const refreshTokenRef = useRef<string | null>(null);
+  const router = useRouter();
 
   const logout = useCallback(async (refreshToken?: string) => {
     try {
@@ -93,9 +95,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("refresh_token");
       refreshTokenRef.current = null;
       dispatch({ type: 'CLEAR_AUTH' });
-      window.location.href = "/";
+      router.push("/");
     }
-  }, []);
+  }, [router]);
 
   const setAuthTokens = useCallback(
     (accessToken: string, refreshToken: string) => {
@@ -176,6 +178,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     initializeAuth();
+
+    // Listen for logout events from API client
+    const handleLogout = () => logout();
+    window.addEventListener('auth:logout', handleLogout);
+    return () => window.removeEventListener('auth:logout', handleLogout);
   }, [setAuthTokens, logout]);
 
   const loginWithGoogle = useCallback(() => {

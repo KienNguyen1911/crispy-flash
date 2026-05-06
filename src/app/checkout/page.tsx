@@ -12,11 +12,6 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
-export const metadata = {
-  title: "Checkout",
-  description: "Choose a subscription plan and complete your purchase"
-};
-
 const plans = [
   {
     id: 'pro-monthly',
@@ -54,12 +49,13 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('MOMO');
   const [loading, setLoading] = useState(false);
 
+  // Redirect unauthenticated users server-side
+  if (!isAuthenticated || !token) {
+    router.push('/login');
+    return null;
+  }
+
   const handleCheckout = async () => {
-    if (!isAuthenticated || !token) {
-      toast.error('Please login to continue');
-      router.push('/login');
-      return;
-    }
 
     setLoading(true);
     try {
