@@ -84,6 +84,7 @@ export default function ShareTopicDialog({
     startTransition(async () => {
       try {
         const token = localStorage.getItem("jwt_token");
+        if (!token) return;
         const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
         const response = await fetch(`${apiBase}/api/topic-share/${topicId}`, {
           method: "DELETE",
