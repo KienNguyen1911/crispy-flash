@@ -139,8 +139,8 @@ export default function ShareTopicDialog({
         <div className="space-y-4">
           {shareUrl ? (
             <>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Share Link</label>
+              <label className="space-y-2">
+                <span className="text-sm font-medium">Share Link</span>
                 <div className="flex gap-2">
                   <Input
                     value={shareUrl}
@@ -160,7 +160,7 @@ export default function ShareTopicDialog({
                     )}
                   </Button>
                 </div>
-              </div>
+              </label>
 
               <div className="bg-blue-50 p-3 rounded text-sm text-blue-700">
                 ✓ This topic is now public and can be shared

@@ -114,10 +114,10 @@ export default function MoveTopicDialog({
                     </p>
                   ) : (
                     <>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">
+                      <label className="space-y-2">
+                        <span className="text-sm font-medium">
                           Select a project
-                        </label>
+                        </span>
                         <div className="border border-border rounded-md overflow-y-auto max-h-[250px]">
                           {availableProjects.map((project) => (
                             <button
@@ -139,7 +139,7 @@ export default function MoveTopicDialog({
                             </button>
                           ))}
                         </div>
-                      </div>
+                      </label>
 
                       <div className="flex justify-end gap-2">
                         <Button
