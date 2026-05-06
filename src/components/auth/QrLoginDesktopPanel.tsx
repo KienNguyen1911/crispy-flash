@@ -119,6 +119,23 @@ export default function QrLoginDesktopPanel({
     }
   }, [buildRequesterDevice]);
 
+  const pollSessionStatus = useCallback(async (session: QrLoginSessionResponse) => {
+    try {
+      const response = await fetch(
+        `${API_BASE}/api/auth/qr-login/sessions/${session.sessionId}/status?sessionToken=${encodeURIComponent(session.sessionToken)}`,
+      );
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = (await response.json()) as QrLoginSessionView;
+      dispatch({ type: 'SET_STATUS', payload: data.status });
+    } catch {
+      // ignore polling errors and keep waiting for websocket
+    }
+  }, []);
+
   const exchangeSession = useCallback(async () => {
     if (!state.session || hasExchangedRef.current) {
       return;
@@ -230,25 +247,12 @@ export default function QrLoginDesktopPanel({
       return;
     }
 
-    const timer = window.setInterval(async () => {
-      try {
-        const response = await fetch(
-          `${API_BASE}/api/auth/qr-login/sessions/${state.session!.sessionId}/status?sessionToken=${encodeURIComponent(state.session!.sessionToken)}`,
-        );
-
-        if (!response.ok) {
-          return;
-        }
-
-        const data = (await response.json()) as QrLoginSessionView;
-        dispatch({ type: 'SET_STATUS', payload: data.status });
-      } catch {
-        // ignore polling errors and keep waiting for websocket
-      }
+    const timer = window.setInterval(() => {
+      pollSessionStatus(state.session!);
     }, 3000);
 
     return () => window.clearInterval(timer);
-  }, [state.session, state.status]);
+  }, [state.session, state.status, pollSessionStatus]);
 
   useEffect(() => {
     if (state.status === "APPROVED") {

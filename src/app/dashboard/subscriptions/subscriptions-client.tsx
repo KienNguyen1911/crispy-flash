@@ -76,7 +76,7 @@ interface SubscriptionsPageProps {
 export default function AdminSubscriptionsPage({ initialOrders }: SubscriptionsPageProps) {
   const { token } = useAuth();
   const [page, setPage] = useState(1);
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [grantState, dispatch] = useReducer(grantReducer, {
     plan: 'PRO_MONTHLY',
@@ -165,13 +165,13 @@ export default function AdminSubscriptionsPage({ initialOrders }: SubscriptionsP
                         <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                     </TableCell>
                 </TableRow>
-            ) : orders.length === 0 ? (
+            ) : (orders.length > 0 ? orders : initialOrders).length === 0 ? (
                 <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                         No orders found.
                     </TableCell>
                 </TableRow>
-            ) : orders.map((order) => (
+            ) : (orders.length > 0 ? orders : initialOrders).map((order) => (
               <TableRow key={order.id} suppressHydrationWarning>
                 <TableCell className="font-medium">{order.id.slice(0, 8)}...</TableCell>
                 <TableCell>
@@ -219,7 +219,7 @@ export default function AdminSubscriptionsPage({ initialOrders }: SubscriptionsP
 
       <div className="flex justify-end gap-2 mt-4">
         <Button variant="outline" onClick={() => loadPage(Math.max(1, page - 1))} disabled={page === 1}>Previous</Button>
-        <Button variant="outline" onClick={() => loadPage(page + 1)} disabled={orders.length < 10}>Next</Button>
+        <Button variant="outline" onClick={() => loadPage(page + 1)} disabled={(orders.length > 0 ? orders : initialOrders).length < 10}>Next</Button>
       </div>
 
       <Dialog open={grantState.open} onOpenChange={(open) => dispatch({ type: 'SET_OPEN', payload: open })}>

@@ -39,11 +39,12 @@ const plans = [
 ];
 
 const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+const DEFAULT_PLAN = plans[1];
 
 export default function CheckoutClient() {
   const { token, isAuthenticated } = useAuth();
   const { push } = useRouter();
-  const [selectedPlan, setSelectedPlan] = useState(plans[1]);
+  const [selectedPlan, setSelectedPlan] = useState(DEFAULT_PLAN);
   const [paymentMethod, setPaymentMethod] = useState('MOMO');
   const [loading, setLoading] = useState(false);
 

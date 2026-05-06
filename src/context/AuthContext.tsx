@@ -136,54 +136,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [logout]
   );
 
-  useEffect(() => {
-    const initializeAuth = async () => {
-      const storedAccessToken = localStorage.getItem("jwt_token");
-      const storedRefreshToken = localStorage.getItem("refresh_token");
-      refreshTokenRef.current = storedRefreshToken;
+  const initializeAuth = useCallback(async () => {
+    const storedAccessToken = localStorage.getItem("jwt_token");
+    const storedRefreshToken = localStorage.getItem("refresh_token");
+    refreshTokenRef.current = storedRefreshToken;
 
-      if (storedAccessToken && storedRefreshToken) {
-        try {
-          const decoded = jwtDecode<{ exp: number; sub: string }>(storedAccessToken);
+    if (storedAccessToken && storedRefreshToken) {
+      try {
+        const decoded = jwtDecode<{ exp: number; sub: string }>(storedAccessToken);
 
-          if (decoded.exp * 1000 < Date.now()) {
-            // Access token expired, try refresh
-            const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
-            const res = await fetch(`${apiBase}/api/auth/refresh`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ refreshToken: storedRefreshToken })
-            });
+        if (decoded.exp * 1000 < Date.now()) {
+          // Access token expired, try refresh
+          const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
+          const res = await fetch(`${apiBase}/api/auth/refresh`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refreshToken: storedRefreshToken })
+          });
 
-            if (res.ok) {
-              const data = await res.json();
-              setAuthTokens(data.access_token, data.refresh_token);
-            } else {
-              // Refresh token khong hop le (bi xoa trong Redis hoac maxAge het)
-              console.log("Refresh token is invalid or expired in server. Logging out.");
-              logout(storedRefreshToken);
-            }
+          if (res.ok) {
+            const data = await res.json();
+            setAuthTokens(data.access_token, data.refresh_token);
           } else {
-            // Còn hạn, set normal
-            setAuthTokens(storedAccessToken, storedRefreshToken);
+            // Refresh token khong hop le (bi xoa trong Redis hoac maxAge het)
+            console.log("Refresh token is invalid or expired in server. Logging out.");
+            logout(storedRefreshToken);
           }
-        } catch (error) {
-          console.error("Token verification error:", error);
-          logout(storedRefreshToken);
+        } else {
+          // Còn hạn, set normal
+          setAuthTokens(storedAccessToken, storedRefreshToken);
         }
+      } catch (error) {
+        console.error("Token verification error:", error);
+        logout(storedRefreshToken);
       }
-      dispatch({ type: 'SET_LOADING', payload: false });
-    };
+    }
+    dispatch({ type: 'SET_LOADING', payload: false });
+  }, [setAuthTokens, logout]);
 
+  useEffect(() => {
     initializeAuth();
 
     // Listen for logout events from API client
     const handleLogout = () => logout();
     window.addEventListener('auth:logout', handleLogout);
     return () => window.removeEventListener('auth:logout', handleLogout);
-  }, [setAuthTokens, logout]);
+  }, [initializeAuth, logout]);
 
   const loginWithGoogle = useCallback(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
