@@ -10,6 +10,9 @@ import {
   useReducer,
   useRef
 } from "react";
+import { useRouter } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
+import AuthDialog from "@/components/auth/AuthDialog";
 
 interface User {
   id: string;
