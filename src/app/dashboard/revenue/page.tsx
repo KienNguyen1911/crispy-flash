@@ -47,21 +47,16 @@ const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', cu
 
 export default function RevenuePage() {
   const { user } = useAuth();
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: startOfMonth(subMonths(new Date(), 0)),
+    to: endOfMonth(new Date()),
+  });
   const [revenueState, dispatch] = useReducer(revenueReducer, {
     stats: [],
     totalRevenue: 0,
     providerStats: [],
     loading: false
   });
-
-  // Initialize date range on client side only
-  useEffect(() => {
-    setDateRange({
-      from: startOfMonth(subMonths(new Date(), 0)),
-      to: endOfMonth(new Date()),
-    });
-  }, []);
 
   useEffect(() => {
     async function fetchData() {

@@ -1,12 +1,14 @@
 "use client";
 import React, { useRef } from "react";
 import {
-  motion,
+  m,
   useMotionValue,
   useSpring,
   useTransform,
   useMotionTemplate,
-} from "motion/react";
+  LazyMotion,
+} from "framer-motion";
+import { domAnimation } from "framer-motion/m";
 import { cn } from "@/lib/utils";
 
 export const CometCard = ({
@@ -79,38 +81,40 @@ export const CometCard = ({
   };
 
   return (
-    <div className={cn("relative group", className)} style={{ perspective: "1000px" }}>
-      <motion.div
-        ref={ref}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        style={{
-          rotateX,
-          rotateY,
-          translateX,
-          translateY,
-          boxShadow:
-            "rgba(0, 0, 0, 0.01) 0px 520px 146px 0px, rgba(0, 0, 0, 0.04) 0px 333px 133px 0px, rgba(0, 0, 0, 0.26) 0px 83px 83px 0px, rgba(0, 0, 0, 0.29) 0px 21px 46px 0px",
-          transformStyle: "preserve-3d",
-        }}
-        initial={{ scale: 1, z: 0 }}
-        whileHover={{
-          scale: 1.05,
-          z: 50,
-          transition: { duration: 0.2 },
-        }}
-        className="relative rounded-2xl w-full h-full transform-gpu bg-card border border-white/5 shadow-2xl overflow-hidden"
-      >
-        {children}
-        <motion.div
-          className="pointer-events-none absolute inset-0 z-50 h-full w-full rounded-[16px] mix-blend-soft-light"
+    <LazyMotion features={domAnimation}>
+      <div className={cn("relative group", className)} style={{ perspective: "1000px" }}>
+        <m.div
+          ref={ref}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
           style={{
-            background: glareBackground,
-            opacity: 1,
+            rotateX,
+            rotateY,
+            translateX,
+            translateY,
+            boxShadow:
+              "rgba(0, 0, 0, 0.01) 0px 520px 146px 0px, rgba(0, 0, 0, 0.04) 0px 333px 133px 0px, rgba(0, 0, 0, 0.26) 0px 83px 83px 0px, rgba(0, 0, 0, 0.29) 0px 21px 46px 0px",
+            transformStyle: "preserve-3d",
           }}
-          transition={{ duration: 0.2 }}
-        />
-      </motion.div>
-    </div>
+          initial={{ scale: 1, z: 0 }}
+          whileHover={{
+            scale: 1.05,
+            z: 50,
+            transition: { duration: 0.2 },
+          }}
+          className="relative rounded-2xl w-full h-full transform-gpu bg-card border border-white/5 shadow-2xl overflow-hidden"
+        >
+          {children}
+          <m.div
+            className="pointer-events-none absolute inset-0 z-50 h-full w-full rounded-[16px] mix-blend-soft-light"
+            style={{
+              background: glareBackground,
+              opacity: 1,
+            }}
+            transition={{ duration: 0.2 }}
+          />
+        </m.div>
+      </div>
+    </LazyMotion>
   );
 };

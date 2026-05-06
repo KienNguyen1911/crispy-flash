@@ -61,7 +61,8 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { KanjiDrawer } from "@/components/vocabularies/KanjiDrawer";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence, LazyMotion } from "framer-motion";
+import { domAnimation } from "framer-motion/m";
 import VocabGraphViewer from "@/components/graph/VocabGraphViewer";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
@@ -86,7 +87,7 @@ export function DataTable<TData, TValue>({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [isEditing, setIsEditing] = React.useState(false);
-  const [data, setData] = React.useState<TData[]>([]);
+  const [data, setData] = React.useState<TData[]>(initialData);
   const deletedVocabularyIdsRef = React.useRef<Set<string>>(new Set());
   const [viewMode, setViewMode] = React.useState<"table" | "cards">("cards");
   const [isGraphOpen, setIsGraphOpen] = React.useState(false);
@@ -115,15 +116,11 @@ export function DataTable<TData, TValue>({
     return [...columns, actionColumn];
   }, [columns, isEditing]);
 
-  React.useEffect(() => {
-    setData(initialData);
-  }, [initialData]);
-
   // Compute visibility based on responsive state and editing mode
-  const computedColumnVisibility = React.useMemo(() => ({
+  const computedColumnVisibility = {
     status: isDesktop,
     actions: isEditing
-  }), [isDesktop, isEditing]);
+  };
 
   const visibleData = React.useMemo(
     () => data.filter((row) => !deletedVocabularyIdsRef.current.has((row as any).id)),
@@ -407,69 +404,71 @@ export function DataTable<TData, TValue>({
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <AnimatePresence>
-          {rows.map((row, index) => {
-            const item = row.original as any;
-            return (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
-                className="h-full"
-              >
-                <Card
-                  className="group h-full bg-card/50 backdrop-blur-sm border-white/5 shadow-md hover:shadow-glow transition-all duration-300 hover:scale-[1.02] cursor-pointer"
-                  onClick={() => handleRowClick(item.word)}
+      <LazyMotion features={domAnimation}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <AnimatePresence>
+            {rows.map((row, index) => {
+              const item = row.original as any;
+              return (
+                <m.div
+                  key={item.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                  className="h-full"
                 >
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-xl lg:text-2xl font-bold text-primary mb-2 break-words">
-                          {item.word}
-                        </h3>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm md:text-base text-muted-foreground italic break-words">
-                            {item.pronunciation}
-                          </p>
-                          {item.part_of_speech && (
-                            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                              {item.part_of_speech}
-                            </span>
-                          )}
+                  <Card
+                    className="group h-full bg-card/50 backdrop-blur-sm border-white/5 shadow-md hover:shadow-glow transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+                    onClick={() => handleRowClick(item.word)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xl lg:text-2xl font-bold text-primary mb-2 break-words">
+                            {item.word}
+                          </h3>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm md:text-base text-muted-foreground italic break-words">
+                              {item.pronunciation}
+                            </p>
+                            {item.part_of_speech && (
+                              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                                {item.part_of_speech}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="cursor-help">
+                                  {getStatusIcon(item.status)}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  {item.status?.replace("_", " ") || "Unknown"}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
-                      <div className="flex-shrink-0">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="cursor-help">
-                                {getStatusIcon(item.status)}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>
-                                {item.status?.replace("_", " ") || "Unknown"}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="text-sm md:text-base text-foreground leading-relaxed">
-                      {item.meaning}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm md:text-base text-foreground leading-relaxed">
+                        {item.meaning}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </m.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      </LazyMotion>
     );
   };
 
@@ -638,17 +637,19 @@ export function DataTable<TData, TValue>({
           <div className="w-full lg:flex-1">{actionButtons}</div>
         </div>
       </div>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={viewMode}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          {viewMode === "table" ? renderTableView() : renderCardsView()}
-        </motion.div>
-      </AnimatePresence>
+      <LazyMotion features={domAnimation}>
+        <AnimatePresence mode="wait">
+          <m.div
+            key={viewMode}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {viewMode === "table" ? renderTableView() : renderCardsView()}
+          </m.div>
+        </AnimatePresence>
+      </LazyMotion>
 
       <Dialog open={isGraphOpen} onOpenChange={setIsGraphOpen}>
         <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 border-none overflow-hidden [&>button]:z-[60] [&>button]:bg-white [&>button]:text-black [&>button]:border-[3px] [&>button]:border-black [&>button]:shadow-[2px_2px_0px_black] [&>button]:opacity-100 [&>button:hover]:bg-zinc-100 bg-zinc-50">

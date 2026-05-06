@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useState, useRef, useEffect } from "react";
+import React, { useContext, useState, useRef, useEffect, useReducer } from "react";
 import Link from "next/link";
 import type { Project } from "@/lib/types";
 import {
@@ -25,6 +25,32 @@ import { Check, X } from "lucide-react";
 import { TopicContext } from "@/context/TopicContext";
 import { Progress } from "@/components/ui/progress";
 
+type EditState = {
+  editing: boolean;
+  title: string;
+  description: string;
+  saving: boolean;
+};
+
+const editReducer = (state: EditState, action: any): EditState => {
+  switch (action.type) {
+    case 'INIT':
+      return { ...state, title: action.title, description: action.description };
+    case 'SET_EDITING':
+      return { ...state, editing: action.payload };
+    case 'SET_TITLE':
+      return { ...state, title: action.payload };
+    case 'SET_DESCRIPTION':
+      return { ...state, description: action.payload };
+    case 'SET_SAVING':
+      return { ...state, saving: action.payload };
+    case 'RESET':
+      return { ...state, title: action.title, description: action.description, editing: false };
+    default:
+      return state;
+  }
+};
+
 export default function TopicCardClient({
   projectId,
   topic,
@@ -40,52 +66,51 @@ export default function TopicCardClient({
 }) {
   const { deleteTopic } = useContext(TopicContext);
   const { updateTopic } = useContext(TopicContext) as any;
-  const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [state, dispatch] = useReducer(editReducer, {
+    editing: false,
+    title: topic.title,
+    description: topic.description ?? '',
+    saving: false
+  });
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    setTitle(topic.title);
-    setDescription(topic.description ?? '');
+    dispatch({ type: 'INIT', title: topic.title, description: topic.description ?? '' });
   }, [topic.id]);
 
   const isDirty =
-    title !== topic.title || description !== (topic.description ?? "");
+    state.title !== topic.title || state.description !== (topic.description ?? "");
 
   const save = async () => {
     if (!isDirty) {
-      setEditing(false);
+      dispatch({ type: 'SET_EDITING', payload: false });
       return;
     }
     try {
-      setSaving(true);
-      await updateTopic(projectId, topic.id, { title, description });
+      dispatch({ type: 'SET_SAVING', payload: true });
+      await updateTopic(projectId, topic.id, { title: state.title, description: state.description });
       onTopicUpdated?.();
-      setEditing(false);
+      dispatch({ type: 'SET_EDITING', payload: false });
     } catch (e) {
       // context handles toasts
     } finally {
-      setSaving(false);
+      dispatch({ type: 'SET_SAVING', payload: false });
     }
   };
 
   // Click outside to cancel editing and revert
   useEffect(() => {
-    if (!editing) return;
+    if (!state.editing) return;
     const handlePointerDown = (e: PointerEvent) => {
       if (!containerRef.current) return;
       const target = e.target as Node;
       if (!containerRef.current.contains(target)) {
-        setTitle(topic.title);
-        setDescription(topic.description ?? "");
-        setEditing(false);
+        dispatch({ type: 'RESET', title: topic.title, description: topic.description ?? "" });
       }
     };
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [editing, topic.title, topic.description]);
+  }, [state.editing, topic.title, topic.description]);
 
   return (
     <Card
@@ -94,28 +119,28 @@ export default function TopicCardClient({
     >
       <CardHeader>
         <div>
-          {editing ? (
+          {state.editing ? (
             <input
               className="text-xl font-headline w-full bg-transparent outline-none"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={state.title}
+              onChange={(e) => dispatch({ type: 'SET_TITLE', payload: e.target.value })}
             />
           ) : (
             <CardTitle
               className="font-headline cursor-text"
-              onClick={() => setEditing(true)}
+              onClick={() => dispatch({ type: 'SET_EDITING', payload: true })}
             >
               {topic.title}
             </CardTitle>
           )}
-          {editing ? (
+          {state.editing ? (
             <textarea
               className="text-sm md:text-base text-muted-foreground w-full mt-1 bg-transparent outline-none"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={state.description}
+              onChange={(e) => dispatch({ type: 'SET_DESCRIPTION', payload: e.target.value })}
             />
           ) : (
-            <CardDescription onClick={() => setEditing(true)}>
+            <CardDescription onClick={() => dispatch({ type: 'SET_EDITING', payload: true })}>
               {topic.description}
             </CardDescription>
           )}
@@ -181,16 +206,14 @@ export default function TopicCardClient({
           </AlertDialogContent>
         </AlertDialog>
         {/* Legend-style icon buttons when editing */}
-        {editing && (
+        {state.editing && (
           <div className="ml-2 bg-white/90 dark:bg-slate-900/80 rounded-md p-1 shadow flex items-center gap-1">
             <button
               title="Cancel"
               aria-label="Cancel"
               className="p-1 rounded text-muted-foreground hover:bg-muted"
               onClick={() => {
-                setEditing(false);
-                setTitle(topic.title);
-                setDescription(topic.description ?? "");
+                dispatch({ type: 'RESET', title: topic.title, description: topic.description ?? "" });
               }}
             >
               <X className="h-4 w-4" />
@@ -200,7 +223,7 @@ export default function TopicCardClient({
               aria-label="Save"
               className="p-1 rounded text-primary hover:bg-primary/10"
               onClick={save}
-              disabled={!isDirty || saving}
+              disabled={!isDirty || state.saving}
             >
               <Check className="h-4 w-4" />
             </button>
@@ -209,7 +232,7 @@ export default function TopicCardClient({
       </div>
 
       {/* Full-card overlay link (under delete button) - disable while editing */}
-      {!editing && (
+      {!state.editing && (
         <Link
           href={`/projects/${projectId}/topics/${topic.id}`}
           className="absolute inset-0 z-10"

@@ -7,7 +7,7 @@ import { Suspense } from 'react';
 
 function CallbackContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const { push } = useRouter();
   const { setAuthTokens } = useAuth();
   const hasProcessed = useRef(false);
 
@@ -21,11 +21,11 @@ function CallbackContent() {
     
     if (token && refreshToken) {
       setAuthTokens(token, refreshToken);
-      router.push('/');
+      push('/');
     } else {
-      router.push('/?error=Authentication-failed');
+      push('/?error=Authentication-failed');
     }
-  }, [searchParams, setAuthTokens, router]);
+  }, [searchParams, setAuthTokens, push]);
 
   return <div>Loading...</div>;
 }

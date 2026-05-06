@@ -5,14 +5,10 @@ import { Github, Twitter } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function Footer() {
-  const [year, setYear] = useState<number | null>(null);
-
-  useEffect(() => {
-    setYear(new Date().getFullYear());
-  }, []);
+  const [year] = useState(() => new Date().getFullYear());
 
   return (
-    <footer className="w-full bg-card/50 border-t border-border mt-auto">
+    <footer className="w-full bg-card/50 border-t border-border mt-auto" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           

@@ -51,6 +51,13 @@ export default function MoveTopicDialog({
     }
   };
 
+  const closeDialog = () => {
+    setOpen(false);
+    setSelectedProjectId("");
+    setSelectedProjectName("");
+    onOpenChange?.(false);
+  };
+
   return (
     <LazyMotion features={domAnimation}>
       <AnimatePresence mode="wait">
@@ -63,12 +70,7 @@ export default function MoveTopicDialog({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
-              onClick={() => {
-                setOpen(false);
-                setSelectedProjectId("");
-                setSelectedProjectName("");
-                onOpenChange?.(false);
-              }}
+              onClick={closeDialog}
             />
 
             {/* Drawer */}
@@ -95,12 +97,7 @@ export default function MoveTopicDialog({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => {
-                    setOpen(false);
-                    setSelectedProjectId("");
-                    setSelectedProjectName("");
-                    onOpenChange?.(false);
-                  }}
+                  onClick={closeDialog}
                   className="shrink-0"
                 >
                   <X className="h-5 w-5" />
@@ -146,12 +143,7 @@ export default function MoveTopicDialog({
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="outline"
-                          onClick={() => {
-                            setOpen(false);
-                            setSelectedProjectId("");
-                            setSelectedProjectName("");
-                            onOpenChange?.(false);
-                          }}
+                          onClick={closeDialog}
                           disabled={isMoving}
                         >
                           Cancel

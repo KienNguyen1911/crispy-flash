@@ -35,7 +35,8 @@ import { useToast } from "@/hooks/use-toast";
 import GenerateStoryDialog from "@/components/GenerateStoryDialog";
 import StoryDisplay from "@/components/StoryDisplay";
 import ShareTopicDialog from "@/components/ShareTopicDialog";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m, LazyMotion } from "framer-motion";
+import { domAnimation } from "framer-motion/m";
 import { Share2 } from "lucide-react";
 
 export const metadata = {
@@ -320,28 +321,30 @@ export default function TopicDetailPage() {
         />
       </div>
 
-      <AnimatePresence mode="wait">
-        {isLearnMode && (
-          <motion.div
-            initial={{ opacity: 1, y: "100%" }}
-            animate={{ opacity: 1, y: "0%" }}
-            exit={{ opacity: 0, y: "100%" }}
-            transition={{
-              duration: 0.3,
-              ease: [0.4, 0, 0.2, 1],
-            }}
-          >
-            <LearnMode
-              topicId={topicId}
-              projectId={projectId}
-              initialVocab={topic.vocabulary || []}
-              onClose={() => setIsLearnMode(false)}
-              mutateTopic={mutateTopic}
-              mutateProjectTopics={mutateProjectTopics}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <LazyMotion features={domAnimation}>
+        <AnimatePresence mode="wait">
+          {isLearnMode && (
+            <m.div
+              initial={{ opacity: 1, y: "100%" }}
+              animate={{ opacity: 1, y: "0%" }}
+              exit={{ opacity: 0, y: "100%" }}
+              transition={{
+                duration: 0.3,
+                ease: [0.4, 0, 0.2, 1],
+              }}
+            >
+              <LearnMode
+                topicId={topicId}
+                projectId={projectId}
+                initialVocab={topic.vocabulary || []}
+                onClose={() => setIsLearnMode(false)}
+                mutateTopic={mutateTopic}
+                mutateProjectTopics={mutateProjectTopics}
+              />
+            </m.div>
+          )}
+        </AnimatePresence>
+      </LazyMotion>
 
       <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">

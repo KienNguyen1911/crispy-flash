@@ -45,12 +45,12 @@ export default function AdminUsersPage() {
   const { token } = useAuth();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debouncedSearchRef = useRef("");
 
   const query = new URLSearchParams({
     page: page.toString(),
     limit: "10",
-    ...(debouncedSearch && { search: debouncedSearch }),
+    ...(debouncedSearchRef.current && { search: debouncedSearchRef.current }),
   });
 
   const { data, isLoading, mutate } = useSWR(
@@ -68,7 +68,7 @@ export default function AdminUsersPage() {
   const handleSearch = (value: string) => {
     setSearch(value);
     const timer = setTimeout(() => {
-      setDebouncedSearch(value);
+      debouncedSearchRef.current = value;
       setPage(1);
     }, 500);
     return () => clearTimeout(timer);

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { X, Share2, Download } from 'lucide-react';
 
 export function PWAiOSInstall() {
-  const [isInstalled, setIsInstalled] = useState(false);
+  const isInstalledRef = useRef(false);
   const showInstallBannerRef = useRef(false);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export function PWAiOSInstall() {
     }
     
     if (isStandalone) {
-      setIsInstalled(true);
+      isInstalledRef.current = true;
     }
   }, []);
 
@@ -35,7 +35,7 @@ export function PWAiOSInstall() {
     showInstallBannerRef.current = false;
   };
 
-  if (isInstalled || !showInstallBannerRef.current) {
+  if (isInstalledRef.current || !showInstallBannerRef.current) {
     return null;
   }
 

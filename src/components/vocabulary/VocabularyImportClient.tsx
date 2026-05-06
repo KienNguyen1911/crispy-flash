@@ -48,13 +48,13 @@ type ColumnMapping = {
 };
 
 export default function VocabularyImportClient() {
+  const { push } = useRouter();
   const [text, setText] = useState("");
   const [parsedData, setParsedData] = useState<ParsedRow[]>([]);
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({});
   const [isSaving, setIsSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
-  const router = useRouter();
   const params = useParams();
   const projectId = params.projectId as string;
   const topicId = params.topicId as string;
@@ -258,7 +258,7 @@ export default function VocabularyImportClient() {
     console.log(`Prepared ${vocabToSave.length} vocabulary items for saving`);
     addVocabulary(topicId, vocabToSave);
     setIsSaving(false);
-    router.push(`/projects/${projectId}/topics/${topicId}`);
+    push(`/projects/${projectId}/topics/${topicId}`);
   };
 
   const maxColumns =

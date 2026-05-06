@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, useReducer } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -33,11 +33,29 @@ type VocabGraphViewerProps = {
   vocabulary: Vocabulary[];
 };
 
+type GraphState = {
+  isCategorizing: boolean;
+  showReading: boolean;
+};
+
+const graphReducer = (state: GraphState, action: any): GraphState => {
+  switch (action.type) {
+    case 'SET_CATEGORIZING':
+      return { ...state, isCategorizing: action.payload };
+    case 'SET_SHOW_READING':
+      return { ...state, showReading: action.payload };
+    default:
+      return state;
+  }
+};
+
 function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const [isCategorizing, setIsCategorizing] = React.useState(true);
-  const [showReading, setShowReading] = useState(true);
+  const [state, dispatch] = useReducer(graphReducer, {
+    isCategorizing: true,
+    showReading: true
+  });
   const { setCenter, getNode } = useReactFlow();
   const isMobile = useMediaQuery("(max-width: 767px)");
   const isUpperCase = (str: string) => str === str.toUpperCase();
@@ -57,7 +75,7 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
     let isCancelled = false;
 
     const setupGraph = async () => {
-      setIsCategorizing(true);
+      dispatch({ type: 'SET_CATEGORIZING', payload: true });
 
       const isKanjiMatch = (v: Vocabulary) => {
         return Boolean(v.part_of_speech?.toLowerCase() === 'kanji') || (Boolean(v.meaning) && v.meaning === v.meaning?.toUpperCase());
@@ -88,7 +106,7 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
             ...node,
             data: {
               ...node.data,
-              showReading,
+              showReading: state.showReading,
             },
           };
         }
@@ -97,7 +115,7 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
 
       setNodes(nodesWithReadingFlag);
       setEdges(computedEdges);
-      setIsCategorizing(false);
+      dispatch({ type: 'SET_CATEGORIZING', payload: false });
     };
 
     setupGraph();
@@ -105,7 +123,7 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
     return () => {
       isCancelled = true;
     };
-  }, [vocabulary, setNodes, setEdges, isMobile, showReading]);
+  }, [vocabulary, setNodes, setEdges, isMobile, state.showReading]);
 
   useEffect(() => {
     return () => {
@@ -271,13 +289,13 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
         <div className={`absolute top-4 z-30 ${isMobile ? 'right-4' : 'left-4'}`}>
           <button
             type="button"
-            onClick={() => setShowReading(prev => !prev)}
+            onClick={() => dispatch({ type: 'SET_SHOW_READING', payload: !state.showReading })}
             className="bg-white text-black border-[3px] border-black rounded-sm px-3 py-2 text-xs font-bold shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all"
           >
-            {showReading ? 'Reading: ON' : 'Reading: OFF'}
+            {state.showReading ? 'Reading: ON' : 'Reading: OFF'}
           </button>
         </div>
-        {isCategorizing && (
+        {state.isCategorizing && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
             <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
             <h3 className="text-xl font-bold text-gray-900">AI đang phân loại từ vựng...</h3>
