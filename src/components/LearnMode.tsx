@@ -1,23 +1,14 @@
 "use client";
 
-import { useReducer, useMemo, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 import { LazyMotion, m } from "framer-motion";
 import { domAnimation } from "framer-motion/m";
-import {
-  ChevronLeft,
-  ChevronRight,
-  X,
-  Volume2,
-  Check,
-  RotateCcw,
-  XCircle,
-  CheckCircle,
-  Redo2,
-} from "lucide-react";
 import { Vocabulary } from "@prisma/client";
-import { updateVocabularyBatchStatus } from "@/services/learn-mode-api";
-import { toast } from "sonner";
+import { LearnModeControls } from "./learn-mode/LearnModeControls";
+import { SessionComplete } from "./learn-mode/SessionComplete";
+import { CardStack } from "./learn-mode/CardStack";
+import { useLearnMode } from "./learn-mode/useLearnMode";
 
 interface LearnModeProps {
   topicId: string;
@@ -28,50 +19,6 @@ interface LearnModeProps {
   mutateProjectTopics?: () => Promise<any>;
 }
 
-interface LearnState {
-  vocabularies: Vocabulary[];
-  currentIndex: number;
-  isFlipped: boolean;
-  isFlipping: boolean;
-  showWordFirst: boolean;
-  showPronunciation: boolean;
-  swipeDirection: "left" | "right" | null;
-  previousIndex: number | null;
-}
-
-type LearnAction =
-  | { type: "SET_VOCABULARIES"; payload: Vocabulary[] }
-  | { type: "SET_CURRENT_INDEX"; payload: number }
-  | { type: "TOGGLE_FLIP" }
-  | { type: "SET_FLIPPING"; payload: boolean }
-  | { type: "TOGGLE_WORD_FIRST" }
-  | { type: "TOGGLE_PRONUNCIATION" }
-  | { type: "SET_SWIPE"; payload: { direction: "left" | "right" | null; previousIndex: number | null } }
-  | { type: "RESET" };
-
-const learnReducer = (state: LearnState, action: LearnAction): LearnState => {
-  switch (action.type) {
-    case "SET_VOCABULARIES":
-      return { ...state, vocabularies: action.payload };
-    case "SET_CURRENT_INDEX":
-      return { ...state, currentIndex: action.payload };
-    case "TOGGLE_FLIP":
-      return { ...state, isFlipped: !state.isFlipped };
-    case "SET_FLIPPING":
-      return { ...state, isFlipping: action.payload };
-    case "TOGGLE_WORD_FIRST":
-      return { ...state, showWordFirst: !state.showWordFirst };
-    case "TOGGLE_PRONUNCIATION":
-      return { ...state, showPronunciation: !state.showPronunciation };
-    case "SET_SWIPE":
-      return { ...state, swipeDirection: action.payload.direction, previousIndex: action.payload.previousIndex };
-    case "RESET":
-      return { ...state, currentIndex: 0, isFlipped: false, vocabularies: JSON.parse(JSON.stringify(state.vocabularies)) };
-    default:
-      return state;
-  }
-};
-
 const LearnMode = ({
   topicId,
   projectId,
@@ -80,318 +27,33 @@ const LearnMode = ({
   mutateTopic,
   mutateProjectTopics,
 }: LearnModeProps) => {
-  const [state, dispatch] = useReducer(learnReducer, {
-    vocabularies: JSON.parse(JSON.stringify(initialVocab)),
-    currentIndex: 0,
-    isFlipped: false,
-    isFlipping: false,
-    showWordFirst: true,
-    showPronunciation: true,
-    swipeDirection: null,
-    previousIndex: null,
+  const {
+    state,
+    currentVocab,
+    sessionCompletedRef,
+    handleCardClick,
+    handleNext,
+    handlePrev,
+    handleRemembered,
+    handleNotRemembered,
+    handleRestart,
+    toggleShowMode,
+    togglePronunciation,
+    playAudio,
+  } = useLearnMode({
+    topicId,
+    initialVocab,
+    mutateTopic,
+    mutateProjectTopics,
   });
 
-  const sessionCompletedRef = useRef(false);
-
-  const currentVocab = useMemo(
-    () => state.vocabularies[state.currentIndex],
-    [state.vocabularies, state.currentIndex],
-  );
-
-  const renderCard = (vocab: Vocabulary) => (
-    <>
-      <div
-        className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
-        style={{ backfaceVisibility: "hidden" }}
-      >
-        {state.showWordFirst ? (
-          <>
-            {vocab.word && (
-              <h2 className="text-5xl font-bold mb-2 text-center">
-                {vocab.word}
-              </h2>
-            )}
-            {vocab.pronunciation && state.showPronunciation && (
-              <p className="text-xl text-muted-foreground">
-                {vocab.pronunciation}
-              </p>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4"
-              onClick={(e) => {
-                e.stopPropagation();
-                playAudio(vocab.word || vocab.pronunciation || "");
-              }}
-            >
-              <Volume2 className="h-6 w-6" />
-            </Button>
-          </>
-        ) : (
-          <>
-            <p className="text-2xl font-semibold text-center">
-              {vocab.meaning}
-            </p>
-            {vocab.usageExample && (
-              <p className="text-lg text-muted-foreground mt-4 text-center italic">
-                {vocab.usageExample}
-              </p>
-            )}
-          </>
-        )}
-      </div>
-
-      <div
-        className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
-        style={{
-          backfaceVisibility: "hidden",
-          transform: "rotateY(180deg)",
-        }}
-      >
-        {state.showWordFirst ? (
-          <>
-            <p className="text-2xl font-semibold text-center">
-              {vocab.meaning}
-            </p>
-            {vocab.usageExample && (
-              <p className="text-lg text-muted-foreground mt-4 text-center italic">
-                {vocab.usageExample}
-              </p>
-            )}
-          </>
-        ) : (
-          <>
-            {vocab.word && (
-              <h2 className="text-5xl font-bold mb-2 text-center">
-                {vocab.word}
-              </h2>
-            )}
-            {vocab.pronunciation && state.showPronunciation && (
-              <p className="text-xl text-muted-foreground">
-                {vocab.pronunciation}
-              </p>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4"
-              onClick={(e) => {
-                e.stopPropagation();
-                playAudio(vocab.word || vocab.pronunciation || "");
-              }}
-            >
-              <Volume2 className="h-6 w-6" />
-            </Button>
-          </>
-        )}
-      </div>
-    </>
-  );
-
-  const saveProgress = async (showToast = true) => {
-    try {
-      await updateVocabularyBatchStatus(
-        topicId,
-        vocabularies.map(({ id, status }) => ({ id, status })),
-      );
-      if (showToast) {
-        toast.success("Progress saved!");
-      }
-      if (mutateTopic) {
-        await mutateTopic();
-      }
-      if (mutateProjectTopics) {
-        await mutateProjectTopics();
-      }
-    } catch (error) {
-      toast.error("Failed to save progress.");
-      console.error("Failed to save progress", error);
-    }
-  };
-
-  const handleClose = async () => {
+  const handleClose = () => {
     onClose(state.vocabularies);
   };
 
-  const playAudio = (text: string) => {
-    if ("speechSynthesis" in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "ja-JP";
-      speechSynthesis.speak(utterance);
-    }
-  };
-
-  const handleNext = () => {
-    if (state.currentIndex < state.vocabularies.length - 1) {
-      dispatch({ type: "SET_CURRENT_INDEX", payload: state.currentIndex + 1 });
-      dispatch({ type: "TOGGLE_FLIP" });
-    } else {
-      sessionCompletedRef.current = true;
-      saveProgress(true);
-    }
-  };
-
-  const handlePrev = () => {
-    if (state.currentIndex > 0) {
-      dispatch({ type: "SET_CURRENT_INDEX", payload: state.currentIndex - 1 });
-      dispatch({ type: "TOGGLE_FLIP" });
-    }
-  };
-
-  const handleRemembered = () => {
-    if (state.swipeDirection) return;
-
-    const newVocabs = [...state.vocabularies];
-    newVocabs[state.currentIndex].status = "REMEMBERED";
-    dispatch({ type: "SET_VOCABULARIES", payload: newVocabs });
-
-    dispatch({ type: "SET_SWIPE", payload: { direction: "right", previousIndex: state.currentIndex } });
-    dispatch({ type: "TOGGLE_FLIP" });
-
-    if (state.currentIndex < state.vocabularies.length - 1) {
-      dispatch({ type: "SET_CURRENT_INDEX", payload: state.currentIndex + 1 });
-      setTimeout(() => {
-        dispatch({ type: "SET_SWIPE", payload: { direction: null, previousIndex: null } });
-      }, 400);
-    } else {
-      setTimeout(() => {
-        sessionCompletedRef.current = true;
-        saveProgress(true);
-      }, 400);
-    }
-  };
-
-  const handleNotRemembered = () => {
-    if (state.swipeDirection) return;
-
-    const newVocabs = [...state.vocabularies];
-    newVocabs[state.currentIndex].status = "NOT_REMEMBERED";
-    dispatch({ type: "SET_VOCABULARIES", payload: newVocabs });
-
-    dispatch({ type: "SET_SWIPE", payload: { direction: "left", previousIndex: state.currentIndex } });
-    dispatch({ type: "TOGGLE_FLIP" });
-
-    if (state.currentIndex < state.vocabularies.length - 1) {
-      dispatch({ type: "SET_CURRENT_INDEX", payload: state.currentIndex + 1 });
-      setTimeout(() => {
-        setSwipeDirection(null);
-        setPreviousIndex(null);
-        dispatch({ type: "SET_SWIPE", payload: { direction: null, previousIndex: null } });
-      }, 400);
-    } else {
-      setTimeout(() => {
-        sessionCompletedRef.current = true;
-        saveProgress(true);
-      }, 400);
-    }
-  };
-
-  const handleRestart = () => {
-    dispatch({ type: "RESET" });
-    sessionCompletedRef.current = false;
-  };
-
-  const toggleShowMode = () => {
-    dispatch({ type: "TOGGLE_WORD_FIRST" });
-    dispatch({ type: "TOGGLE_FLIP" });
-  };
-
-  const togglePronunciation = () => {
-    dispatch({ type: "TOGGLE_PRONUNCIATION" });
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (sessionCompletedRef.current) return;
-
-      if (event.code === "Space") {
-        event.preventDefault();
-        setIsFlipped((f) => !f);
-      }
-      if (event.key === "ArrowRight") {
-        handleNext();
-      }
-      if (event.key === "ArrowLeft") {
-        handlePrev();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleNext, handlePrev]);
-
   if (sessionCompletedRef.current) {
     return (
-      <LazyMotion features={domAnimation}>
-        <m.div
-          initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="fixed bg-background inset-0 z-50 flex flex-col items-center justify-center text-foreground"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, hsl(var(--foreground) / 0.1) 1px, transparent 1px)",
-          backgroundSize: "20px 20px",
-        }}
-      >
-        <m.div
-          initial={{ opacity: 0, scale: 0.8, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{
-            duration: 0.4,
-            ease: [0.4, 0, 0.2, 1],
-          }}
-          className="text-center"
-        >
-          <m.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{
-              delay: 0.2,
-              duration: 0.5,
-              ease: [0.34, 1.56, 0.64, 1],
-            }}
-          >
-            <Check
-              className="w-16 h-16 mx-auto mb-4"
-              style={{ color: "hsl(var(--clr-success-a10))" }}
-            />
-          </m.div>
-          <m.h2
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.3 }}
-            className="text-2xl font-bold mb-2"
-          >
-            Session Complete!
-          </m.h2>
-          <m.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.3 }}
-            className="text-muted-foreground mb-6"
-          >
-            You have reviewed all the flashcards.
-          </m.p>
-          <m.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.3 }}
-            className="flex gap-4"
-          >
-            <Button onClick={handleRestart} variant="outline">
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Restart
-            </Button>
-            <Button onClick={handleClose}>Close</Button>
-          </m.div>
-        </m.div>
-        </m.div>
-      </LazyMotion>
+      <SessionComplete onRestart={handleRestart} onClose={handleClose} />
     );
   }
 
@@ -399,197 +61,60 @@ const LearnMode = ({
     <LazyMotion features={domAnimation}>
       <m.div
         initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center text-foreground"
-      style={{
-        backgroundImage:
-          "radial-gradient(circle, hsl(var(--foreground) / 0.1) 1px, transparent 1px)",
-        backgroundSize: "20px 20px",
-      }}
-    >
-      <m.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.1, duration: 0.2 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center text-foreground"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, hsl(var(--foreground) / 0.1) 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+        }}
       >
-        <Button
-          onClick={handleClose}
-          className="absolute top-4 right-4"
-          variant="ghost"
-          size="icon"
-        >
-          <X className="h-6 w-6" />
-        </Button>
-      </m.div>
-
-      <m.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15, duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-        className="w-full max-w-md px-4"
-        style={{ perspective: 1000 }}
-      >
-        <div className="flex justify-center mb-4">
-          <p className="text-sm md:text-base text-muted-foreground">
-            {state.currentIndex + 1} / {state.vocabularies.length}
-          </p>
-        </div>
-
-        <div className="relative aspect-[3/3] w-full">
-          {/* Background cards (stack effect) */}
-          {[2, 1].map((offset) => {
-            const cardIndex = state.currentIndex + offset;
-            if (cardIndex >= state.vocabularies.length) return null;
-
-            const adjustedOffset = state.swipeDirection ? offset - 1 : offset;
-
-            return (
-              <m.div
-                key={cardIndex}
-                className="absolute w-full h-full bg-card border border-border rounded-lg"
-                animate={{
-                  top: `${adjustedOffset * 20}px`,
-                  scale: 1 - adjustedOffset * 0.06,
-                  opacity: adjustedOffset <= 1 ? 1 - adjustedOffset * 0.25 : 0,
-                }}
-                transition={{ duration: 0.3 }}
-                style={{
-                  left: 0,
-                  zIndex: -offset,
-                  pointerEvents: "none",
-                  boxShadow:
-                    "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-                }}
-              />
-            );
-          })}
-
-          {/* Previous card (swiping out) */}
-          {state.previousIndex !== null && (
-            <m.div
-              key={`prev-${state.previousIndex}`}
-              className="absolute w-full h-full cursor-pointer"
-              style={{ transformStyle: "preserve-3d", zIndex: 11 }}
-              initial={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
-              animate={{
-                x: state.swipeDirection === "left" ? -1000 : 1000,
-                y: 100,
-                rotate: state.swipeDirection === "left" ? -15 : 15,
-                opacity: 0,
-              }}
-              transition={{ duration: 0.3 }}
-            >
-              {renderCard(state.vocabularies[state.previousIndex])}
-            </m.div>
-          )}
-
-          {/* Current card */}
-          <m.div
-            key={state.currentIndex}
-            className="absolute w-full h-full cursor-pointer"
-            style={{ transformStyle: "preserve-3d", zIndex: 10 }}
-            initial={
-              state.swipeDirection
-                ? { scale: 0.97, opacity: 0.7, top: 8 }
-                : { scale: 1, opacity: 1 }
-            }
-            animate={{
-              rotateY: state.isFlipped ? 180 : 0,
-              scale: state.isFlipping ? 1.08 : 1,
-              opacity: 1,
-              top: 0,
-            }}
-            transition={{
-              duration: state.swipeDirection ? 0.3 : 0.4,
-              scale: {
-                duration: 0.15,
-                ease: "easeOut",
-              },
-              rotateY: {
-                duration: 0.4,
-                ease: "easeInOut",
-              },
-            }}
-            onClick={() => {
-              if (state.swipeDirection) return;
-              dispatch({ type: "SET_FLIPPING", payload: true });
-              setTimeout(() => {
-                dispatch({ type: "TOGGLE_FLIP" });
-                setTimeout(() => {
-                  dispatch({ type: "SET_FLIPPING", payload: false });
-                }, 200);
-              }, 150);
-            }}
-          >
-            {renderCard(currentVocab)}
-          </m.div>
-        </div>
-
         <m.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.3 }}
-          className="flex justify-center items-center gap-4 mt-6"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1, duration: 0.2 }}
         >
           <Button
-            onClick={toggleShowMode}
-            variant={state.showWordFirst ? "warning" : "outline"}
-            size="sm"
+            onClick={handleClose}
+            className="absolute top-4 right-4"
+            variant="ghost"
+            size="icon"
           >
-            {state.showWordFirst ? "Meaning First" : "Word First"}
-          </Button>
-          <Button
-            onClick={togglePronunciation}
-            variant={state.showPronunciation ? "warning" : "outline"}
-            size="sm"
-          >
-            {state.showPronunciation ? "Hide" : "Show"} Pronunciation
+            <X className="h-6 w-6" />
           </Button>
         </m.div>
 
-        <m.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.3 }}
-          className="mt-20 flex justify-center items-center gap-6"
-        >
-          <Button
-            onClick={handleNotRemembered}
-            variant="destructive"
-            size="icon"
-            className="w-20 h-20 rounded-full transition-transform hover:scale-110"
-          >
-            <X style={{ width: "2rem", height: "2rem" }} />
-          </Button>
-          <Button
-            onClick={handlePrev}
-            disabled={currentIndex === 0}
-            variant="outline"
-            size="icon"
-            className="w-16 h-16 rounded-full transition-transform hover:scale-110 bg-primary"
-          >
-            <Redo2 style={{ width: "1.5rem", height: "1.5rem" }} />
-          </Button>
-          <Button
-            onClick={handleRemembered}
-            variant="success"
-            size="icon"
-            className="w-20 h-20 rounded-full transition-transform hover:scale-110"
-          >
-            <Check style={{ width: "2rem", height: "2rem" }} />
-          </Button>
-        </m.div>
+        <CardStack
+          currentVocab={currentVocab}
+          currentIndex={state.currentIndex}
+          totalCards={state.vocabularies.length}
+          displayState={{
+            isFlipped: state.isFlipped,
+            isFlipping: state.isFlipping,
+            showWordFirst: state.showWordFirst,
+            showPronunciation: state.showPronunciation,
+          }}
+          swipeDirection={state.swipeDirection}
+          previousIndex={state.previousIndex}
+          vocabularies={state.vocabularies}
+          onCardClick={handleCardClick}
+          onPlayAudio={playAudio}
+        />
 
-        <m.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.3 }}
-          className="mt-4 flex justify-center"
-        ></m.div>
+        <LearnModeControls
+          currentIndex={state.currentIndex}
+          totalCards={state.vocabularies.length}
+          showWordFirst={state.showWordFirst}
+          showPronunciation={state.showPronunciation}
+          onRemembered={handleRemembered}
+          onNotRemembered={handleNotRemembered}
+          onPrev={handlePrev}
+          onToggleShowMode={toggleShowMode}
+          onTogglePronunciation={togglePronunciation}
+        />
       </m.div>
-    </m.div>
     </LazyMotion>
   );
 };

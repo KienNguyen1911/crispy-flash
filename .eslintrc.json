@@ -1,0 +1,6 @@
+{
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "react-doctor/no-react19-deprecated-apis": "off"
+  }
+}

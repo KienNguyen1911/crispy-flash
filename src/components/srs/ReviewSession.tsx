@@ -5,18 +5,14 @@ import { useDueReviews, useReviewSession } from "@/hooks/use-srs";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, Brain, Clock, CheckCircle2, XCircle, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ChevronLeft, Brain, Clock } from "lucide-react";
 import { VocabularyWithSrs } from "@/types/srs";
 import type { ReviewAttemptResult } from "@/types/srs";
 import { KanjiDrawer } from "@/components/vocabularies/KanjiDrawer";
+import { ReviewCard } from "./ReviewCard";
 
 interface ReviewSessionProps {
   projectId?: string;
@@ -197,67 +193,10 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
     return () => clearInterval(timer);
   }, [cardState.timeLeft, cardState.isAnswered, currentVocab, handleAnswerSelect]);
 
-  const renderContextSentence = (sentence: string, word: string) => {
-    const index = sentence.indexOf(word);
-    if (index === -1) {
-      return <span>{sentence}</span>;
-    }
-
-    const before = sentence.slice(0, index);
-    const target = sentence.slice(index, index + word.length);
-    const after = sentence.slice(index + word.length);
-
-    return (
-      <span>
-        {before}
-        <span className="rounded bg-primary/15 px-1 text-primary">{target}</span>
-        {after}
-      </span>
-    );
-  };
-
   const handleKanjiClick = (word: string, kanji: string) => {
     setSelectedWordForKanji(word);
     setSelectedKanjiChar(kanji);
     setIsKanjiDrawerOpen(true);
-  };
-
-  const renderKanjiWord = (word: string) => {
-    // Extract individual kanji characters
-    const kanjiRegex = /[\u4e00-\u9faf]/g;
-    const kanjis = word.match(kanjiRegex);
-    
-    if (!kanjis || kanjis.length === 0) {
-      return <span>{word}</span>;
-    }
-
-    const chars = word.split('');
-    const parts = chars.map((char) => {
-      if (/[\u4e00-\u9faf]/.test(char)) {
-        // This is a kanji character - make it clickable
-        return (
-          <span
-            key={`${word}-${char}-kanji`}
-            className="cursor-pointer hover:text-blue-500 hover:scale-110 transition-all inline-block mx-0.5"
-            onClick={() => handleKanjiClick(word, char)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                handleKanjiClick(word, char);
-              }
-            }}
-            role="button"
-            tabIndex={0}
-          >
-            {char}
-          </span>
-        );
-      } else {
-        // This is not a kanji (hiragana, katakana, etc.)
-        return <span key={`${word}-${char}-char`}>{char}</span>;
-      }
-    });
-
-    return <span className="inline-flex items-center">{parts}</span>;
   };
 
   if (isLoading) {
@@ -302,160 +241,20 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
           />
         </div>
 
-      {/* Main Card */}
-      <Card className="relative">
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <CardTitle>{currentVocab.promptQuestion || "What is the meaning of this word?"}</CardTitle>
-              <CardDescription>
-                {cardState.isAnswered
-                  ? "Review the answer and continue when you're ready."
-                  : `Select the correct answer within ${TIME_LIMIT} seconds.`}
-              </CardDescription>
-            </div>
-            <Badge variant="outline">
-              <Clock className="h-3 w-3 mr-1" />
-              {currentVocab.interval} days
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Word Display */}
-          <div className="text-center space-y-2 min-h-[100px] flex flex-col justify-center">
-            {promptType === "WORD_TO_READING" && currentVocab.promptContext && currentVocab.word && (
-              <div className="mx-auto max-w-xl text-base text-muted-foreground leading-7">
-                {renderContextSentence(currentVocab.promptContext, currentVocab.word)}
-              </div>
-            )}
-            <div className="text-5xl font-bold text-primary">
-              {cardState.isAnswered && currentVocab.word && /[\u4e00-\u9faf]/.test(currentVocab.word)
-                ? renderKanjiWord(currentVocab.word)
-                : (currentVocab.word || currentVocab.pronunciation)}
-            </div>
-            {cardState.isAnswered && currentVocab.pronunciation && (
-              <div className="text-2xl font-semibold text-secondary">
-                {currentVocab.pronunciation}
-              </div>
-            )}
-            {cardState.isAnswered && currentVocab.word && /[\u4e00-\u9faf]/.test(currentVocab.word) && (
-              <div className="text-sm text-muted-foreground mt-2">
-                Click on kanji to see details
-              </div>
-            )}
-          </div>
-
-          {/* Answer Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {answerOptions.map((option) => {
-              const isCorrect = option === correctAnswer;
-              const isSelected = option === cardState.selectedAnswer;
-
-              let buttonVariant:
-                | "default"
-                | "destructive"
-                | "secondary"
-                | "outline" = "outline";
-              if (cardState.isAnswered) {
-                if (isCorrect) {
-                  // Correct answer is now handled by className
-                } else if (isSelected) {
-                  buttonVariant = "destructive";
-                }
-              }
-
-              return (
-                <Button
-                  key={option}
-                  variant={buttonVariant}
-                  size="lg"
-                  onClick={() => handleAnswerSelect(option)}
-                  disabled={cardState.isAnswered}
-                  className={cn(
-                    "h-auto py-4 text-base justify-center text-center whitespace-normal",
-                    cardState.isAnswered &&
-                      isCorrect &&
-                      "bg-green-600 text-white hover:bg-green-700",
-                    cardState.isAnswered && !isCorrect && !isSelected && "opacity-50",
-                  )}
-                >
-                  {option}
-                </Button>
-              );
-            })}
-          </div>
-
-          {cardState.isAnswered && (
-            <div
-              className={cn(
-                "rounded-lg border px-4 py-3 space-y-3",
-                cardState.lastResult === "CORRECT"
-                  ? "border-green-500/40 bg-green-500/10"
-                  : "border-amber-500/40 bg-amber-500/10",
-              )}
-            >
-              <div className="flex items-center gap-2 font-semibold">
-                {cardState.lastResult === "CORRECT" ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-amber-500" />
-                )}
-                <span>
-                  {cardState.lastResult === "CORRECT"
-                    ? "Correct"
-                    : cardState.lastResult === "TIMEOUT"
-                      ? "Time is up"
-                      : "Incorrect"}
-                </span>
-              </div>
-              <div className="text-sm md:text-base space-y-1">
-                <div>
-                  <span className="text-muted-foreground">Correct answer: </span>
-                  <span className="font-semibold">{correctAnswer}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Meaning: </span>
-                  <span>{currentVocab.meaning}</span>
-                </div>
-                {promptType === "WORD_TO_MEANING" && currentVocab.pronunciation && (
-                  <div>
-                    <span className="text-muted-foreground">Reading: </span>
-                    <span>{currentVocab.pronunciation}</span>
-                  </div>
-                )}
-              </div>
-              <Button
-                onClick={() => moveToNext(batchSummary)}
-                disabled={isSubmitting}
-                className="w-full sm:w-auto"
-              >
-                Continue
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          )}
-
-          {/* Navigation & Info */}
-          <div className="flex justify-between items-center pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={onCancel}
-              disabled={isSubmitting}
-            >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Stop
-            </Button>
-            <div className="text-sm md:text-base text-muted-foreground" suppressHydrationWarning>
-              Last Review:{" "}
-              {currentVocab.lastReviewDate
-                ? new Date(currentVocab.lastReviewDate).toLocaleDateString(
-                    "vi-VN",
-                  )
-                : "No review"}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        <ReviewCard
+          vocab={currentVocab}
+          isAnswered={cardState.isAnswered}
+          selectedAnswer={cardState.selectedAnswer}
+          lastResult={cardState.lastResult}
+          timeLeft={cardState.timeLeft}
+          answerOptions={answerOptions}
+          correctAnswer={correctAnswer}
+          isSubmitting={isSubmitting}
+          onAnswerSelect={handleAnswerSelect}
+          onKanjiClick={handleKanjiClick}
+          currentIndex={currentIndex}
+          totalCount={sessionReviews.length}
+        />
       </div>
 
       <KanjiDrawer

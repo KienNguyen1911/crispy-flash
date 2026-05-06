@@ -1,21 +1,11 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { LazyMotion, m } from "framer-motion";
 import { domAnimation } from "framer-motion/m";
-import {
-  ChevronLeft,
-  ChevronRight,
-  X,
-  Volume2,
-  Check,
-  RotateCcw,
-  XCircle,
-  CheckCircle,
-  Redo2,
-} from "lucide-react";
 import { toast } from "sonner";
+import { LearnModePublicCard } from "./learn-mode-public/LearnModePublicCard";
+import { LearnModePublicControls } from "./learn-mode-public/LearnModePublicControls";
 
 interface VocabularyItem {
   id: string;
@@ -54,6 +44,19 @@ const LearnModePublic = ({
     [vocabulary, currentIndex],
   );
 
+  const playAudio = (text: string) => {
+    if ("speechSynthesis" in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "ja-JP";
+      speechSynthesis.speak(utterance);
+    }
+  };
+
+  const handleAudioClick = (e: React.MouseEvent, text: string) => {
+    e.stopPropagation();
+    playAudio(text);
+  };
+
   const renderCard = (vocab: VocabularyItem) => (
     <>
       <div
@@ -76,10 +79,7 @@ const LearnModePublic = ({
               variant="ghost"
               size="icon"
               className="absolute top-4 right-4"
-              onClick={(e) => {
-                e.stopPropagation();
-                playAudio(vocab.word || vocab.pronunciation || "");
-              }}
+              onClick={(e) => handleAudioClick(e, vocab.word || vocab.pronunciation || "")}
             >
               <Volume2 className="h-6 w-6" />
             </Button>
@@ -137,10 +137,7 @@ const LearnModePublic = ({
               variant="ghost"
               size="icon"
               className="absolute top-4 right-4"
-              onClick={(e) => {
-                e.stopPropagation();
-                playAudio(vocab.word || vocab.pronunciation || "");
-              }}
+              onClick={(e) => handleAudioClick(e, vocab.word || vocab.pronunciation || "")}
             >
               <Volume2 className="h-6 w-6" />
             </Button>

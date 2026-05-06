@@ -6,65 +6,34 @@ import {
   ColumnFiltersState,
   SortingState,
   VisibilityState,
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
   useReactTable
 } from "@tanstack/react-table";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-
-import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { toast } from "sonner";
 
 import {
-  Pen,
-  Plus,
   Trash2,
-  Blocks,
-  Grid,
-  Table as TableIcon,
   CheckCircle,
   XCircle,
   HelpCircle,
-  Sparkles,
-  Network
+  Sparkles
 } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/components/ui/tooltip";
 import {
   deleteVocabularies,
   updateVocabularies
 } from "@/services/topics-vocabularies-api";
-import Link from "next/link";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { KanjiDrawer } from "@/components/vocabularies/KanjiDrawer";
 import { m, AnimatePresence, LazyMotion } from "framer-motion";
 import { domAnimation } from "framer-motion/m";
-import VocabGraphViewer from "@/components/graph/VocabGraphViewer";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { DataTableCardsView } from "./data-table/DataTableCardsView";
+import { DataTableTableView } from "./data-table/DataTableTableView";
+import { DataTableHeader } from "./data-table/DataTableHeader";
+import { DataTableGraphDialog } from "./data-table/DataTableGraphDialog";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -73,25 +42,61 @@ interface DataTableProps<TData, TValue> {
   topicId: string;
 }
 
+interface TableState {
+  sorting: SortingState;
+  columnFilters: ColumnFiltersState;
+  columnVisibility: VisibilityState;
+  rowSelection: Record<string, boolean>;
+  viewMode: "table" | "cards";
+  isGraphOpen: boolean;
+}
+
+type TableAction =
+  | { type: "SET_SORTING"; payload: SortingState }
+  | { type: "SET_COLUMN_FILTERS"; payload: ColumnFiltersState }
+  | { type: "SET_COLUMN_VISIBILITY"; payload: VisibilityState }
+  | { type: "SET_ROW_SELECTION"; payload: Record<string, boolean> }
+  | { type: "SET_VIEW_MODE"; payload: "table" | "cards" }
+  | { type: "SET_GRAPH_OPEN"; payload: boolean };
+
+const tableReducer = (state: TableState, action: TableAction): TableState => {
+  switch (action.type) {
+    case "SET_SORTING":
+      return { ...state, sorting: action.payload };
+    case "SET_COLUMN_FILTERS":
+      return { ...state, columnFilters: action.payload };
+    case "SET_COLUMN_VISIBILITY":
+      return { ...state, columnVisibility: action.payload };
+    case "SET_ROW_SELECTION":
+      return { ...state, rowSelection: action.payload };
+    case "SET_VIEW_MODE":
+      return { ...state, viewMode: action.payload };
+    case "SET_GRAPH_OPEN":
+      return { ...state, isGraphOpen: action.payload };
+    default:
+      return state;
+  }
+};
+
 export function DataTable<TData, TValue>({
   columns,
   data: initialData,
   projectId,
   topicId
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [tableState, dispatch] = React.useReducer(tableReducer, {
+    sorting: [],
+    columnFilters: [],
+    columnVisibility: {},
+    rowSelection: {},
+    viewMode: "cards",
+    isGraphOpen: false,
+  });
+
   const isEditingRef = React.useRef(false);
   const dataRef = React.useRef<TData[]>(initialData);
   const [, forceUpdate] = React.useState({});
   const deletedVocabularyIdsRef = React.useRef<Set<string>>(new Set());
-  const [viewMode, setViewMode] = React.useState<"table" | "cards">("cards");
-  const [isGraphOpen, setIsGraphOpen] = React.useState(false);
   const selectedKanjiWordRef = React.useRef<string | null>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -150,7 +155,7 @@ export function DataTable<TData, TValue>({
       }
       return JSON.stringify(row) !== JSON.stringify(originalRow);
     });
-  }, [data, deletedVocabularyIds, initialData]);
+  }, [data, initialData]);
 
   const dirtyRowIds = React.useMemo(() => {
     const initialDataById = (initialData as any[]).reduce<Record<string, any>>(
@@ -194,20 +199,32 @@ export function DataTable<TData, TValue>({
     data: visibleData,
     columns: augmentedColumns,
     getCoreRowModel: getCoreRowModel(),
-    onSortingChange: setSorting,
+    onSortingChange: (updater) => {
+      const newSorting = typeof updater === 'function' ? updater(tableState.sorting) : updater;
+      dispatch({ type: "SET_SORTING", payload: newSorting });
+    },
     getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: (updater) => {
+      const newFilters = typeof updater === 'function' ? updater(tableState.columnFilters) : updater;
+      dispatch({ type: "SET_COLUMN_FILTERS", payload: newFilters });
+    },
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    onColumnVisibilityChange: (updater) => {
+      const newVisibility = typeof updater === 'function' ? updater(tableState.columnVisibility) : updater;
+      dispatch({ type: "SET_COLUMN_VISIBILITY", payload: newVisibility });
+    },
+    onRowSelectionChange: (updater) => {
+      const newSelection = typeof updater === 'function' ? updater(tableState.rowSelection) : updater;
+      dispatch({ type: "SET_ROW_SELECTION", payload: newSelection });
+    },
     state: {
-      sorting,
-      columnFilters,
-      columnVisibility: { ...columnVisibility, ...computedColumnVisibility },
-      rowSelection
+      sorting: tableState.sorting,
+      columnFilters: tableState.columnFilters,
+      columnVisibility: { ...tableState.columnVisibility, ...computedColumnVisibility },
+      rowSelection: tableState.rowSelection
     },
     meta: {
-      isEditing,
+      isEditing: isEditingRef.current,
       updateData: (rowIndex: number, columnId: string, value: unknown) => {
         dataRef.current = dataRef.current.map((row, index) => {
           if (index === rowIndex) {
@@ -238,10 +255,7 @@ export function DataTable<TData, TValue>({
       const changedVocabularies = (data as any[]).filter((row) => {
         if (deletedVocabularyIdsRef.current.has((row as any).id)) return false;
         const originalRow = initialDataById[(row as any).id];
-        if (!originalRow) {
-          return false;
-        }
-        return JSON.stringify(row) !== JSON.stringify(originalRow);
+        return originalRow && JSON.stringify(row) !== JSON.stringify(originalRow);
       });
 
       const deletePromise =
@@ -256,7 +270,7 @@ export function DataTable<TData, TValue>({
 
       await Promise.all([deletePromise, updatePromise]);
 
-      let messages = [];
+      const messages = [];
       if (deletedVocabularyIdsRef.current.size > 0) {
         messages.push(`${deletedVocabularyIdsRef.current.size} vocabularies deleted`);
       }
@@ -290,375 +304,70 @@ export function DataTable<TData, TValue>({
     if (nextViewMode === "cards" && isEditingRef.current) {
       return;
     }
-
-    setViewMode(nextViewMode);
+    dispatch({ type: "SET_VIEW_MODE", payload: nextViewMode });
   };
 
   const handleRowClick = (word: string) => {
-    if (!isEditing) {
+    if (!isEditingRef.current) {
       selectedKanjiWordRef.current = word;
-      setIsGraphOpen(true);
+      dispatch({ type: "SET_GRAPH_OPEN", payload: true });
     }
   };
 
-  const filterControls = (
-    <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
-      <Select
-        value={(table.getColumn("status")?.getFilterValue() as string) ?? "ALL"}
-        onValueChange={(value) => {
-          if (value === "ALL") {
-            table.getColumn("status")?.setFilterValue(undefined);
-          } else {
-            table.getColumn("status")?.setFilterValue(value);
-          }
-        }}
-      >
-        <SelectTrigger className="w-full border-border/60 bg-background/40 sm:w-[180px]">
-          <SelectValue placeholder="Filter by status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ALL">All</SelectItem>
-          <SelectItem value="REMEMBERED">Memorized</SelectItem>
-          <SelectItem value="NOT_REMEMBERED">Struggling</SelectItem>
-          <SelectItem value="UNKNOWN">Not started</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  );
-
-  const actionButtons = (
-    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-      {!isEditing ? (
-        <Link href={`/projects/${projectId}/topics/${topicId}/import`}>
-          <Button variant="outline" className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            Import
-          </Button>
-        </Link>
-      ) : null}
-      <div className="flex w-full items-center rounded-md border border-border/60 bg-background/40 p-1 sm:w-auto">
-        <Button
-          variant={viewMode === "cards" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => handleSwitchView("cards")}
-          disabled={isEditing}
-          title={isEditing ? "Finish editing before switching to cards" : "Cards view"}
-          className="flex-1 sm:flex-none"
-        >
-          <Blocks className="mr-2 h-4 w-4" />
-          Cards
-        </Button>
-        <Button
-          variant={viewMode === "table" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => handleSwitchView("table")}
-          title="Table view"
-          className="flex-1 sm:flex-none"
-        >
-          <TableIcon className="mr-2 h-4 w-4" />
-          Table
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsGraphOpen(true)}
-          title="Graph view"
-          className="flex-1 sm:flex-none"
-        >
-          <Network className="mr-2 h-4 w-4" />
-          Graph
-        </Button>
-      </div>
-      {viewMode === "table" ? (
-        isEditingRef.current ? (
-          null
-        ) : (
-          <Button variant="outline" onClick={() => { isEditingRef.current = true; forceUpdate({}); }} className="w-full sm:w-auto">
-            <Pen className="mr-2 h-4 w-4" />
-            Edit table
-          </Button>
-        )
-      ) : (
-        <Badge variant="outline" className="h-9 justify-center px-3 sm:justify-start">
-          Cards are view-only
-        </Badge>
-      )}
-    </div>
-  );
-
-  const renderCardsView = () => {
-    const rows = table.getRowModel().rows;
-
-    if (rows.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="text-muted-foreground mb-2">
-            <Grid className="h-12 w-12 mx-auto opacity-50" />
-          </div>
-          <h3 className="text-lg font-semibold text-foreground mb-1">
-            No vocabulary found
-          </h3>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Try adjusting your filters or add new vocabulary
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <LazyMotion features={domAnimation}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <AnimatePresence>
-            {rows.map((row, index) => {
-              const item = row.original as any;
-              return (
-                <m.div
-                  key={item.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                  className="h-full"
-                >
-                  <Card
-                    className="group h-full bg-card/50 backdrop-blur-sm border-white/5 shadow-md hover:shadow-glow transition-all duration-300 hover:scale-[1.02] cursor-pointer"
-                    onClick={() => handleRowClick(item.word)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start gap-3">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-xl lg:text-2xl font-bold text-primary mb-2 break-words">
-                            {item.word}
-                          </h3>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm md:text-base text-muted-foreground italic break-words">
-                              {item.pronunciation}
-                            </p>
-                            {item.part_of_speech && (
-                              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                                {item.part_of_speech}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex-shrink-0">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="cursor-help">
-                                  {getStatusIcon(item.status)}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>
-                                  {item.status?.replace("_", " ") || "Unknown"}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-sm md:text-base text-foreground leading-relaxed">
-                        {item.meaning}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </m.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
-      </LazyMotion>
-    );
+  const handleEditToggle = () => {
+    isEditingRef.current = true;
+    forceUpdate({});
   };
-
-  const renderTableView = () => (
-    <div className="space-y-3">
-      {isEditing ? (
-        <div className="sticky top-4 z-20 rounded-xl border border-amber-500/20 bg-background/95 px-4 py-3 shadow-lg backdrop-blur">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Editing vocabulary</span>
-              {hasUnsavedChanges ? (
-                <Badge
-                  variant="outline"
-                  className="border-amber-500/50 text-amber-600"
-                >
-                  Unsaved changes
-                </Badge>
-              ) : (
-                <span>All changes saved locally</span>
-              )}
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                className="w-full sm:w-auto"
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleSave} className="w-full sm:w-auto">
-                Save
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-      <Card className="rounded-xl border-white/5 bg-card/40 backdrop-blur-sm overflow-hidden shadow-lg">
-        <Table>
-          {!isDesktop ? null : (
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead
-                        key={header.id}
-                        className="whitespace-nowrap px-4"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-          )}
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => {
-                const status = (row.original as any).status;
-                const isDirtyRow = dirtyRowIds.has((row.original as any).id);
-                let rowClassName = "";
-                if (!isDesktop) {
-                  switch (status) {
-                    case "REMEMBERED":
-                      rowClassName = "border-l-4 border-emerald-500 bg-emerald-500/5";
-                      break;
-                    case "NOT_REMEMBERED":
-                      rowClassName = "border-l-4 border-rose-500 bg-rose-500/5";
-                      break;
-                    case "NEW":
-                      rowClassName = "border-l-4 border-sky-500 bg-sky-500/5";
-                      break;
-                    case "UNKNOWN":
-                    default:
-                      rowClassName = "border-l-4 border-slate-500 bg-slate-500/5";
-                      break;
-                  }
-                }
-                if (isDirtyRow) {
-                  rowClassName = `${rowClassName} bg-amber-500/10 border-amber-500/30`;
-                }
-                if (!isDesktop) {
-                  const wordCell = row.getVisibleCells().find((c) => c.column.id === "word");
-                  const pronCell = row.getVisibleCells().find((c) => c.column.id === "pronunciation");
-                  const meanCell = row.getVisibleCells().find((c) => c.column.id === "meaning");
-
-                  if (isEditing) {
-                    return (
-                      <TableRow key={row.id} className={`${rowClassName}`}>
-                        <TableCell className="p-4 flex flex-col gap-3">
-                          {wordCell && flexRender(wordCell.column.columnDef.cell, wordCell.getContext())}
-                          {pronCell && flexRender(pronCell.column.columnDef.cell, pronCell.getContext())}
-                          {meanCell && flexRender(meanCell.column.columnDef.cell, meanCell.getContext())}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  }
-
-                  return (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                      className={`${rowClassName} hover:bg-muted/50 transition-colors duration-200 cursor-pointer block w-full`}
-                      onClick={() => handleRowClick((row.original as any).word)}
-                    >
-                      <TableCell className="p-4 flex flex-col gap-1 border-b border-border/10 w-full block">
-                        <div className="flex justify-between items-start w-full">
-                          <div className="flex-1 min-w-0 pr-4">
-                            <h4 className="font-headline text-2xl font-bold text-primary truncate max-w-full">{(row.original as any).word}</h4>
-                            <p className="text-muted-foreground italic text-sm truncate max-w-full">{(row.original as any).pronunciation}</p>
-                          </div>
-                          <div className="flex-1 min-w-0 text-right">
-                            <p className="text-foreground font-medium text-sm break-words">{(row.original as any).meaning}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                }
-
-                return (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className={`${rowClassName} hover:bg-muted/50 transition-colors duration-200 ${isEditing ? "cursor-default" : "cursor-pointer"}`}
-                    onClick={() => handleRowClick((row.original as any).word)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className={`p-4 ${isEditing ? "px-1" : ""}`.trim() || undefined}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </Card>
-    </div>
-  );
 
   return (
     <div>
-      <div className="py-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div className="w-full lg:max-w-md">{filterControls}</div>
-          <div className="w-full lg:flex-1">{actionButtons}</div>
-        </div>
-      </div>
+      <DataTableHeader
+        table={table}
+        viewMode={tableState.viewMode}
+        isEditing={isEditingRef.current}
+        projectId={projectId}
+        topicId={topicId}
+        onViewModeChange={handleSwitchView}
+        onGraphOpen={() => dispatch({ type: "SET_GRAPH_OPEN", payload: true })}
+        onEditToggle={handleEditToggle}
+      />
       <LazyMotion features={domAnimation}>
         <AnimatePresence mode="wait">
           <m.div
-            key={viewMode}
+            key={tableState.viewMode}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            {viewMode === "table" ? renderTableView() : renderCardsView()}
+            {tableState.viewMode === "table" ? (
+              <DataTableTableView
+                table={table}
+                isEditing={isEditingRef.current}
+                hasUnsavedChanges={hasUnsavedChanges}
+                dirtyRowIds={dirtyRowIds}
+                isDesktop={isDesktop}
+                columnsLength={columns.length}
+                onRowClick={handleRowClick}
+                onSave={handleSave}
+                onCancel={handleCancel}
+              />
+            ) : (
+              <DataTableCardsView
+                rows={table.getRowModel().rows}
+                onRowClick={handleRowClick}
+                getStatusIcon={getStatusIcon}
+              />
+            )}
           </m.div>
         </AnimatePresence>
       </LazyMotion>
 
-      <Dialog open={isGraphOpen} onOpenChange={setIsGraphOpen}>
-        <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 border-none overflow-hidden [&>button]:z-[60] [&>button]:bg-white [&>button]:text-black [&>button]:border-[3px] [&>button]:border-black [&>button]:shadow-[2px_2px_0px_black] [&>button]:opacity-100 [&>button:hover]:bg-zinc-100 bg-zinc-50">
-          <DialogTitle className="sr-only">Whiteboard Graph View</DialogTitle>
-          <VocabGraphViewer vocabulary={visibleData as any[]} />
-        </DialogContent>
-      </Dialog>
+      <DataTableGraphDialog
+        isOpen={tableState.isGraphOpen}
+        data={visibleData}
+        onOpenChange={(open) => dispatch({ type: "SET_GRAPH_OPEN", payload: open })}
+      />
 
       <KanjiDrawer
         word={selectedKanjiWordRef.current}

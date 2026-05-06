@@ -4,43 +4,16 @@ import { useState, useContext } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Card,
-  CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { VocabularyContext } from "@/context/VocabularyContext";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
 import type { Vocabulary } from "@/lib/types";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-  DialogTrigger
-} from "@/components/ui/dialog";
+import { parseInputToRows } from "@/lib/vocabulary-parser";
+import { VocabularyImportForm } from "./VocabularyImportForm";
+import { VocabularyPreviewTable } from "./VocabularyPreviewTable";
 
 type ParsedRow = string[];
 type ColumnMapping = {
@@ -80,128 +53,6 @@ export default function VocabularyImportClient() {
       });
       setColumnMapping(newMapping);
     }
-  };
-
-  /**
-   * Parse the raw input text into rows of cells.
-   * Supports:
-   * - Tab or slash separated (format 1 & 2)
-   * - Markdown table (format 3)
-   */
-  const parseInputToRows = (raw: string): ParsedRow[] => {
-    const lines = raw.split("\n").reduce<string[]>((acc, l) => {
-      const trimmed = l.trim();
-      if (trimmed.length > 0) acc.push(trimmed);
-      return acc;
-    }, []);
-
-    // Detect markdown table (lines starting and ending with | or containing | separators)
-    const isMarkdownTable = lines.every(
-      (line) => line.startsWith("|") && line.includes("|")
-    );
-    if (isMarkdownTable) {
-      // remove separator lines like | --- | --- |
-      const filtered = lines.filter(
-        (l) => !/^\|?\s*-{1,}\s*(\|\s*-{1,}\s*)+$/i.test(l)
-      );
-      return filtered.reduce<ParsedRow[]>((acc, line) => {
-        const parts = line.split("|");
-        const cells = parts.reduce<string[]>((cellAcc, c, i) => {
-          const trimmed = c.trim();
-          if (trimmed !== "" && !(i === 0 || i === parts.length - 1)) {
-            cellAcc.push(trimmed);
-          }
-          return cellAcc;
-        }, []);
-        acc.push(cells);
-        return acc;
-      }, []);
-    }
-
-    // Otherwise, try splitting by tab first, then slashes, then multiple spaces
-    const rows: ParsedRow[] = [];
-    const tabRegex = /\t/;
-    const pipeRegex = /\|/;
-    const slashRegex = /\//;
-    
-    for (const line of lines) {
-      const hasTab = tabRegex.test(line);
-      const hasPipe = pipeRegex.test(line);
-      const hasSlash = slashRegex.test(line);
-
-      // If line contains tabs, split by tab
-      if (hasTab) {
-        rows.push(
-          line.split("\t").reduce<string[]>((acc, s) => {
-            const trimmed = s.trim();
-            if (trimmed !== "") acc.push(trimmed);
-            return acc;
-          }, [])
-        );
-        continue;
-      }
-
-      // If line contains pipe-separated but not starting with | (some authors omit outer pipes)
-      if (hasPipe) {
-        const cells = line.split("|").reduce<string[]>((acc, s) => {
-          const trimmed = s.trim();
-          if (trimmed !== "") acc.push(trimmed);
-          return acc;
-        }, []);
-        if (cells.length > 1) {
-          rows.push(cells);
-          continue;
-        }
-      }
-
-      // If line contains slash separators like 'にち / ひ' or uses tabs and slashes, split on slash or multiple spaces
-      if (hasSlash) {
-        const parts = line.split("/").reduce<string[]>((acc, s) => {
-          const trimmed = s.trim();
-          if (trimmed !== "") acc.push(trimmed);
-          return acc;
-        }, []);
-        // Also split the first segment by tab or spaces to separate word and pronunciation if needed
-        if (parts.length >= 2) {
-          // Try breaking first part by whitespace to get word and pronunciation when line like "夕\tゆう / せき\tBuổi chiều"
-          const preParts = parts[0].split(/\s+/).reduce<string[]>((acc, s) => {
-            const trimmed = s.trim();
-            if (trimmed !== "") acc.push(trimmed);
-            return acc;
-          }, []);
-          if (preParts.length > 1) {
-            rows.push([
-              preParts[0],
-              preParts.slice(1).join(" "),
-              ...parts.slice(1)
-            ]);
-          } else {
-            rows.push(parts);
-          }
-          continue;
-        }
-      }
-
-      // Fallback: split by two-or-more spaces or single tab or single space
-      const byTwoSpaces = line.split(/\s{2,}/).reduce<string[]>((acc, s) => {
-        const trimmed = s.trim();
-        if (trimmed !== "") acc.push(trimmed);
-        return acc;
-      }, []);
-      if (byTwoSpaces.length > 1) {
-        rows.push(byTwoSpaces);
-        continue;
-      }
-
-      const bySpace = line.split(/\s+/).reduce<string[]>((acc, s) => {
-        const trimmed = s.trim();
-        if (trimmed !== "") acc.push(trimmed);
-        return acc;
-      }, []);
-      rows.push(bySpace);
-    }
-
-    return rows;
   };
 
   const handleColumnMapChange = (
@@ -261,12 +112,6 @@ export default function VocabularyImportClient() {
     push(`/projects/${projectId}/topics/${topicId}`);
   };
 
-  const maxColumns =
-    parsedData.length > 0
-      ? Math.max(...parsedData.map((row) => row.length))
-      : 0;
-  const columnOptions = ["word", "pronunciation", "meaning", "part_of_speech", "skip"];
-
   return (
     <div className="container mx-auto max-w-5xl py-8 px-4">
       <Card>
@@ -278,86 +123,23 @@ export default function VocabularyImportClient() {
           </CardDescription>
         </CardHeader>
       </Card>
-      <Textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        rows={10}
-        placeholder={
-          "日  にち / ひ  Ngày, mặt trời  noun\n月  つき / がつ  Mặt trăng, tháng  noun"
-        }
-        className="mb-4 mt-4"
+      <VocabularyImportForm
+        text={text}
+        onTextChange={setText}
+        onPreview={handlePreview}
+        onSave={handleSave}
+        isSaving={isSaving}
+        hasData={parsedData.length > 0}
       />
-        <div className="flex justify-between">
-          <Button onClick={handlePreview}>Preview Data</Button>
-          <Button
-            onClick={handleSave}
-            disabled={parsedData.length === 0 || isSaving}
-          >
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSaving ? "Saving..." : "Save Vocabulary"}
-          </Button>
-        </div>
-      {/* Separator */}
       <div className="mt-4"></div>
 
       {showPreview && (
         <div className="rounded-md border space-y-4">
-          {parsedData.length === 0 ? (
-            <p className="text-sm md:text-base text-muted-foreground text-center pb-4">No data to preview.</p>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {Array.from({ length: maxColumns }).map((_, index) => (
-                      <TableHead key={index}>
-                        <Select
-                          value={columnMapping[index]}
-                          onValueChange={(value: any) =>
-                            handleColumnMapChange(index, value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Map Column" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {columnOptions.map((opt) => (
-                              <SelectItem
-                                key={opt}
-                                value={opt}
-                                className="capitalize"
-                              >
-                                {opt === "part_of_speech" ? "part of speech" : opt.replace("_", " ")}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {parsedData.slice(0, 5).map((row, rowIndex) => (
-                    <TableRow key={rowIndex}>
-                      {Array.from({ length: maxColumns }).map(
-                        (_, cellIndex) => (
-                          <TableCell key={cellIndex}>
-                            {row[cellIndex] || ""}
-                          </TableCell>
-                        )
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-
-              {parsedData.length > 5 && (
-                <p className="text-sm md:text-base text-muted-foreground text-center">
-                  ... and {parsedData.length - 5} more rows.
-                </p>
-              )}
-            </>
-          )}
+          <VocabularyPreviewTable
+            parsedData={parsedData}
+            columnMapping={columnMapping}
+            onColumnMapChange={handleColumnMapChange}
+          />
         </div>
       )}
     </div>
