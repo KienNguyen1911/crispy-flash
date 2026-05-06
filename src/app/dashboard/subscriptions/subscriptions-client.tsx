@@ -1,0 +1,269 @@
+
+'use client';
+
+import { useState, useReducer } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { Loader2, MoreHorizontal } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
+interface GrantState {
+  plan: string;
+  duration: number;
+  selectedUser: string | null;
+  open: boolean;
+}
+
+type GrantAction = 
+  | { type: 'SET_PLAN'; payload: string }
+  | { type: 'SET_DURATION'; payload: number }
+  | { type: 'SET_USER'; payload: string | null }
+  | { type: 'SET_OPEN'; payload: boolean }
+  | { type: 'RESET' };
+
+const grantReducer = (state: GrantState, action: GrantAction): GrantState => {
+  switch (action.type) {
+    case 'SET_PLAN':
+      return { ...state, plan: action.payload };
+    case 'SET_DURATION':
+      return { ...state, duration: action.payload };
+    case 'SET_USER':
+      return { ...state, selectedUser: action.payload };
+    case 'SET_OPEN':
+      return { ...state, open: action.payload };
+    case 'RESET':
+      return { plan: 'PRO_MONTHLY', duration: 1, selectedUser: null, open: false };
+    default:
+      return state;
+  }
+};
+
+interface Order {
+  id: string;
+  userId: string;
+  user: { name: string; email: string };
+  amount: number;
+  currency: string;
+  status: string;
+  createdAt: string;
+}
+
+interface SubscriptionsPageProps {
+  initialOrders: Order[];
+}
+
+export default function AdminSubscriptionsPage({ initialOrders }: SubscriptionsPageProps) {
+  const { token } = useAuth();
+  const [page, setPage] = useState(1);
+  const [orders, setOrders] = useState(initialOrders);
+  const [isLoading, setIsLoading] = useState(false);
+  const [grantState, dispatch] = useReducer(grantReducer, {
+    plan: 'PRO_MONTHLY',
+    duration: 1,
+    selectedUser: null,
+    open: false
+  });
+
+  const loadPage = async (pageNum: number) => {
+    if (!token) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/payment/orders?page=${pageNum}&limit=10`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setOrders(data.data || []);
+      setPage(pageNum);
+    } catch (error) {
+      toast.error('Failed to load orders');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGrant = async () => {
+    if (!grantState.selectedUser || !token) return;
+
+    try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/payment/grant/${grantState.selectedUser}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                plan: grantState.plan,
+                durationMonths: Number(grantState.duration),
+            }),
+        });
+
+        if (res.ok) {
+            toast.success('Subscription granted successfully');
+            dispatch({ type: 'SET_OPEN', payload: false });
+            await loadPage(page);
+        } else {
+            toast.error('Failed to grant subscription');
+        }
+    } catch (error) {
+        toast.error('Error occurred');
+    }
+  };
+
+  return (
+    <div className="container mx-auto py-10 px-4">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Subscription Management</h1>
+        <div className="flex gap-2">
+            <Button onClick={() => {
+                dispatch({ type: 'SET_USER', payload: null });
+                dispatch({ type: 'SET_OPEN', payload: true });
+            }}>
+                Grant Subscription
+            </Button>
+            <Button variant="outline" onClick={() => loadPage(page)}>Refresh</Button>
+        </div>
+      </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order ID</TableHead>
+              <TableHead>User</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Currency</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+                <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                        <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                    </TableCell>
+                </TableRow>
+            ) : orders.length === 0 ? (
+                <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                        No orders found.
+                    </TableCell>
+                </TableRow>
+            ) : orders.map((order) => (
+              <TableRow key={order.id} suppressHydrationWarning>
+                <TableCell className="font-medium">{order.id.slice(0, 8)}...</TableCell>
+                <TableCell>
+                    <div className="flex flex-col">
+                        <span className="font-medium">{order.user.name}</span>
+                        <span className="text-xs text-muted-foreground">{order.user.email}</span>
+                    </div>
+                </TableCell>
+                <TableCell>{order.amount.toLocaleString()}</TableCell>
+                <TableCell>{order.currency}</TableCell>
+                <TableCell>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
+                        ${order.status === 'SUCCESS' ? 'bg-green-100 text-green-800' : 
+                          order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                        {order.status.toLowerCase()}
+                    </span>
+                </TableCell>
+                <TableCell suppressHydrationWarning>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell className="text-right">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                                dispatch({ type: 'SET_USER', payload: order.userId });
+                                dispatch({ type: 'SET_OPEN', payload: true });
+                            }}>
+                                Grant Subscription
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(order.id)}>
+                                Copy Order ID
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="flex justify-end gap-2 mt-4">
+        <Button variant="outline" onClick={() => loadPage(Math.max(1, page - 1))} disabled={page === 1}>Previous</Button>
+        <Button variant="outline" onClick={() => loadPage(page + 1)} disabled={orders.length < 10}>Next</Button>
+      </div>
+
+      <Dialog open={grantState.open} onOpenChange={(open) => dispatch({ type: 'SET_OPEN', payload: open })}>
+        <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+                <DialogTitle>Grant Subscription</DialogTitle>
+                <DialogDescription>
+                    Manually add subscription time to user.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="userId" className="text-right">User ID</Label>
+                    <Input 
+                        id="userId" 
+                        value={grantState.selectedUser || ''} 
+                        onChange={(e) => dispatch({ type: 'SET_USER', payload: e.target.value })} 
+                        className="col-span-3"
+                        placeholder="User ID (UUID)"
+                    />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="plan" className="text-right">Plan</Label>
+                    <Select value={grantState.plan} onValueChange={(value) => dispatch({ type: 'SET_PLAN', payload: value })}>
+                        <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="Select plan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="PRO_MONTHLY">Pro Monthly</SelectItem>
+                            <SelectItem value="PRO_YEARLY">Pro Yearly</SelectItem>
+                            <SelectItem value="LIFETIME">Lifetime</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="duration" className="text-right">Months</Label>
+                    <Input id="duration" type="number" value={grantState.duration} onChange={(e) => dispatch({ type: 'SET_DURATION', payload: Number(e.target.value) })} className="col-span-3" />
+                </div>
+            </div>
+            <DialogFooter>
+                <Button type="submit" onClick={handleGrant}>Save changes</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

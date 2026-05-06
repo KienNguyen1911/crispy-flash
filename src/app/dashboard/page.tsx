@@ -1,6 +1,3 @@
-"use client"
-
-import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, CreditCard, Activity, DollarSign } from "lucide-react"
 import { apiClient } from "@/lib/api";
@@ -8,30 +5,28 @@ import { DatabaseBackupPanel } from "@/components/admin/DatabaseBackupPanel";
 
 const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
-export default function AdminDashboardPage() {
-  const [summary, setSummary] = useState({
-    totalRevenue: 0,
-    salesCount: 0,
-    subscriptionCount: 0,
-    activeUsersCount: 0,
-  });
+async function fetchSummary() {
+  try {
+    const data = await apiClient<{
+      totalRevenue: number;
+      salesCount: number;
+      subscriptionCount: number;
+      activeUsersCount: number;
+    }>('/dashboard/summary');
+    return data;
+  } catch (e) {
+    console.error("Failed to fetch dashboard summary", e);
+    return {
+      totalRevenue: 0,
+      salesCount: 0,
+      subscriptionCount: 0,
+      activeUsersCount: 0,
+    };
+  }
+}
 
-  useEffect(() => {
-     async function fetchSummary() {
-         try {
-             const data = await apiClient<{
-                totalRevenue: number;
-                salesCount: number;
-                subscriptionCount: number;
-                activeUsersCount: number;
-             }>('/dashboard/summary');
-             setSummary(data);
-         } catch (e) {
-             console.error("Failed to fetch dashboard summary", e);
-         }
-     }
-     fetchSummary();
-  }, []);
+export default async function AdminDashboardPage() {
+  const summary = await fetchSummary();
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
