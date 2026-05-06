@@ -12,9 +12,9 @@ import {
   formatQrLoginStatus,
   getQrImageUrl,
   getTimeRemaining,
-  QrLoginSessionResponse,
-  QrLoginSessionView,
   SOCKET_BASE,
+  type QrLoginSessionResponse,
+  type QrLoginSessionView,
 } from "@/lib/qr-login";
 
 interface QrLoginDesktopPanelProps {
