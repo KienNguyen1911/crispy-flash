@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
-import { LazyMotion, m } from "framer-motion";
-import { domAnimation } from "framer-motion/m";
+import { useState, useMemo, useEffect } from "react";
+import { LazyMotion, m, domAnimation } from "framer-motion";
 import { toast } from "sonner";
 import { LearnModePublicCard } from "./learn-mode-public/LearnModePublicCard";
 import { LearnModePublicControls } from "./learn-mode-public/LearnModePublicControls";
@@ -31,12 +30,12 @@ const LearnModePublic = ({
   const [isFlipped, setIsFlipped] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
-  const showWordFirstRef = useRef(true);
-  const showPronunciationRef = useRef(true);
+  const [showWordFirst, setShowWordFirst] = useState(true);
+  const [showPronunciation, setShowPronunciation] = useState(true);
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(
     null,
   );
-  const previousIndexRef = useRef<number | null>(null);
+  const [previousIndex, setPreviousIndex] = useState<number | null>(null);
   const [localStatus, setLocalStatus] = useState<Record<string, string>>({});
 
   const currentVocab = useMemo(
@@ -63,14 +62,14 @@ const LearnModePublic = ({
         className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
         style={{ backfaceVisibility: "hidden" }}
       >
-        {showWordFirstRef.current ? (
+        {showWordFirst ? (
           <>
             {vocab.word && (
               <h2 className="text-5xl font-bold mb-2 text-center">
                 {vocab.word}
               </h2>
             )}
-            {vocab.pronunciation && showPronunciationRef.current && (
+            {vocab.pronunciation && showPronunciation && (
               <p className="text-xl text-muted-foreground">
                 {vocab.pronunciation}
               </p>
@@ -105,7 +104,7 @@ const LearnModePublic = ({
           transform: "rotateY(180deg)",
         }}
       >
-        {showWordFirstRef.current ? (
+        {showWordFirst ? (
           <>
             <p className="text-2xl font-semibold text-center">
               {vocab.meaning}
@@ -147,14 +146,6 @@ const LearnModePublic = ({
     </>
   );
 
-  const playAudio = (text: string) => {
-    if ("speechSynthesis" in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "ja-JP";
-      speechSynthesis.speak(utterance);
-    }
-  };
-
   const handleNext = () => {
     if (currentIndex < vocabulary.length - 1) {
       setCurrentIndex(prev => prev + 1);
@@ -187,7 +178,7 @@ const LearnModePublic = ({
       setCurrentIndex(prev => prev + 1);
       setTimeout(() => {
         setSwipeDirection(null);
-        previousIndexRef.current = null;
+        setPreviousIndex(null);
       }, 400);
     } else {
       setTimeout(() => {

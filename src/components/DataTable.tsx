@@ -27,8 +27,7 @@ import {
   updateVocabularies
 } from "@/services/topics-vocabularies-api";
 import { KanjiDrawer } from "@/components/vocabularies/KanjiDrawer";
-import { m, AnimatePresence, LazyMotion } from "framer-motion";
-import { domAnimation } from "framer-motion/m";
+import { m, AnimatePresence, LazyMotion, domAnimation } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { DataTableCardsView } from "./data-table/DataTableCardsView";
 import { DataTableTableView } from "./data-table/DataTableTableView";

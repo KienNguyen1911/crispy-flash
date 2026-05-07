@@ -12,11 +12,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import PageLoader from '@/components/ui/PageLoader';
 
-export const metadata = {
-  title: "Project Analytics",
-  description: "View detailed learning analytics and progress for your project"
-};
-
 const AnalyticsChart = dynamic(() => import('@/components/analytics/AnalyticsChart'), { ssr: false });
 
 const AnalyticsPage = () => {

@@ -7,8 +7,7 @@ import { TopicForm } from "@/components/topics/TopicForm";
 import { useContext } from "react";
 import { TopicContext } from "@/context/TopicContext";
 import { useRouter } from "next/navigation";
-import { LazyMotion, m, AnimatePresence } from "framer-motion";
-import { domAnimation } from "framer-motion/m";
+import { LazyMotion, m, AnimatePresence, domAnimation } from "framer-motion";
 
 export default function TopicCreate({
   projectId,

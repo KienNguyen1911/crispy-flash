@@ -7,8 +7,8 @@ import {
   useTransform,
   useMotionTemplate,
   LazyMotion,
+  domAnimation,
 } from "framer-motion";
-import { domAnimation } from "framer-motion/m";
 import { cn } from "@/lib/utils";
 
 export const CometCard = ({

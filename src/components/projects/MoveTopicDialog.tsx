@@ -5,8 +5,7 @@ import type { Project } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { X, Check } from "lucide-react";
 import { TopicContext } from "@/context/TopicContext";
-import { LazyMotion, m, AnimatePresence } from "framer-motion";
-import { domAnimation } from "framer-motion/m";
+import { LazyMotion, m, AnimatePresence, domAnimation } from "framer-motion";
 
 export default function MoveTopicDialog({
   topicId,

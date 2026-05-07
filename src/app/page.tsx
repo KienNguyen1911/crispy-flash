@@ -5,11 +5,6 @@ import DataLoader from "@/components/ui/DataLoader";
 import { LandingPage } from "@/components/landing/LandingPage";
 import { UserDashboard } from "@/components/dashboard/UserDashboard";
 
-export const metadata = {
-  title: "Flashcard Learning System",
-  description: "Learn vocabulary effectively with interactive flashcards"
-};
-
 export default function Page() {
   const { isAuthenticated, isLoading } = useAuth();
 

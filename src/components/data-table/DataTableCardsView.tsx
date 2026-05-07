@@ -10,8 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/components/ui/tooltip";
-import { m, AnimatePresence, LazyMotion } from "framer-motion";
-import { domAnimation } from "framer-motion/m";
+import { m, AnimatePresence, LazyMotion, domAnimation } from "framer-motion";
 
 interface DataTableCardsViewProps<TData> {
   rows: Row<TData>[];

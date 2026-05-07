@@ -1,7 +1,6 @@
 "use client";
 
-import { AnimatePresence, m, LazyMotion } from "framer-motion";
-import { domAnimation } from "framer-motion/m";
+import { AnimatePresence, m, LazyMotion, domAnimation } from "framer-motion";
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 

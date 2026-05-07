@@ -12,6 +12,8 @@ import { PWAiOSInstall } from '@/components/PWAiOSInstall';
 import { PWADesktopInstall } from '@/components/PWADesktopInstall';
 import { RootLayoutClient } from './root-layout-client';
 
+export const dynamic = 'force-dynamic';
+
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 

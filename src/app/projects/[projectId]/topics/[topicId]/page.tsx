@@ -19,11 +19,6 @@ import { TopicActions } from "@/components/topics/TopicActions";
 import { StoryDrawer } from "@/components/topics/StoryDrawer";
 import { LearnModeModal } from "@/components/topics/LearnModeModal";
 
-export const metadata = {
-  title: "Topic Details",
-  description: "View and manage vocabulary for your topic"
-};
-
 const DataTable = dynamic(
   () =>
     import("@/components/DataTable").then((mod) => ({

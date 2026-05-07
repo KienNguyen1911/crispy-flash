@@ -1,7 +1,6 @@
 "use client";
 
-import { LazyMotion, m } from "framer-motion";
-import { domAnimation } from "framer-motion/m";
+import { LazyMotion, m, domAnimation } from "framer-motion";
 import { Vocabulary } from "@prisma/client";
 import { LearnModeCard } from "./LearnModeCard";
 

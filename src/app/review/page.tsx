@@ -10,11 +10,6 @@ import { Brain, BookOpen, ArrowRight, Loader, BarChart3 } from "lucide-react";
 import { useDailyReviewSummary, useDueReviewCount } from "@/hooks/use-srs";
 import { getProjects } from "@/services/projects-api";
 
-export const metadata = {
-  title: "Smart Review",
-  description: "Review vocabulary using spaced repetition algorithm"
-};
-
 export default function ReviewPage() {
   const { data: projects = [], isLoading: projectsLoading } = useSWR(
     "/api/projects",

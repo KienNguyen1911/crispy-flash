@@ -26,11 +26,6 @@ import { useEffect, useRef, useState } from "react";
 import type { Project } from "@/lib/types";
 import MoveTopicDialog from "@/components/projects/MoveTopicDialog";
 
-export const metadata = {
-  title: "Project Topics",
-  description: "Manage topics and vocabulary for your learning project"
-};
-
 export default function ProjectPage() {
   const params = useParams();
   const projectId = params.projectId as string;

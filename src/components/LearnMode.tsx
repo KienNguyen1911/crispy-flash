@@ -2,8 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { LazyMotion, m } from "framer-motion";
-import { domAnimation } from "framer-motion/m";
+import { LazyMotion, m, domAnimation } from "framer-motion";
 import { Vocabulary } from "@prisma/client";
 import { LearnModeControls } from "./learn-mode/LearnModeControls";
 import { SessionComplete } from "./learn-mode/SessionComplete";
