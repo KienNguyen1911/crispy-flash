@@ -28,7 +28,7 @@ export function GraphKanjiDrawer({ word, isOpen, onClose }: GraphKanjiDrawerProp
         closed: "translate-y-full opacity-0",
         header: "px-6 py-3 border-b-[4px] border-black bg-zinc-50 shrink-0 flex items-center justify-between",
         title: "text-xl font-black uppercase tracking-tighter text-black",
-        closeBtn: "bg-white border-[3px] border-black p-1 hover:bg-zinc-100 shadow-[3px_3px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all",
+        closeBtn: "bg-white text-black border-[3px] border-black p-1 hover:bg-zinc-100 shadow-[3px_3px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all",
         tabsList: "bg-zinc-100 border-b-[3px] border-black p-1 gap-2 rounded-none h-auto",
         tabsTrigger: "px-4 py-2 font-black border-2 border-transparent data-[state=active]:border-black data-[state=active]:bg-white data-[state=active]:shadow-[2px_2px_0px_black] transition-all rounded-none text-black/60 data-[state=active]:text-black",
         mainCard: "border-[4px] border-black shadow-[6px_6px_0px_black] rounded-none bg-white p-6 mb-8",
