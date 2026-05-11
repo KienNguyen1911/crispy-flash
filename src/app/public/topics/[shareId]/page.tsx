@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import {
   Breadcrumb,
@@ -8,6 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import PublicTopicActions from "@/components/topics/PublicTopicActions";
+import { Metadata } from "next";
 
 async function getTopic(shareId: string) {
   const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
@@ -26,6 +28,29 @@ async function getTopic(shareId: string) {
     console.error("Failed to fetch public topic:", error);
     return null;
   }
+}
+
+export async function generateMetadata(
+  props: { params: Promise<{ shareId: string }> }
+): Promise<Metadata> {
+  const params = await props.params;
+  const topic = await getTopic(params.shareId);
+
+  if (!topic) {
+    return {
+      title: "Topic Not Found - Lingofy",
+    };
+  }
+
+  return {
+    title: `${topic.title} - Shared Topic on Lingofy`,
+    description: `Master new words with this shared topic: ${topic.title}.`,
+    openGraph: {
+      title: topic.title,
+      description: `Master new words with this shared topic: ${topic.title}.`,
+      type: "website",
+    },
+  };
 }
 
 export default async function PublicTopicPage(
@@ -101,11 +126,13 @@ export default async function PublicTopicPage(
                       <p className="text-sm">{vocab.meaning}</p>
                     </div>
                     {vocab.image && (
-                      <div>
-                        <img
+                      <div className="relative w-full h-32">
+                        <Image
                           src={vocab.image}
-                          alt={vocab.word}
-                          className="w-full h-32 object-cover rounded"
+                          alt={vocab.word || "Vocabulary image"}
+                          fill
+                          className="object-cover rounded"
+                          unoptimized
                         />
                       </div>
                     )}

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useKanjiDetails } from "@/hooks/use-kanji-details";
 
@@ -17,12 +17,13 @@ interface GraphKanjiDrawerProps {
 export function GraphKanjiDrawer({ word, isOpen, onClose }: GraphKanjiDrawerProps) {
     const [kanjis, setKanjis] = useState<string[]>([]);
     const [selectedKanji, setSelectedKanji] = useState<string>("");
+    const [isExpanded, setIsExpanded] = useState(false);
     
     const { data: details, isLoading } = useKanjiDetails(selectedKanji, isOpen);
 
     // Neo-brutalism Whiteboard styles
     const styles = {
-        container: "absolute bottom-0 left-1/2 -translate-x-1/2 z-[100] w-[95%] sm:w-[75%] lg:w-[65%] h-[65%] bg-white border-t-[4px] border-x-[4px] border-black shadow-[0_-8px_0px_rgba(0,0,0,0.05)] flex flex-col overflow-hidden transition-all duration-500 ease-in-out",
+        container: "absolute bottom-0 left-1/2 -translate-x-1/2 z-[100] w-[95%] sm:w-[75%] lg:w-[65%] bg-white border-t-[4px] border-x-[4px] border-black shadow-[0_-8px_0px_rgba(0,0,0,0.05)] flex flex-col overflow-hidden transition-all duration-500 ease-in-out",
         open: "translate-y-0 opacity-100",
         closed: "translate-y-full opacity-0",
         header: "px-6 py-3 border-b-[4px] border-black bg-zinc-50 shrink-0 flex items-center justify-between",
@@ -42,6 +43,7 @@ export function GraphKanjiDrawer({ word, isOpen, onClose }: GraphKanjiDrawerProp
 
     useEffect(() => {
         if (word && isOpen) {
+            setIsExpanded(false); // Reset to collapsed when new word opens
             const kanjiCharacters = word.match(/[\u4e00-\u9faf]/g) || [];
             const uniqueKanjis = Array.from(new Set(kanjiCharacters));
             setKanjis(uniqueKanjis);
@@ -59,7 +61,8 @@ export function GraphKanjiDrawer({ word, isOpen, onClose }: GraphKanjiDrawerProp
         <div 
             className={cn(
                 styles.container,
-                isOpen ? styles.open : styles.closed
+                isOpen ? styles.open : styles.closed,
+                isExpanded ? "h-[85%]" : "h-[64px]"
             )}
         >
             {/* Header */}
@@ -67,13 +70,26 @@ export function GraphKanjiDrawer({ word, isOpen, onClose }: GraphKanjiDrawerProp
                 <div className={styles.title}>
                     Word: <span className="underline decoration-[4px] underline-offset-4">{word}</span>
                 </div>
-                <button onClick={onClose} className={styles.closeBtn}>
-                    <X className="h-5 w-5 stroke-[3px]" />
-                </button>
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => setIsExpanded(!isExpanded)} 
+                        className={styles.closeBtn}
+                        title={isExpanded ? "Collapse" : "Expand"}
+                    >
+                        {isExpanded ? (
+                            <Minimize2 className="h-5 w-5 stroke-[3px]" />
+                        ) : (
+                            <Maximize2 className="h-5 w-5 stroke-[3px]" />
+                        )}
+                    </button>
+                    <button onClick={onClose} className={styles.closeBtn} title="Close">
+                        <X className="h-5 w-5 stroke-[3px]" />
+                    </button>
+                </div>
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 flex flex-col min-h-0 bg-white">
+            <div className={cn("flex-1 flex flex-col min-h-0 bg-white", !isExpanded && "invisible")}>
                 {kanjis.length === 0 ? (
                     <div className="flex-1 flex items-center justify-center font-bold text-zinc-400 uppercase tracking-widest">
                         No Kanji found in this word
