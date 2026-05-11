@@ -43,7 +43,8 @@ import {
   XCircle,
   HelpCircle,
   Sparkles,
-  Network
+  Network,
+  Command
 } from "lucide-react";
 import {
   Tooltip,
@@ -61,6 +62,8 @@ import { Badge } from "@/components/ui/badge";
 import { KanjiDrawer } from "@/components/vocabularies/KanjiDrawer";
 import VocabGraphViewer from "@/components/graph/VocabGraphViewer";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { TopicSwitcher } from "@/components/topics/TopicSwitcher";
+import { useSearchParams } from "next/navigation";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -75,6 +78,9 @@ export function DataTable<TData, TValue>({
   projectId,
   topicId
 }: DataTableProps<TData, TValue>) {
+  const searchParams = useSearchParams();
+  const initialViewMode = (searchParams.get("viewMode") as "table" | "graph") || "table";
+  
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -87,10 +93,32 @@ export function DataTable<TData, TValue>({
   const [deletedVocabularyIds, setDeletedVocabularyIds] = React.useState<
     Set<string>
   >(new Set());
-  const [viewMode, setViewMode] = React.useState<"table">("table");
-  const [isGraphOpen, setIsGraphOpen] = React.useState(false);
+  const [viewMode, setViewMode] = React.useState<"table" | "graph">(initialViewMode);
   const [selectedKanjiWord, setSelectedKanjiWord] = React.useState<string | null>(null);
+  const [isTopicSwitcherOpen, setIsTopicSwitcherOpen] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  // Update viewMode if URL param changes
+  React.useEffect(() => {
+    const mode = searchParams.get("viewMode");
+    if (mode === "graph" || mode === "table") {
+      setViewMode(mode);
+    }
+  }, [searchParams]);
+
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
+        if (viewMode === "graph") {
+          e.preventDefault();
+          setIsTopicSwitcherOpen((open) => !open);
+        }
+      }
+    };
+
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, [viewMode]);
 
   const augmentedColumns = React.useMemo(() => {
     const actionColumn: ColumnDef<TData, TValue> = {
@@ -289,7 +317,7 @@ export function DataTable<TData, TValue>({
     setIsEditing(false);
   };
 
-  const handleSwitchView = (nextViewMode: "table") => {
+  const handleSwitchView = (nextViewMode: "table" | "graph") => {
     setViewMode(nextViewMode);
   };
 
@@ -346,9 +374,9 @@ export function DataTable<TData, TValue>({
           Table
         </Button>
         <Button
-          variant="ghost"
+          variant={viewMode === "graph" ? "default" : "ghost"}
           size="sm"
-          onClick={() => setIsGraphOpen(true)}
+          onClick={() => handleSwitchView("graph")}
           title="Graph view"
           className="flex-1 sm:flex-none"
         >
@@ -534,14 +562,40 @@ export function DataTable<TData, TValue>({
         {renderTableView()}
       </div>
 
-      <Dialog open={isGraphOpen} onOpenChange={setIsGraphOpen}>
-        <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 border-none overflow-hidden [&>button]:z-[60] [&>button]:bg-white [&>button]:text-black [&>button]:border-[3px] [&>button]:border-black [&>button]:shadow-[2px_2px_0px_black] [&>button]:opacity-100 [&>button:hover]:bg-zinc-100 bg-zinc-50">
-          <DialogTitle className="sr-only">Whiteboard Graph View</DialogTitle>
+      {viewMode === "graph" && (
+        <div className="fixed inset-0 z-[100] bg-zinc-50 flex flex-col">
+          <div className="absolute top-4 right-4 z-[110] flex gap-2">
+             <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsTopicSwitcherOpen(true)}
+                className="bg-white text-black border-[3px] border-black shadow-[4px_4px_0px_black] font-black hover:-translate-y-1 transition-all"
+             >
+                <Command className="mr-2 h-4 w-4" />
+                Switch Topic
+             </Button>
+             <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setViewMode("table")}
+                className="bg-white text-black border-[3px] border-black shadow-[4px_4px_0px_black] font-black hover:-translate-y-1 transition-all"
+             >
+                <TableIcon className="mr-2 h-4 w-4" />
+                Back to Table
+             </Button>
+          </div>
           <VocabGraphViewer 
             vocabulary={visibleData as any[]} 
           />
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
+
+      <TopicSwitcher
+        projectId={projectId}
+        currentTopicId={topicId}
+        isOpen={isTopicSwitcherOpen}
+        onOpenChange={setIsTopicSwitcherOpen}
+      />
 
       <KanjiDrawer
         word={selectedKanjiWord}

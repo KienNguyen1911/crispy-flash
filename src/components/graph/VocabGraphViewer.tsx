@@ -208,7 +208,7 @@ function InnerGraphViewer({ vocabulary, onWordClick }: VocabGraphViewerProps) {
   }, [playVocabularyText, onWordClick]);
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-[calc(100vh-100px)] rounded-md relative bg-zinc-50 overflow-hidden">
+    <div className="flex flex-col md:flex-row w-full h-full rounded-md relative bg-zinc-50 overflow-hidden">
 
       {/* Sidebar Directory */}
       {(rootKanjis.length > 0 || categoryGroups.length > 0) && (

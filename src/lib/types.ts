@@ -20,6 +20,8 @@ export type Topic = {
   vocabulary: Vocabulary[];
   contentGenerationStatus?: "PENDING" | "GENERATING" | "COMPLETED" | "FAILED";
   contextualPracticeContent?: AIGeneratedContent;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Project = {
