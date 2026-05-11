@@ -16,12 +16,13 @@ import '@xyflow/react/dist/style.css';
 
 import { Vocabulary } from '@/lib/types';
 import { buildGraphElements } from '@/lib/graph-utils';
-import { categorizeVocabularies } from '@/lib/ai-classifier';
+import { aiClassifier } from '@/lib/ai-classifier';
 import { Loader2 } from 'lucide-react';
 import KanjiNode from './KanjiNode';
 import VocabNode from './VocabNode';
 import CategoryGroupNode from './CategoryGroupNode';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { GraphKanjiDrawer } from './GraphKanjiDrawer';
 
 const nodeTypes = {
   kanjiNode: KanjiNode,
@@ -31,13 +32,15 @@ const nodeTypes = {
 
 type VocabGraphViewerProps = {
   vocabulary: Vocabulary[];
+  onWordClick?: (word: string) => void;
 };
 
-function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
+function InnerGraphViewer({ vocabulary, onWordClick }: VocabGraphViewerProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [isCategorizing, setIsCategorizing] = React.useState(true);
   const [showReading, setShowReading] = useState(true);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const { setCenter, getNode } = useReactFlow();
   const isMobile = useMediaQuery("(max-width: 767px)");
   const isUpperCase = (str: string) => str === str.toUpperCase();
@@ -76,7 +79,7 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
 
       let categoryMap = {};
       if (isolatedVocabs.length > 0) {
-        categoryMap = await categorizeVocabularies(isolatedVocabs);
+        categoryMap = await aiClassifier.categorize(isolatedVocabs);
       }
 
       if (isCancelled) return;
@@ -116,8 +119,8 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
   }, []);
 
   // Zoom into root kanji
-  const handleKanjiClick = useCallback((id: string, e: React.MouseEvent<HTMLDivElement>) => {
-    const node = getNode(id);
+  const handleKanjiClick = useCallback((k: Vocabulary, e: React.MouseEvent<HTMLDivElement>) => {
+    const node = getNode(k.id);
     if (node) {
       // Offset by half node size (approx 180/60, 70) to center it nicely
       setCenter(
@@ -189,8 +192,20 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
       const vocab = node.data.vocab as Vocabulary;
       const textToPlay = vocab.word || vocab.pronunciation || '';
       playVocabularyText(textToPlay);
+      
+      // Also open Kanji Drawer if requested
+      setSelectedWord(vocab.word);
+      if (onWordClick) {
+        onWordClick(vocab.word);
+      }
+    } else if (node.type === 'kanjiNode') {
+      const vocab = node.data.vocab as Vocabulary;
+      setSelectedWord(vocab.word);
+      if (onWordClick) {
+        onWordClick(vocab.word);
+      }
     }
-  }, [playVocabularyText]);
+  }, [playVocabularyText, onWordClick]);
 
   return (
     <div className="flex flex-col md:flex-row w-full h-[calc(100vh-100px)] rounded-md relative bg-zinc-50 overflow-hidden">
@@ -211,7 +226,7 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
                       {rootKanjis.map(k => (
                         <div
                           key={k.id}
-                          onClick={(e) => handleKanjiClick(k.id, e)}
+                          onClick={(e) => handleKanjiClick(k, e)}
                           className="bg-white text-black border-[3px] border-black hover:-translate-y-1 hover:shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all cursor-pointer flex justify-between items-start rounded-sm min-w-[220px] md:min-w-0 flex-shrink-0"
                         >
                           <div className="px-3 py-2 flex flex-col justify-between h-full min-h-[70px]">
@@ -297,6 +312,12 @@ function InnerGraphViewer({ vocabulary }: VocabGraphViewerProps) {
           <Controls className="bg-white border-[3px] border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] [&_button]:bg-white [&_button]:border-b-[3px] [&_button]:border-black [&_button:last-child]:border-b-0 [&_button_svg]:fill-black [&_button_svg]:stroke-black [&_button_svg]:text-black" />
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         </ReactFlow>
+
+        <GraphKanjiDrawer 
+          word={selectedWord}
+          isOpen={!!selectedWord}
+          onClose={() => setSelectedWord(null)}
+        />
       </div>
     </div>
   );

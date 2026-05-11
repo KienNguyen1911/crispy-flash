@@ -6,247 +6,195 @@ export type GraphDataType = {
   edges: Edge[];
 };
 
-export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boolean = false, categoryMap: Record<string, string> = {}): GraphDataType => {
-  const nodes: Node[] = [];
-  const edges: Edge[] = [];
+// Internal Layout Types
+interface Point { x: number; y: number; }
+interface NodeLayout { id: string; position: Point; type: string; data: any; parentId?: string; }
+interface EdgeLayout { id: string; source: string; target: string; }
 
-  const isKanjiMatch = (v: Vocabulary) => {
-    return Boolean(v.part_of_speech?.toLowerCase() === 'kanji') || (Boolean(v.meaning) && v.meaning === v.meaning?.toUpperCase());
-  };
+/**
+ * The Graph Layout Engine encapsulates all mathematical positioning logic.
+ * It is deterministic and independent of the React Flow framework.
+ */
+class GraphLayoutEngine {
+  calculate(vocabs: Vocabulary[], isMobile: boolean, categoryMap: Record<string, string>): { nodes: NodeLayout[], edges: EdgeLayout[] } {
+    const nodes: NodeLayout[] = [];
+    const edges: EdgeLayout[] = [];
 
-  // Separate into Kanji and Vocab
-  const kanjis = vocabularyList.filter(v => isKanjiMatch(v));
-  const vocabs = vocabularyList.filter(v => !isKanjiMatch(v));
+    const isKanji = (v: Vocabulary) => 
+      Boolean(v.part_of_speech?.toLowerCase() === 'kanji') || (Boolean(v.meaning) && v.meaning === v.meaning?.toUpperCase());
 
-  const KANJI_X_SPACING = isMobile ? 0 : 1000;
-  const KANJI_Y_SPACING = isMobile ? 800 : 800;
+    const kanjis = vocabs.filter(isKanji);
+    const regularVocabs = vocabs.filter(v => !isKanji(v));
 
-  // Track children for each Kanji
-  const kanjiChildrenMap: Record<string, Vocabulary[]> = {};
-  kanjis.forEach(k => { kanjiChildrenMap[k.id] = []; });
+    // 1. Build Relationships
+    const kanjiChildrenMap: Record<string, Vocabulary[]> = {};
+    kanjis.forEach(k => { kanjiChildrenMap[k.id] = []; });
 
-  // Map edges and assign children
-  vocabs.forEach(v => {
-    kanjis.forEach(k => {
-      // If vocab.word (e.g. 材料) contains the kanji.word (e.g. 材)
-      if (v.word.includes(k.word)) {
-        kanjiChildrenMap[k.id].push(v);
-        edges.push({
-          id: `e-${k.id}-${v.id}`,
-          source: k.id,
-          target: v.id,
-          style: { stroke: '#000', strokeWidth: 2 },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#000',
-          },
-        });
-      }
-    });
-  });
-
-  // Calculate layout dimension blocks
-  const cols = isMobile ? 1 : (Math.ceil(Math.sqrt(kanjis.length)) || 1);
-  const addedVocabs = new Set<string>();
-
-  // Sort Kanjis based on shared vocab relationships (BFS) so related Kanjis are physically adjacent
-  const kanjiAdj = new Map<string, Set<string>>();
-  kanjis.forEach(k => kanjiAdj.set(k.id, new Set()));
-
-  vocabs.forEach(v => {
-    const parentIds = kanjis.filter(k => v.word.includes(k.word)).map(k => k.id);
-    if (parentIds.length > 1) {
-      for (let i = 0; i < parentIds.length; i++) {
-        for (let j = i + 1; j < parentIds.length; j++) {
-          kanjiAdj.get(parentIds[i])!.add(parentIds[j]);
-          kanjiAdj.get(parentIds[j])!.add(parentIds[i]);
+    regularVocabs.forEach(v => {
+      kanjis.forEach(k => {
+        if (v.word.includes(k.word)) {
+          kanjiChildrenMap[k.id].push(v);
+          edges.push({ id: `e-${k.id}-${v.id}`, source: k.id, target: v.id });
         }
-      }
-    }
-  });
-
-  const sortedKanjis: Vocabulary[] = [];
-  const visitedKanjis = new Set<string>();
-
-  kanjis.forEach(startKanji => {
-    if (!visitedKanjis.has(startKanji.id)) {
-      const queue = [startKanji.id];
-      visitedKanjis.add(startKanji.id);
-
-      while (queue.length > 0) {
-        const currId = queue.shift()!;
-        const currKanji = kanjis.find(k => k.id === currId)!;
-        sortedKanjis.push(currKanji);
-
-        const neighbors = kanjiAdj.get(currId);
-        if (neighbors) {
-          neighbors.forEach(neighborId => {
-            if (!visitedKanjis.has(neighborId)) {
-               visitedKanjis.add(neighborId);
-               queue.push(neighborId);
-            }
-          });
-        }
-      }
-    }
-  });
-
-  sortedKanjis.forEach((k, index) => {
-    const col = isMobile ? 0 : (index % cols);
-    const row = isMobile ? index : Math.floor(index / cols);
-
-    const rootX = col * KANJI_X_SPACING;
-    const rootY = row * KANJI_Y_SPACING;
-
-    // Add Kanji Node
-    nodes.push({
-      id: k.id,
-      type: 'kanjiNode',
-      data: { vocab: k },
-      position: { x: rootX, y: rootY },
-    });
-
-    const children = kanjiChildrenMap[k.id];
-    // Filter to render child uniquely if they share parent kanji, 
-    // it will be attached to the first parent encountered and have edges to others smoothly.
-    const unaddedChildren = children.filter(v => !addedVocabs.has(v.id));
-
-    const totalChildren = unaddedChildren.length;
-    const RADIUS = isMobile ? 220 : 280;
-
-    unaddedChildren.forEach((v, cIndex) => {
-      addedVocabs.add(v.id);
-
-      let angle;
-      if (isMobile) {
-        if (totalChildren === 1) {
-          angle = 0; // Right
-        } else if (totalChildren === 2) {
-          angle = cIndex === 0 ? -Math.PI / 2 : Math.PI / 2; // Top, Bottom
-        } else {
-          // Spread from -PI/2 (Top) to PI/2 (Bottom) along the right side
-          angle = -Math.PI / 2 + (cIndex / (totalChildren - 1)) * Math.PI;
-        }
-      } else {
-        // Evenly distribute around a full circle. Top is -PI/2
-        angle = (cIndex / totalChildren) * 2 * Math.PI - Math.PI / 2;
-      }
-
-      // Node center offset compensation
-      const childX = rootX + Math.cos(angle) * RADIUS;
-      const childY = rootY + Math.sin(angle) * RADIUS;
-
-      nodes.push({
-        id: v.id,
-        type: 'vocabNode',
-        data: { vocab: v },
-        position: { x: childX, y: childY },
       });
     });
-  });
 
-  // Calculate dynamic handles for all edges based on absolute coordinates
-  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    // 2. Sort Kanjis by proximity (BFS)
+    const sortedKanjis = this.sortKanjisByRelationship(kanjis, regularVocabs);
 
-  edges.forEach(edge => {
-    const sourceNode = nodeMap.get(edge.source);
-    const targetNode = nodeMap.get(edge.target);
-    if (!sourceNode || !targetNode) return;
+    // 3. Position Kanjis and their children (Radial Layout)
+    const addedVocabs = new Set<string>();
+    const cols = isMobile ? 1 : (Math.ceil(Math.sqrt(kanjis.length)) || 1);
+    const KANJI_X_SPACING = isMobile ? 0 : 1000;
+    const KANJI_Y_SPACING = 800;
 
-    const dx = targetNode.position.x - sourceNode.position.x;
-    const dy = targetNode.position.y - sourceNode.position.y;
-    const angle = Math.atan2(dy, dx);
+    sortedKanjis.forEach((k, index) => {
+      const col = isMobile ? 0 : (index % cols);
+      const row = isMobile ? index : Math.floor(index / cols);
+      const rootX = col * KANJI_X_SPACING;
+      const rootY = row * KANJI_Y_SPACING;
 
-    let normalized = angle;
-    if (normalized < 0) normalized += 2 * Math.PI;
+      nodes.push({ id: k.id, type: 'kanjiNode', data: { vocab: k }, position: { x: rootX, y: rootY } });
 
-    if (normalized >= 7 * Math.PI / 4 || normalized < Math.PI / 4) {
-      edge.sourceHandle = 'right';
-      edge.targetHandle = 'left';
-    } else if (normalized >= Math.PI / 4 && normalized < 3 * Math.PI / 4) {
-      edge.sourceHandle = 'bottom';
-      edge.targetHandle = 'top';
-    } else if (normalized >= 3 * Math.PI / 4 && normalized < 5 * Math.PI / 4) {
-      edge.sourceHandle = 'left';
-      edge.targetHandle = 'right';
-    } else {
-      edge.sourceHandle = 'top';
-      edge.targetHandle = 'bottom';
-    }
-  });
+      const children = kanjiChildrenMap[k.id].filter(v => !addedVocabs.has(v.id));
+      const RADIUS = isMobile ? 220 : 280;
 
-  // Calculate position for isolated vocabularies
-  const isolatedVocabs = vocabs.filter(v => !addedVocabs.has(v.id));
-  
-  if (isolatedVocabs.length > 0) {
-    let maxY = 0;
-    if (nodes.length > 0) {
-      maxY = nodes.reduce((max, node) => Math.max(max, node.position.y), 0) + (isMobile ? 400 : 500);
-    }
-
-    const ISO_COLS = isMobile ? 1 : 4;
-    const ISOLATED_X_SPACING = 360;
-    const ISOLATED_Y_SPACING = 260;
-    
-    // Group them
-    const groupedVocabs: Record<string, Vocabulary[]> = {};
-    const hasCategories = Object.keys(categoryMap).length > 0;
-    
-    isolatedVocabs.forEach(v => {
-      const cat = hasCategories ? (categoryMap[v.id] || "Từ vựng chung") : "Vocabulary";
-      if (!groupedVocabs[cat]) groupedVocabs[cat] = [];
-      groupedVocabs[cat].push(v);
-    });
-
-    let currentY = maxY;
-    let startX = 0;
-    let groupIndex = 0;
-
-    Object.entries(groupedVocabs).forEach(([catName, items]) => {
-      const GROUP_X_PADDING = 30;
-      const GROUP_Y_PADDING = 60;
-      
-      const cols = isMobile ? 1 : Math.min(items.length, ISO_COLS);
-      const rows = Math.ceil(items.length / cols);
-      
-      const maxAllowedNodeWidth = 320;
-      const maxAllowedNodeHeight = 250;
-      
-      const groupWidth = (cols - 1) * ISOLATED_X_SPACING + maxAllowedNodeWidth + 2 * GROUP_X_PADDING;
-      const groupHeight = (rows - 1) * ISOLATED_Y_SPACING + maxAllowedNodeHeight + 2 * GROUP_Y_PADDING;
-      
-      const groupId = `cat-group-${groupIndex}`;
-      
-      // Add Group Parent Node
-      nodes.push({
-        id: groupId,
-        type: 'categoryGroupNode',
-        position: { x: startX, y: currentY },
-        data: { label: catName, width: groupWidth, height: groupHeight }
-      });
-
-      // Add child items using relative positioning to the parent
-      items.forEach((v, index) => {
-        const col = index % cols;
-        const row = Math.floor(index / cols);
-
+      children.forEach((v, cIndex) => {
+        addedVocabs.add(v.id);
+        const angle = this.calculateRadialAngle(cIndex, children.length, isMobile);
         nodes.push({
           id: v.id,
           type: 'vocabNode',
           data: { vocab: v },
-          position: { 
-            x: GROUP_X_PADDING + col * ISOLATED_X_SPACING, 
-            y: GROUP_Y_PADDING + row * ISOLATED_Y_SPACING 
-          },
-          parentId: groupId,
-          extent: 'parent'
+          position: { x: rootX + Math.cos(angle) * RADIUS, y: rootY + Math.sin(angle) * RADIUS }
         });
       });
+    });
 
-      currentY += groupHeight + 100; // Vertical spacing between groups
-      groupIndex++;
+    // 4. Position Isolated Vocabs (Categorized Groups)
+    const isolated = regularVocabs.filter(v => !addedVocabs.has(v.id));
+    if (isolated.length > 0) {
+      this.layoutIsolatedGroups(nodes, isolated, categoryMap, isMobile);
+    }
+
+    return { nodes, edges };
+  }
+
+  private sortKanjisByRelationship(kanjis: Vocabulary[], vocabs: Vocabulary[]): Vocabulary[] {
+    const adj = new Map<string, Set<string>>();
+    kanjis.forEach(k => adj.set(k.id, new Set()));
+
+    vocabs.forEach(v => {
+      const parents = kanjis.filter(k => v.word.includes(k.word)).map(k => k.id);
+      for (let i = 0; i < parents.length; i++) {
+        for (let j = i + 1; j < parents.length; j++) {
+          adj.get(parents[i])!.add(parents[j]);
+          adj.get(parents[j])!.add(parents[i]);
+        }
+      }
+    });
+
+    const result: Vocabulary[] = [];
+    const visited = new Set<string>();
+
+    kanjis.forEach(start => {
+      if (visited.has(start.id)) return;
+      const q = [start.id];
+      visited.add(start.id);
+      while (q.length > 0) {
+        const id = q.shift()!;
+        result.push(kanjis.find(k => k.id === id)!);
+        adj.get(id)?.forEach(n => {
+          if (!visited.has(n)) { visited.add(n); q.push(n); }
+        });
+      }
+    });
+
+    return result;
+  }
+
+  private calculateRadialAngle(index: number, total: number, isMobile: boolean): number {
+    if (isMobile) {
+      if (total === 1) return 0;
+      if (total === 2) return index === 0 ? -Math.PI / 2 : Math.PI / 2;
+      return -Math.PI / 2 + (index / (total - 1)) * Math.PI;
+    }
+    return (index / total) * 2 * Math.PI - Math.PI / 2;
+  }
+
+  private layoutIsolatedGroups(nodes: NodeLayout[], items: Vocabulary[], categoryMap: Record<string, string>, isMobile: boolean) {
+    const maxY = nodes.length > 0 ? nodes.reduce((m, n) => Math.max(m, n.position.y), 0) + (isMobile ? 400 : 500) : 0;
+    const grouped: Record<string, Vocabulary[]> = {};
+    items.forEach(v => {
+      const cat = categoryMap[v.id] || (Object.keys(categoryMap).length > 0 ? "Từ vựng chung" : "Vocabulary");
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(v);
+    });
+
+    let currentY = maxY;
+    Object.entries(grouped).forEach(([name, vocabs], gIdx) => {
+      const ISO_COLS = isMobile ? 1 : 4;
+      const cols = Math.min(vocabs.length, ISO_COLS);
+      const rows = Math.ceil(vocabs.length / cols);
+      const width = (cols - 1) * 360 + 320 + 60;
+      const height = (rows - 1) * 260 + 250 + 120;
+      const groupId = `cat-group-${gIdx}`;
+
+      nodes.push({ id: groupId, type: 'categoryGroupNode', position: { x: 0, y: currentY }, data: { label: name, width, height } });
+
+      vocabs.forEach((v, i) => {
+        nodes.push({
+          id: v.id,
+          type: 'vocabNode',
+          data: { vocab: v },
+          position: { x: 30 + (i % cols) * 360, y: 60 + Math.floor(i / cols) * 260 },
+          parentId: groupId
+        });
+      });
+      currentY += height + 100;
     });
   }
+}
+
+/**
+ * Main orchestrator for building React Flow graph elements.
+ * Delegates layout calculation to the deterministic GraphLayoutEngine.
+ */
+export const buildGraphElements = (vocabularyList: Vocabulary[], isMobile: boolean = false, categoryMap: Record<string, string> = {}): GraphDataType => {
+  const engine = new GraphLayoutEngine();
+  const { nodes: nodeLayouts, edges: edgeLayouts } = engine.calculate(vocabularyList, isMobile, categoryMap);
+
+  const nodes: Node[] = nodeLayouts.map(nl => ({
+    id: nl.id,
+    type: nl.type,
+    data: nl.data,
+    position: nl.position,
+    parentId: nl.parentId,
+    extent: nl.parentId ? 'parent' : undefined
+  }));
+
+  const edges: Edge[] = edgeLayouts.map(el => {
+    const edge: Edge = {
+      id: el.id,
+      source: el.source,
+      target: el.target,
+      style: { stroke: '#000', strokeWidth: 2 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#000' }
+    };
+
+    // Calculate dynamic handles based on relative positions
+    const s = nodes.find(n => n.id === el.source)!;
+    const t = nodes.find(n => n.id === el.target)!;
+    const angle = Math.atan2(t.position.y - s.position.y, t.position.x - s.position.x);
+    let norm = angle < 0 ? angle + 2 * Math.PI : angle;
+
+    if (norm >= 7 * Math.PI / 4 || norm < Math.PI / 4) { edge.sourceHandle = 'right'; edge.targetHandle = 'left'; }
+    else if (norm >= Math.PI / 4 && norm < 3 * Math.PI / 4) { edge.sourceHandle = 'bottom'; edge.targetHandle = 'top'; }
+    else if (norm >= 3 * Math.PI / 4 && norm < 5 * Math.PI / 4) { edge.sourceHandle = 'left'; edge.targetHandle = 'right'; }
+    else { edge.sourceHandle = 'top'; edge.targetHandle = 'bottom'; }
+
+    return edge;
+  });
 
   return { nodes, edges };
 };
