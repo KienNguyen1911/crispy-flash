@@ -3,14 +3,16 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 type CardProps = React.HTMLAttributes<HTMLDivElement> & {
-  variant?: "default" | "glass";
+  variant?: "default" | "glass" | "neo" | "neoSubtle";
 };
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(({ className, variant = "default", ...props }, ref) => {
   const base = "rounded-lg";
   const variants = {
     default: "border bg-card text-card-foreground shadow-sm",
-    glass: "border border-[var(--glass-border)] bg-[var(--glass-bg)] text-card-foreground shadow-[var(--glass-shadow)] backdrop-blur-[var(--glass-backdrop-blur)] bg-clip-padding"
+    glass: "border border-[var(--glass-border)] bg-[var(--glass-bg)] text-card-foreground shadow-[var(--glass-shadow)] backdrop-blur-[var(--glass-backdrop-blur)] bg-clip-padding",
+    neo: "border-2 border-[var(--neo-line-strong)] bg-[var(--neo-surface)] text-card-foreground shadow-[var(--neo-shadow)]",
+    neoSubtle: "border-2 border-[var(--neo-line)] bg-[var(--neo-surface)] text-card-foreground shadow-[var(--neo-shadow-sm)]"
   } as const;
 
   return (

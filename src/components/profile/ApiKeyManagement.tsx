@@ -30,7 +30,7 @@ const ApiKeyManagement = () => {
   };
 
   return (
-    <Card>
+    <Card variant="neo">
       <CardHeader>
         <CardTitle>AI API Settings</CardTitle>
         <CardDescription>Manage your API Key and select the AI model for enhanced features.</CardDescription>
@@ -61,7 +61,7 @@ const ApiKeyManagement = () => {
           />
         </div>
 
-        <Button onClick={handleSaveApiKey}>Save/Update Key</Button>
+        <Button onClick={handleSaveApiKey} variant="neo">Save/Update Key</Button>
         <p className="text-sm md:text-base text-muted-foreground mt-2">{apiKeyStatus}</p>
 
         <div className="mt-4">

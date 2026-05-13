@@ -39,31 +39,20 @@ import {
   Plus,
   Trash2,
   Table as TableIcon,
-  CheckCircle,
-  XCircle,
-  HelpCircle,
-  Sparkles,
   Network,
   Command
 } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/components/ui/tooltip";
 import {
   deleteVocabularies,
   updateVocabularies
 } from "@/services/topics-vocabularies-api";
 import Link from "next/link";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { KanjiDrawer } from "@/components/vocabularies/KanjiDrawer";
 import VocabGraphViewer from "@/components/graph/VocabGraphViewer";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { TopicSwitcher } from "@/components/topics/TopicSwitcher";
 import { useSearchParams } from "next/navigation";
+import { NeoPanel, NeoToolbar } from "@/components/ui/neo";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -214,16 +203,6 @@ export function DataTable<TData, TValue>({
     );
   }, [data, deletedVocabularyIds, initialData]);
 
-  const getStatusIcon = (status: string) => {
-    const iconClass = "h-4 w-4";
-    switch (status) {
-      case "REMEMBERED": return <CheckCircle className={`${iconClass} text-emerald-500 drop-shadow-[0_0_5px_rgba(16,185,129,0.4)]`} />;
-      case "NOT_REMEMBERED": return <XCircle className={`${iconClass} text-rose-500 drop-shadow-[0_0_5px_rgba(244,63,94,0.4)]`} />;
-      case "NEW": return <Sparkles className={`${iconClass} text-sky-500 drop-shadow-[0_0_5px_rgba(14,165,233,0.4)]`} />;
-      default: return <HelpCircle className={`${iconClass} text-slate-500`} />;
-    }
-  };
-
   const table = useReactTable({
     data: visibleData,
     columns: augmentedColumns,
@@ -339,7 +318,7 @@ export function DataTable<TData, TValue>({
           }
         }}
       >
-        <SelectTrigger className="w-full border-border/60 bg-background/40 sm:w-[180px]">
+        <SelectTrigger className="w-full rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-[var(--neo-surface)] font-semibold shadow-[var(--neo-shadow-sm)] sm:w-[180px]">
           <SelectValue placeholder="Filter by status" />
         </SelectTrigger>
         <SelectContent>
@@ -356,15 +335,15 @@ export function DataTable<TData, TValue>({
     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
       {!isEditing ? (
         <Link href={`/projects/${projectId}/topics/${topicId}/import`}>
-          <Button variant="outline" className="w-full sm:w-auto">
+          <Button variant="neoSecondary" className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Import
           </Button>
         </Link>
       ) : null}
-      <div className="flex w-full items-center rounded-md border border-border/60 bg-background/40 p-1 sm:w-auto">
+      <div className="flex w-full items-center rounded-[var(--neo-radius)] border-2 border-[var(--neo-line-strong)] bg-black p-1 shadow-[var(--neo-shadow-sm)] sm:w-auto">
         <Button
-          variant={viewMode === "table" ? "default" : "ghost"}
+          variant={viewMode === "table" ? "neo" : "neoGhost"}
           size="sm"
           onClick={() => handleSwitchView("table")}
           title="Table view"
@@ -374,7 +353,7 @@ export function DataTable<TData, TValue>({
           Table
         </Button>
         <Button
-          variant={viewMode === "graph" ? "default" : "ghost"}
+          variant={viewMode === "graph" ? "neo" : "neoGhost"}
           size="sm"
           onClick={() => handleSwitchView("graph")}
           title="Graph view"
@@ -385,7 +364,7 @@ export function DataTable<TData, TValue>({
         </Button>
       </div>
       {!isEditing && (
-        <Button variant="outline" onClick={() => setIsEditing(true)} className="w-full sm:w-auto">
+        <Button variant="neoSecondary" onClick={() => setIsEditing(true)} className="w-full sm:w-auto">
           <Pen className="mr-2 h-4 w-4" />
           Edit table
         </Button>
@@ -396,7 +375,7 @@ export function DataTable<TData, TValue>({
   const renderTableView = () => (
     <div className="space-y-3">
       {isEditing ? (
-        <div className="sticky top-4 z-20 rounded-xl border border-amber-500/20 bg-background/95 px-4 py-3 shadow-lg backdrop-blur">
+        <div className="sticky top-4 z-20 rounded-[var(--neo-radius)] border-2 border-[var(--neo-warning)] bg-[var(--neo-surface)] px-4 py-3 shadow-[var(--neo-shadow)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <span className="font-medium text-foreground">Editing vocabulary</span>
@@ -413,20 +392,20 @@ export function DataTable<TData, TValue>({
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button
-                variant="outline"
+                variant="neoSecondary"
                 onClick={handleCancel}
                 className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
-              <Button onClick={handleSave} className="w-full sm:w-auto">
+              <Button onClick={handleSave} variant="neo" className="w-full sm:w-auto">
                 Save
               </Button>
             </div>
           </div>
         </div>
       ) : null}
-      <Card className="rounded-xl border-white/5 bg-card/40 backdrop-blur-sm overflow-hidden shadow-lg">
+      <NeoPanel className="overflow-hidden">
         <Table>
           {!isDesktop ? null : (
             <TableHeader>
@@ -520,7 +499,7 @@ export function DataTable<TData, TValue>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    className={`${rowClassName} hover:bg-muted/50 transition-colors duration-200 ${isEditing ? "cursor-default" : "cursor-pointer"}`}
+                    className={`${rowClassName} hover:bg-cyan-500/10 transition-colors duration-200 ${isEditing ? "cursor-default" : "cursor-pointer"}`}
                     onClick={() => handleRowClick((row.original as any).word)}
                   >
                     {row.getVisibleCells().map((cell) => (
@@ -546,18 +525,18 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
-      </Card>
+      </NeoPanel>
     </div>
   );
 
   return (
     <div>
-      <div className="py-4">
+      <NeoToolbar className="mb-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="w-full lg:max-w-md">{filterControls}</div>
           <div className="w-full lg:flex-1">{actionButtons}</div>
         </div>
-      </div>
+      </NeoToolbar>
       <div className="mt-4">
         {renderTableView()}
       </div>

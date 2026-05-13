@@ -1,10 +1,12 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import LearningHeatMap from "./LearningHeatMap";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthIcon } from "../ui/auth-button";
+import { Flame } from "lucide-react";
+import { NeoPanel } from "@/components/ui/neo";
 
 interface UserInfo {
   id: string;
@@ -49,7 +51,7 @@ const ActivityStatistics: React.FC<ActivityStatisticsProps> = ({ userInfo, learn
 
   return (
     <div className="space-y-6">
-      <Card>
+      <NeoPanel>
         <CardHeader className="flex flex-row items-center space-x-4">
           {userLoading ? (
             <>
@@ -81,10 +83,10 @@ const ActivityStatistics: React.FC<ActivityStatisticsProps> = ({ userInfo, learn
             </>
           ) : null}
         </CardHeader>
-      </Card>
+      </NeoPanel>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
+        <NeoPanel>
           <CardHeader>
             <CardTitle>Review Count</CardTitle>
           </CardHeader>
@@ -95,18 +97,18 @@ const ActivityStatistics: React.FC<ActivityStatisticsProps> = ({ userInfo, learn
               <p className="text-sm md:text-base text-destructive">Failed to load stats</p>
             ) : (
               <>
-                <p className="text-2xl font-bold">
+                <p className="text-3xl font-black text-cyan-300">
                   {stats?.totalReviews || 0} reviews
                 </p>
                 <p className="text-sm md:text-base text-muted-foreground">
                   {stats?.correctReviews || 0} correct, {stats?.incorrectReviews || 0} incorrect
                 </p>
-                <Progress value={stats?.reviewAccuracy || 0} className="mt-2" />
+                <Progress value={stats?.reviewAccuracy || 0} className="mt-3 rounded-[var(--neo-radius)] border-2 border-[var(--neo-line-strong)] bg-black" />
               </>
             )}
           </CardContent>
-        </Card>
-        <Card>
+        </NeoPanel>
+        <NeoPanel>
           <CardHeader>
             <CardTitle>Streak</CardTitle>
           </CardHeader>
@@ -116,11 +118,14 @@ const ActivityStatistics: React.FC<ActivityStatisticsProps> = ({ userInfo, learn
             ) : statsError ? (
               <p className="text-sm md:text-base text-destructive">Failed to load stats</p>
             ) : (
-              <p className="text-4xl font-bold">🔥 {stats?.weeklyStreak || 0}</p>
+              <p className="inline-flex items-center gap-2 text-4xl font-black text-amber-300">
+                <Flame className="h-8 w-8" />
+                {stats?.weeklyStreak || 0}
+              </p>
             )}
           </CardContent>
-        </Card>
-        <Card>
+        </NeoPanel>
+        <NeoPanel>
           <CardHeader>
             <CardTitle>Accuracy</CardTitle>
           </CardHeader>
@@ -130,20 +135,20 @@ const ActivityStatistics: React.FC<ActivityStatisticsProps> = ({ userInfo, learn
             ) : statsError ? (
               <p className="text-sm md:text-base text-destructive">Failed to load stats</p>
             ) : (
-              <p className="text-4xl font-bold">{stats?.reviewAccuracy ? `${stats.reviewAccuracy}%` : '0%'}</p>
+              <p className="text-4xl font-black text-emerald-300">{stats?.reviewAccuracy ? `${stats.reviewAccuracy}%` : '0%'}</p>
             )}
           </CardContent>
-        </Card>
+        </NeoPanel>
       </div>
 
-      <Card>
+      <NeoPanel>
         <CardHeader>
           <CardTitle>Learning Heatmap</CardTitle>
         </CardHeader>
         <CardContent className="h-full">
           <LearningHeatMap />
         </CardContent>
-      </Card>
+      </NeoPanel>
     </div>
   );
 };

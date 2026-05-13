@@ -2,14 +2,6 @@
 
 import { useState, useContext } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,18 +21,9 @@ import {
 } from "@/components/ui/select";
 import { VocabularyContext } from "@/context/VocabularyContext";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save, ScanLine } from "lucide-react";
 import type { Vocabulary } from "@/lib/types";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-  DialogTrigger
-} from "@/components/ui/dialog";
+import { NeoHeader, NeoPage, NeoPanel } from "@/components/ui/neo";
 
 type ParsedRow = string[];
 type ColumnMapping = {
@@ -249,16 +232,12 @@ export default function VocabularyImportClient() {
   const columnOptions = ["word", "pronunciation", "meaning", "part_of_speech", "skip"];
 
   return (
-    <div className="container mx-auto max-w-5xl py-8 px-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Import Vocabulary</CardTitle>
-          <CardDescription>
-            Paste your vocabulary data below. Common formats are Word / Pronunciation /
-            Meaning / Part of Speech (optional).
-          </CardDescription>
-        </CardHeader>
-      </Card>
+    <NeoPage className="max-w-6xl">
+      <NeoHeader
+        title="Import Vocabulary"
+        description="Paste vocabulary data, preview the parsed columns, then save it into this topic."
+        className="mb-5"
+      />
       <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -266,15 +245,20 @@ export default function VocabularyImportClient() {
         placeholder={
           "日  にち / ひ  Ngày, mặt trời  noun\n月  つき / がつ  Mặt trăng, tháng  noun"
         }
-        className="mb-4 mt-4"
+        className="mb-4 min-h-[280px] rounded-[var(--neo-radius)] border-2 border-[var(--neo-line-strong)] bg-black/80 font-mono text-base shadow-[var(--neo-shadow)] focus-visible:ring-primary"
       />
-        <div className="flex justify-between">
-          <Button onClick={handlePreview}>Preview Data</Button>
+        <div className="flex flex-col justify-between gap-3 sm:flex-row">
+          <Button onClick={handlePreview} variant="neo">
+            <ScanLine className="mr-2 h-4 w-4" />
+            Preview Data
+          </Button>
           <Button
             onClick={handleSave}
             disabled={parsedData.length === 0 || isSaving}
+            variant="neoSecondary"
           >
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {!isSaving && <Save className="mr-2 h-4 w-4" />}
             {isSaving ? "Saving..." : "Save Vocabulary"}
           </Button>
         </div>
@@ -282,7 +266,7 @@ export default function VocabularyImportClient() {
       <div className="mt-4"></div>
 
       {showPreview && (
-        <div className="rounded-md border space-y-4">
+        <NeoPanel className="space-y-4 overflow-hidden p-0">
           {parsedData.length === 0 ? (
             <p className="text-sm md:text-base text-muted-foreground text-center pb-4">No data to preview.</p>
           ) : (
@@ -339,8 +323,8 @@ export default function VocabularyImportClient() {
               )}
             </>
           )}
-        </div>
+        </NeoPanel>
       )}
-    </div>
+    </NeoPage>
   );
 }

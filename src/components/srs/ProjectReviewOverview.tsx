@@ -3,8 +3,9 @@
 import { ArrowLeft, Clock3, Eye, ListChecks, TriangleAlert } from "lucide-react";
 import { useDailyReviewHistory, useDailyReviewSummary, useDueReviewCount, useWeakWords } from "@/hooks/use-srs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { NeoHeader, NeoPanel, NeoStat } from "@/components/ui/neo";
 import {
   Dialog,
   DialogContent,
@@ -37,19 +38,19 @@ export function ProjectReviewOverview({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="text-sm text-muted-foreground">Smart Review</div>
-          <h2 className="text-2xl font-bold">{projectTitle}</h2>
-        </div>
-        <Button variant="outline" onClick={onBack}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Projects
-        </Button>
-      </div>
+      <NeoHeader
+        eyebrow="Smart Review"
+        title={projectTitle}
+        actions={
+          <Button variant="neoSecondary" onClick={onBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Projects
+          </Button>
+        }
+      />
 
       {batchSummary && (
-        <Card className="border-cyan-500/30 bg-cyan-500/5">
+        <NeoPanel className="border-cyan-500/70 bg-cyan-950/30">
           <CardHeader>
             <CardTitle>Batch completed</CardTitle>
             <CardDescription>Your batch is done. You can inspect today&apos;s results or view weak words.</CardDescription>
@@ -61,11 +62,11 @@ export function ProjectReviewOverview({
             <MetricCard label="Timeout" value={batchSummary.timeoutCount} />
             <MetricCard label="Weak words now" value={summary?.weakWordCount || 0} />
           </CardContent>
-        </Card>
+        </NeoPanel>
       )}
 
       <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-        <Card>
+        <NeoPanel>
           <CardHeader>
             <CardTitle>Today in this project</CardTitle>
             <CardDescription>Daily progress for the selected project.</CardDescription>
@@ -82,9 +83,9 @@ export function ProjectReviewOverview({
               loading={historyLoading}
             />
           </CardContent>
-        </Card>
+        </NeoPanel>
 
-        <Card>
+        <NeoPanel>
           <CardHeader>
             <CardTitle>Need attention</CardTitle>
             <CardDescription>Weak words are listed for later review, not re-tested immediately.</CardDescription>
@@ -93,10 +94,10 @@ export function ProjectReviewOverview({
             <MetricCard label="Weak words" value={summaryLoading ? "-" : summary?.weakWordCount || 0} />
             <WeakWordsDialog weakWords={weakWords} loading={weakWordsLoading} />
           </CardContent>
-        </Card>
+        </NeoPanel>
       </div>
 
-      <Card>
+      <NeoPanel>
         <CardHeader>
           <CardTitle>Review queue</CardTitle>
           <CardDescription>Each word appears once in a batch, up to 50 words.</CardDescription>
@@ -107,21 +108,18 @@ export function ProjectReviewOverview({
             <MetricCard label="Due today" value={dueLoading ? "-" : dueToday} />
             <MetricCard label="Overdue" value={dueLoading ? "-" : overdue} />
           </div>
-          <Button onClick={onStartReview} disabled={dueLoading || count === 0} className="w-full sm:w-auto">
+          <Button onClick={onStartReview} disabled={dueLoading || count === 0} variant="neo" className="w-full sm:w-auto">
             Start Review 50 words
           </Button>
         </CardContent>
-      </Card>
+      </NeoPanel>
     </div>
   );
 }
 
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <div className="text-2xl font-bold">{value}</div>
-      <div className="text-sm text-muted-foreground">{label}</div>
-    </div>
+    <NeoStat label={label} value={value} />
   );
 }
 
@@ -135,7 +133,7 @@ function HistoryDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button variant="neoSecondary">
           <Eye className="mr-2 h-4 w-4" />
           View reviewed today
         </Button>
@@ -188,7 +186,7 @@ function WeakWordsDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button variant="neoSecondary">
           <ListChecks className="mr-2 h-4 w-4" />
           View weak words
         </Button>
