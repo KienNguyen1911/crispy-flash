@@ -110,6 +110,23 @@
         --glass-border: rgba(26, 174, 204, 0.2); /* primary-a0 (Cyan) */
         --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         --glass-backdrop-blur: 14px;
+
+        /* Dark neo-brutal system tokens */
+        --neo-bg: #07090b;
+        --neo-surface: #101114;
+        --neo-surface-raised: #15171b;
+        --neo-ink: #000000;
+        --neo-line: #2d333a;
+        --neo-line-strong: #050505;
+        --neo-primary: #27bdd3;
+        --neo-primary-strong: #19a9c0;
+        --neo-success: #20a77b;
+        --neo-warning: #c98522;
+        --neo-danger: #d43a3a;
+        --neo-info: #4b7cff;
+        --neo-shadow: 4px 4px 0 #000000;
+        --neo-shadow-sm: 3px 3px 0 #000000;
+        --neo-radius: 6px;
     }
 }
 
@@ -137,5 +154,14 @@
     }
     .border {
         border-width: 2px;
+    }
+    .neo-grid-bg {
+        background-image:
+            linear-gradient(hsl(0 0% 100% / 0.035) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(0 0% 100% / 0.035) 1px, transparent 1px);
+        background-size: 22px 22px;
+    }
+    .neo-focus {
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
     }
 }

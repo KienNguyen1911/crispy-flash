@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Brain, BookOpen, ArrowRight, Loader, BarChart3 } from "lucide-react";
 import { useDailyReviewSummary, useDueReviewCount } from "@/hooks/use-srs";
 import { getProjects } from "@/services/projects-api";
+import { NeoHeader, NeoPage, NeoPanel, NeoStat } from "@/components/ui/neo";
 
 export default function ReviewPage() {
   const { data: projects = [], isLoading: projectsLoading } = useSWR(
@@ -46,14 +47,17 @@ export default function ReviewPage() {
   const selectedProject = projects.find((project: any) => project.id === selectedProjectId);
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-6xl">
-      <div className="mb-8">
-        <div className="flex items-center gap-2">
-          <Brain className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold">Smart Review</h1>
-        </div>
-        <p className="text-muted-foreground mt-2">Select a project to start reviewing vocabulary</p>
-      </div>
+    <NeoPage>
+      <NeoHeader
+        title={
+          <span className="inline-flex items-center gap-3">
+            <Brain className="h-8 w-8 text-cyan-300" />
+            Smart Review
+          </span>
+        }
+        description="Select a project to start reviewing vocabulary"
+        className="mb-8"
+      />
 
       {isInSession ? (
         <ReviewSession
@@ -104,7 +108,7 @@ export default function ReviewPage() {
           )}
         </div>
       )}
-    </div>
+    </NeoPage>
   );
 }
 
@@ -119,7 +123,7 @@ function ProjectReviewCard({ project, onSelect, onStartReview }: ProjectReviewCa
   const { summary, isLoading: summaryLoading } = useDailyReviewSummary(project.id);
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <NeoPanel className="transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -128,41 +132,27 @@ function ProjectReviewCard({ project, onSelect, onStartReview }: ProjectReviewCa
               <CardDescription className="mt-1">{project.description}</CardDescription>
             )}
           </div>
-          <BookOpen className="h-5 w-5 text-blue-600 flex-shrink-0" />
+          <BookOpen className="h-5 w-5 flex-shrink-0 text-cyan-300" />
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {/* Stats */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{isLoading ? "-" : count}</div>
-              <div className="text-xs text-muted-foreground">Total to review</div>
-            </div>
-            <div className="bg-green-50 dark:bg-green-950 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{isLoading ? "-" : dueToday}</div>
-              <div className="text-xs text-muted-foreground">Due today</div>
-            </div>
+            <NeoStat tone="info" value={isLoading ? "-" : count} label="Total to review" className="p-3" />
+            <NeoStat tone="success" value={isLoading ? "-" : dueToday} label="Due today" className="p-3" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-100 dark:bg-slate-900 p-3 rounded-lg">
-              <div className="text-2xl font-bold">{summaryLoading ? "-" : summary?.reviewedCount || 0}</div>
-              <div className="text-xs text-muted-foreground">Today reviewed</div>
-            </div>
-            <div className="bg-amber-50 dark:bg-amber-950 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-amber-600 dark:text-amber-300">
-                {summaryLoading ? "-" : summary?.weakWordCount || 0}
-              </div>
-              <div className="text-xs text-muted-foreground">Weak words</div>
-            </div>
+            <NeoStat value={summaryLoading ? "-" : summary?.reviewedCount || 0} label="Today reviewed" className="p-3" />
+            <NeoStat tone="warning" value={summaryLoading ? "-" : summary?.weakWordCount || 0} label="Weak words" className="p-3" />
           </div>
 
           {/* Overdue warning */}
           {overdue > 0 && (
-            <div className="bg-red-50 dark:bg-red-950 p-3 rounded-lg border border-red-200 dark:border-red-800">
-              <div className="text-sm font-medium text-red-600 dark:text-red-400">
-                ⚠️ {overdue} overdue
+            <div className="rounded-[var(--neo-radius)] border-2 border-[var(--neo-danger)] bg-red-950/45 p-3 shadow-[var(--neo-shadow-sm)]">
+              <div className="text-sm font-bold text-red-200">
+                {overdue} overdue
               </div>
             </div>
           )}
@@ -170,6 +160,7 @@ function ProjectReviewCard({ project, onSelect, onStartReview }: ProjectReviewCa
           {/* Start button */}
           <Button
             className="w-full mt-2"
+            variant="neo"
             disabled={isLoading || count === 0}
             onClick={(e) => {
               e.stopPropagation();
@@ -181,7 +172,7 @@ function ProjectReviewCard({ project, onSelect, onStartReview }: ProjectReviewCa
           </Button>
           <Button
             className="w-full"
-            variant="outline"
+            variant="neoSecondary"
             onClick={() => onSelect(project.id)}
           >
             Today Summary
@@ -189,6 +180,6 @@ function ProjectReviewCard({ project, onSelect, onStartReview }: ProjectReviewCa
           </Button>
         </div>
       </CardContent>
-    </Card>
+    </NeoPanel>
   );
 }

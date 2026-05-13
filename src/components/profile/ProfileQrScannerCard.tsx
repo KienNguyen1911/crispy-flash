@@ -187,7 +187,7 @@ export default function ProfileQrScannerCard() {
   }, [stopCamera]);
 
   return (
-    <Card>
+    <Card variant="neo">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <QrCode className="h-5 w-5 text-primary" />
@@ -217,13 +217,13 @@ export default function ProfileQrScannerCard() {
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
           <div className="space-y-4">
             <div className="flex flex-wrap gap-3">
-              <Button type="button" onClick={beginCameraScan} disabled={isCameraActive || isProcessing}>
+              <Button type="button" onClick={beginCameraScan} disabled={isCameraActive || isProcessing} variant="neo">
                 <Camera className="mr-2 h-4 w-4" />
                 Start camera
               </Button>
               <Button
                 type="button"
-                variant="outline"
+                variant="neoSecondary"
                 onClick={stopCamera}
                 disabled={!isCameraActive}
               >
@@ -244,6 +244,7 @@ export default function ProfileQrScannerCard() {
             <div className="flex flex-wrap gap-3">
               <Button
                 type="button"
+                variant="neo"
                 onClick={confirmSession}
                 disabled={!sessionInfo || !qrPayload || isProcessing || sessionInfo.status === "APPROVED"}
               >

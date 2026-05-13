@@ -7,7 +7,6 @@ import { useSWRConfig } from "swr";
 import dynamic from "next/dynamic";
 import { useAuthFetcher } from "@/hooks/useAuthFetcher";
 import { useGenerationWebSocket } from "@/hooks/useGenerationWebSocket";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2, BookOpenCheck } from "lucide-react";
 import { columns } from "./columns";
@@ -37,6 +36,7 @@ import StoryDisplay from "@/components/StoryDisplay";
 import ShareTopicDialog from "@/components/ShareTopicDialog";
 import { AnimatePresence, motion } from "motion/react";
 import { Share2 } from "lucide-react";
+import { NeoHeader, NeoPage } from "@/components/ui/neo";
 
 // Dynamic imports to split heavy client bundles
 const DataTable = dynamic(
@@ -234,41 +234,41 @@ export default function TopicDetailPage() {
 
   return (
     <>
-      <div className="container mx-auto max-w-5xl py-8 px-4">
-        <Card className="mb-8 p-6">
-          <Breadcrumb className="mb-4">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink href={`/projects/${project.id}`}>
-                  {project.title}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{topic.title}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-
-          <TopicHeaderEditor projectId={projectId} topic={topic} />
-
-          <div className="mt-4 flex flex-wrap justify-end gap-2">
+      <NeoPage className="max-w-6xl">
+        <NeoHeader
+          eyebrow={
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink href={`/projects/${project.id}`}>
+                    {project.title}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{topic.title}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          }
+          title={<TopicHeaderEditor projectId={projectId} topic={topic} />}
+          actions={
+            <>
             <Button
               onClick={() => setIsLearnMode(true)}
               disabled={!hasVocabulary}
-              className="gap-2"
+              variant="neo"
             >
               <BookOpenCheck className="h-4 w-4" />
               Learn
             </Button>
             <Button
               onClick={() => setIsShareDialogOpen(true)}
-              variant="outline"
-              className="gap-2"
+              variant="neoSecondary"
             >
               <Share2 className="h-4 w-4" />
               Share
@@ -280,11 +280,10 @@ export default function TopicDetailPage() {
                 topic.contentGenerationStatus === "GENERATING" ||
                 isGenerating
               }
-              className="gap-2"
               variant={
                 topic.contentGenerationStatus === "COMPLETED"
-                  ? "outline"
-                  : "default"
+                  ? "neoSecondary"
+                  : "neo"
               }
             >
               {isGenerating ||
@@ -305,15 +304,17 @@ export default function TopicDetailPage() {
                 </>
               )}
             </Button>
-          </div>
-        </Card>
+            </>
+          }
+          className="mb-8"
+        />
         <DataTable
           columns={columns}
           data={topic.vocabulary || []}
           projectId={projectId}
           topicId={topicId}
         />
-      </div>
+      </NeoPage>
 
       <AnimatePresence mode="wait">
         {isLearnMode && (
