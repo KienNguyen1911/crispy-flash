@@ -10,7 +10,8 @@ import {
   Node,
   Edge,
   ReactFlowProvider,
-  useReactFlow
+  useReactFlow,
+  Panel
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -33,18 +34,40 @@ const nodeTypes = {
 type VocabGraphViewerProps = {
   vocabulary: Vocabulary[];
   onWordClick?: (word: string) => void;
+  showReading?: boolean;
+  onToggleReading?: () => void;
+  hideReadingToggle?: boolean;
+  mobileControls?: React.ReactNode;
 };
 
-function InnerGraphViewer({ vocabulary, onWordClick }: VocabGraphViewerProps) {
+function InnerGraphViewer({
+  vocabulary,
+  onWordClick,
+  showReading: controlledShowReading,
+  onToggleReading,
+  hideReadingToggle = false,
+  mobileControls,
+}: VocabGraphViewerProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [isCategorizing, setIsCategorizing] = React.useState(true);
-  const [showReading, setShowReading] = useState(true);
+  const [internalShowReading, setInternalShowReading] = useState(
+    controlledShowReading ?? true
+  );
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const { setCenter, getNode } = useReactFlow();
   const isMobile = useMediaQuery("(max-width: 767px)");
   const isUpperCase = (str: string) => str === str.toUpperCase();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const showReading = controlledShowReading ?? internalShowReading;
+
+  const handleToggleReading = useCallback(() => {
+    if (onToggleReading) {
+      onToggleReading();
+      return;
+    }
+    setInternalShowReading((prev) => !prev);
+  }, [onToggleReading]);
 
   // Extract root kanjis for the directory
   const rootKanjis = useMemo(() => {
@@ -269,15 +292,22 @@ function InnerGraphViewer({ vocabulary, onWordClick }: VocabGraphViewerProps) {
 
       {/* Main Canvas Area */}
       <div className="flex-1 relative w-full h-full">
-        <div className={`absolute top-4 z-30 ${isMobile ? 'right-4' : 'left-4'}`}>
-          <button
-            type="button"
-            onClick={() => setShowReading(prev => !prev)}
-            className="bg-white text-black border-[3px] border-black rounded-sm px-3 py-2 text-xs font-bold shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all"
-          >
-            {showReading ? 'Reading: ON' : 'Reading: OFF'}
-          </button>
-        </div>
+        {mobileControls && (
+          <Panel position="top-right" className="m-4 z-40">
+            {mobileControls}
+          </Panel>
+        )}
+        {!hideReadingToggle && (
+          <div className={`absolute top-4 z-30 ${isMobile ? 'right-4' : 'left-4'}`}>
+            <button
+              type="button"
+              onClick={handleToggleReading}
+              className="bg-white text-black border-[3px] border-black rounded-sm px-3 py-2 text-xs font-bold shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 transition-all"
+            >
+              {showReading ? 'Reading: ON' : 'Reading: OFF'}
+            </button>
+          </div>
+        )}
         {isCategorizing && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
             <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />

@@ -36,6 +36,7 @@ import { toast } from "sonner";
 
 import {
   Pen,
+  Menu,
   Plus,
   Trash2,
   Table as TableIcon,
@@ -53,6 +54,12 @@ import VocabGraphViewer from "@/components/graph/VocabGraphViewer";
 import { TopicSwitcher } from "@/components/topics/TopicSwitcher";
 import { useSearchParams } from "next/navigation";
 import { NeoPanel, NeoToolbar } from "@/components/ui/neo";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -85,6 +92,7 @@ export function DataTable<TData, TValue>({
   const [viewMode, setViewMode] = React.useState<"table" | "graph">(initialViewMode);
   const [selectedKanjiWord, setSelectedKanjiWord] = React.useState<string | null>(null);
   const [isTopicSwitcherOpen, setIsTopicSwitcherOpen] = React.useState(false);
+  const [graphShowReading, setGraphShowReading] = React.useState(true);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   // Update viewMode if URL param changes
@@ -331,6 +339,47 @@ export function DataTable<TData, TValue>({
     </div>
   );
 
+  const mobileGraphMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-11 w-11 bg-white text-black border-[3px] border-black shadow-[4px_4px_0px_black] hover:-translate-y-1 transition-all"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        side="bottom"
+        className="z-[140] min-w-[210px] rounded-none border-[3px] border-black bg-white p-1 text-black shadow-[6px_6px_0px_black]"
+      >
+        <DropdownMenuItem
+          className="cursor-pointer font-black focus:bg-zinc-100"
+          onSelect={() => setIsTopicSwitcherOpen(true)}
+        >
+          <Command className="h-4 w-4" />
+          Switch Topic
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer font-black focus:bg-zinc-100"
+          onSelect={() => setViewMode("table")}
+        >
+          <TableIcon className="h-4 w-4" />
+          Back to Table
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer font-black focus:bg-zinc-100"
+          onSelect={() => setGraphShowReading((prev) => !prev)}
+        >
+          <Network className="h-4 w-4" />
+          {graphShowReading ? "Reading: ON" : "Reading: OFF"}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   const actionButtons = (
     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
       {!isEditing ? (
@@ -543,28 +592,36 @@ export function DataTable<TData, TValue>({
 
       {viewMode === "graph" && (
         <div className="fixed inset-0 z-[100] bg-zinc-50 flex flex-col">
-          <div className="absolute top-4 right-4 z-[110] flex gap-2">
-             <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsTopicSwitcherOpen(true)}
-                className="bg-white text-black border-[3px] border-black shadow-[4px_4px_0px_black] font-black hover:-translate-y-1 transition-all"
-             >
-                <Command className="mr-2 h-4 w-4" />
-                Switch Topic
-             </Button>
-             <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setViewMode("table")}
-                className="bg-white text-black border-[3px] border-black shadow-[4px_4px_0px_black] font-black hover:-translate-y-1 transition-all"
-             >
-                <TableIcon className="mr-2 h-4 w-4" />
-                Back to Table
-             </Button>
-          </div>
-          <VocabGraphViewer 
-            vocabulary={visibleData as any[]} 
+          {isDesktop ? (
+            <div className="absolute top-4 right-4 z-[110]">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsTopicSwitcherOpen(true)}
+                  className="bg-white text-black border-[3px] border-black shadow-[4px_4px_0px_black] font-black hover:-translate-y-1 transition-all"
+                >
+                  <Command className="mr-2 h-4 w-4" />
+                  Switch Topic
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewMode("table")}
+                  className="bg-white text-black border-[3px] border-black shadow-[4px_4px_0px_black] font-black hover:-translate-y-1 transition-all"
+                >
+                  <TableIcon className="mr-2 h-4 w-4" />
+                  Back to Table
+                </Button>
+              </div>
+            </div>
+          ) : null}
+          <VocabGraphViewer
+            vocabulary={visibleData as any[]}
+            showReading={graphShowReading}
+            onToggleReading={() => setGraphShowReading((prev) => !prev)}
+            hideReadingToggle={!isDesktop}
+            mobileControls={!isDesktop ? mobileGraphMenu : undefined}
           />
         </div>
       )}

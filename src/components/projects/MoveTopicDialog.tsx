@@ -24,7 +24,6 @@ export default function MoveTopicDialog({
 }) {
   const { moveTopic } = useContext(TopicContext);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [selectedProjectName, setSelectedProjectName] = useState<string>("");
   const [isMoving, setIsMoving] = useState(false);
   const [open, setOpen] = useState(true);
 
@@ -41,7 +40,6 @@ export default function MoveTopicDialog({
       await moveTopic(topicId, selectedProjectId);
       setOpen(false);
       setSelectedProjectId("");
-      setSelectedProjectName("");
       onTopicMoved?.();
     } catch (error) {
       console.error("Failed to move topic:", error);
@@ -64,7 +62,6 @@ export default function MoveTopicDialog({
             onClick={() => {
               setOpen(false);
               setSelectedProjectId("");
-              setSelectedProjectName("");
               onOpenChange?.(false);
             }}
           />
@@ -81,22 +78,21 @@ export default function MoveTopicDialog({
             }}
             className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-2xl"
           >
-            <div className="rounded-t-2xl border border-border bg-card shadow-lg">
+            <div className="rounded-t-[var(--neo-radius)] border-2 border-[var(--neo-line-strong)] bg-[var(--neo-surface)] shadow-[var(--neo-shadow)]">
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-border p-6">
+              <div className="flex items-center justify-between border-b-2 border-[var(--neo-line)] p-6">
                 <div>
-                  <h2 className="text-xl font-semibold">Move Topic</h2>
-                  <p className="text-sm md:text-base text-muted-foreground mt-1">
+                  <h2 className="text-xl font-black text-white">Move Topic</h2>
+                  <p className="mt-1 text-sm md:text-base font-medium text-muted-foreground">
                     Move "{topicTitle}" to another project
                   </p>
                 </div>
                 <Button
-                  variant="ghost"
+                  variant="neoGhost"
                   size="icon"
                   onClick={() => {
                     setOpen(false);
                     setSelectedProjectId("");
-                    setSelectedProjectName("");
                     onOpenChange?.(false);
                   }}
                   className="shrink-0"
@@ -109,32 +105,31 @@ export default function MoveTopicDialog({
               <div className="p-6 max-h-[70vh] overflow-y-auto">
                 <div className="space-y-4">
                   {availableProjects.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm font-medium text-muted-foreground">
                       No other projects available. Create a new project to move this topic.
                     </p>
                   ) : (
                     <>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">
+                        <label className="text-sm font-black text-white">
                           Select a project
                         </label>
-                        <div className="border border-border rounded-md overflow-y-auto max-h-[250px]">
+                        <div className="max-h-[250px] overflow-y-auto rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-black/10">
                           {availableProjects.map((project) => (
                             <button
                               key={project.id}
                               onClick={() => {
                                 setSelectedProjectId(project.id);
-                                setSelectedProjectName(project.title);
                               }}
-                              className={`w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center justify-between border-b last:border-b-0 ${
+                              className={`flex w-full items-center justify-between border-b border-[var(--neo-line)] px-4 py-3 text-left transition-colors last:border-b-0 ${
                                 selectedProjectId === project.id
-                                  ? "bg-muted"
-                                  : ""
+                                  ? "bg-cyan-950/40 text-white"
+                                  : "text-muted-foreground hover:bg-white/5 hover:text-white"
                               }`}
                             >
-                              <span className="text-sm">{project.title}</span>
+                              <span className="text-sm font-semibold">{project.title}</span>
                               {selectedProjectId === project.id && (
-                                <Check className="h-4 w-4 text-primary" />
+                                <Check className="h-4 w-4 text-cyan-300" />
                               )}
                             </button>
                           ))}
@@ -143,11 +138,10 @@ export default function MoveTopicDialog({
 
                       <div className="flex justify-end gap-2">
                         <Button
-                          variant="outline"
+                          variant="neoSecondary"
                           onClick={() => {
                             setOpen(false);
                             setSelectedProjectId("");
-                            setSelectedProjectName("");
                             onOpenChange?.(false);
                           }}
                           disabled={isMoving}
@@ -155,6 +149,7 @@ export default function MoveTopicDialog({
                           Cancel
                         </Button>
                         <Button
+                          variant="neo"
                           onClick={handleMove}
                           disabled={!selectedProjectId || isMoving}
                         >
