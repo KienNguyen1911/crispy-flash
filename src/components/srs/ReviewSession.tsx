@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useDueReviews, useReviewSession } from "@/hooks/use-srs";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
@@ -17,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { VocabularyWithSrs } from "@/types/srs";
 import type { ReviewAttemptResult } from "@/types/srs";
 import { KanjiDrawer } from "@/components/vocabularies/KanjiDrawer";
+import { NeoPanel } from "@/components/ui/neo";
 
 interface ReviewSessionProps {
   projectId?: string;
@@ -240,7 +240,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
 
   if (!currentVocab) {
     return (
-      <Card className="max-w-2xl mx-auto">
+      <NeoPanel className="max-w-2xl mx-auto">
         <CardContent className="pt-6">
           <div className="text-center space-y-4">
             <Brain className="h-12 w-12 mx-auto text-muted-foreground" />
@@ -250,10 +250,10 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
                 Come back after learning more words!
               </p>
             </div>
-            <Button onClick={onCancel}>Go Back</Button>
+            <Button onClick={onCancel} variant="neo">Go Back</Button>
           </div>
         </CardContent>
-      </Card>
+      </NeoPanel>
     );
   }
   return (
@@ -261,7 +261,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
       <div className="max-w-2xl mx-auto space-y-4">
         {/* Progress Bar & Timer */}
         <div className="space-y-2">
-          <div className="flex justify-between text-sm md:text-base font-medium">
+          <div className="flex justify-between text-sm md:text-base font-black">
             <span>
               Progress: {currentIndex + 1} / {sessionReviews.length}
             </span>
@@ -272,12 +272,12 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
           </div>
           <Progress
             value={(timeLeft / TIME_LIMIT) * 100}
-            className="h-2"
+            className="h-3 rounded-[var(--neo-radius)] border-2 border-[var(--neo-line-strong)] bg-[var(--neo-surface)]"
           />
         </div>
 
       {/* Main Card */}
-      <Card className="relative">
+      <NeoPanel className="relative">
         <CardHeader>
           <div className="flex justify-between items-start">
             <div className="space-y-1">
@@ -346,7 +346,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
                   onClick={() => handleAnswerSelect(option)}
                   disabled={isAnswered}
                   className={cn(
-                    "h-auto py-4 text-base justify-center text-center whitespace-normal",
+                    "h-auto min-h-16 justify-center whitespace-normal rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] py-4 text-center text-base font-black shadow-[var(--neo-shadow-sm)]",
                     isAnswered &&
                       isCorrect &&
                       "bg-green-600 text-white hover:bg-green-700",
@@ -362,7 +362,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
           {isAnswered && (
             <div
               className={cn(
-                "rounded-lg border px-4 py-3 space-y-3",
+                "rounded-[var(--neo-radius)] border-2 px-4 py-3 space-y-3 shadow-[var(--neo-shadow-sm)]",
                 lastResult === "CORRECT"
                   ? "border-green-500/40 bg-green-500/10"
                   : "border-amber-500/40 bg-amber-500/10",
@@ -401,6 +401,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
               <Button
                 onClick={() => moveToNext(batchSummary)}
                 disabled={isSubmitting}
+                variant="neo"
                 className="w-full sm:w-auto"
               >
                 Continue
@@ -412,7 +413,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
           {/* Navigation & Info */}
           <div className="flex justify-between items-center pt-4 border-t">
             <Button
-              variant="outline"
+              variant="neoSecondary"
               onClick={onCancel}
               disabled={isSubmitting}
             >
@@ -429,7 +430,7 @@ export function ReviewSession({ projectId, onComplete, onCancel }: ReviewSession
             </div>
           </div>
         </CardContent>
-      </Card>
+      </NeoPanel>
       </div>
 
       <KanjiDrawer
@@ -453,7 +454,7 @@ function ReviewSessionSkeleton() {
         <div className="h-2 bg-gray-200 rounded animate-pulse" />
       </div>
 
-      <Card>
+      <NeoPanel>
         <CardHeader>
           <div className="flex justify-between items-start">
             <div className="space-y-2">
@@ -474,7 +475,7 @@ function ReviewSessionSkeleton() {
             <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
           </div>
         </CardContent>
-      </Card>
+      </NeoPanel>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm md:text-base font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm md:text-base font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -20,6 +20,13 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         success: "bg-success text-success-foreground hover:bg-success/90",
         warning: "bg-warning text-warning-foreground hover:bg-warning/90",
+        neo: "rounded-[var(--neo-radius)] border-2 border-[var(--neo-line-strong)] bg-[var(--neo-primary)] text-white shadow-[var(--neo-shadow-sm)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-[var(--neo-primary-strong)] hover:shadow-[5px_5px_0_#000]",
+        neoSecondary:
+          "rounded-[var(--neo-radius)] border-2 border-[var(--neo-line-strong)] bg-[var(--neo-surface)] text-white shadow-[var(--neo-shadow-sm)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-[var(--neo-surface-raised)] hover:shadow-[5px_5px_0_#000]",
+        neoDanger:
+          "rounded-[var(--neo-radius)] border-2 border-[var(--neo-line-strong)] bg-[var(--neo-danger)] text-white shadow-[var(--neo-shadow-sm)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-red-600 hover:shadow-[5px_5px_0_#000]",
+        neoGhost:
+          "rounded-[var(--neo-radius)] border-2 border-transparent bg-transparent text-white hover:border-[var(--neo-line)] hover:bg-white/5",
       },
       size: {
         default: "h-10 px-4 py-2",

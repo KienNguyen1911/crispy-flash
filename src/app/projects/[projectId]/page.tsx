@@ -19,11 +19,16 @@ import {
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { Project } from "@/lib/types";
 import MoveTopicDialog from "@/components/projects/MoveTopicDialog";
+import {
+  NeoHeader,
+  NeoPage,
+  NeoPanel,
+  NeoSectionTitle,
+} from "@/components/ui/neo";
 
 export default function ProjectPage() {
   const params = useParams();
@@ -62,7 +67,6 @@ export default function ProjectPage() {
   const {
     data: topicPages,
     error: topicsError,
-    size,
     setSize,
     isValidating,
     mutate: mutateTopicPages
@@ -158,30 +162,34 @@ export default function ProjectPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-5xl py-8 px-4">
-      <Card className="mb-8 p-6">
-        <Breadcrumb className="mb-4">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/">Projects</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{project.name}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+    <NeoPage className="max-w-6xl">
+      <NeoHeader
+        eyebrow={
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/">Projects</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{project.name}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        }
+        title={<ProjectHeaderEditor project={project} />}
+        className="mb-8"
+      />
 
-        <ProjectHeaderEditor project={project} />
-      </Card>
-
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-semibold font-headline">Topics</h2>
-        <div className="flex gap-2">
-          {/* TopicCreate is a client component that uses AppDataContext to add topics */}
-          <Link href={`/projects/${projectId}/analytics`}>
-            <Button variant="outline">Analytics</Button>
-          </Link>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <NeoSectionTitle
+          title="Topics"
+          description="Group related vocabulary, then switch between table, graph, and learn mode."
+        />
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="neoSecondary">
+            <Link href={`/projects/${projectId}/analytics`}>Analytics</Link>
+          </Button>
           <TopicCreate projectId={projectId} onTopicCreated={refetchTopics} />
         </div>
       </div>
@@ -190,7 +198,7 @@ export default function ProjectPage() {
         <div className="space-y-8">
           {Object.entries(groupedTopics).map(([date, dateTopics]) => (
             <div key={date} className="space-y-4">
-              <h3 className="text-lg font-medium text-muted-foreground">{date}</h3>
+              <h3 className="text-lg font-black text-muted-foreground">{date}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {dateTopics.map((topic: any) => (
                   <div key={topic.id} className="transition-opacity duration-300">
@@ -210,21 +218,12 @@ export default function ProjectPage() {
           ))}
         </div>
       ) : (
-        <div
-          className="
-            text-center py-20 
-            rounded-lg 
-            bg-black/40 
-            backdrop-blur-md 
-            border
-            shadow-lg
-          "
-        >
-          <h2 className="text-xl font-semibold">No Topics Yet</h2>
-          <p className="text-muted-foreground mt-2">
+        <NeoPanel subtle className="py-20 text-center">
+          <h2 className="text-2xl font-black text-white">No Topics Yet</h2>
+          <p className="mt-2 text-base font-medium text-muted-foreground">
             Create a topic to start adding vocabulary.
           </p>
-        </div>
+        </NeoPanel>
       )}
 
       {/* Infinite scroll sentinel and loading indicator */}
@@ -258,6 +257,6 @@ export default function ProjectPage() {
           }}
         />
       )}
-    </div>
+    </NeoPage>
   );
 }

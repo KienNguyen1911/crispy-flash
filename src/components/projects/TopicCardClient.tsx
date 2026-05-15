@@ -2,28 +2,26 @@
 
 import React, { useContext, useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import type { Project } from "@/lib/types";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  AlertDialog,
   AlertDialogAction,
+  AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
-import { Trash2, ArrowRight } from "lucide-react";
+import { ArrowRight, Menu, Trash2 } from "lucide-react";
 import { Check, X } from "lucide-react";
 import { TopicContext } from "@/context/TopicContext";
 import { Progress } from "@/components/ui/progress";
+import { NeoPanel } from "@/components/ui/neo";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function TopicCardClient({
   projectId,
@@ -44,6 +42,7 @@ export default function TopicCardClient({
   const [title, setTitle] = useState(topic.title);
   const [description, setDescription] = useState(topic.description ?? "");
   const [saving, setSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const isDirty =
@@ -83,105 +82,101 @@ export default function TopicCardClient({
   }, [editing, topic.title, topic.description]);
 
   return (
-    <Card
+    <NeoPanel
       ref={containerRef}
-      className="group relative h-full flex flex-col bg-card/40 backdrop-blur-sm border-white/5 shadow-lg hover:shadow-glow hover:scale-[1.02] hover:border-primary/30 transition-all duration-300"
+      className="group relative flex min-h-[166px] flex-col p-6 transition-all duration-200 hover:-translate-x-1 hover:-translate-y-1 hover:bg-[var(--neo-surface-raised)] hover:shadow-[7px_7px_0_#000]"
     >
-      <CardHeader>
-        <div>
-          {editing ? (
-            <input
-              className="text-xl font-headline w-full bg-transparent outline-none"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          ) : (
-            <CardTitle
-              className="font-headline cursor-text"
-              onClick={() => setEditing(true)}
-            >
-              {topic.title}
-            </CardTitle>
-          )}
-          {editing ? (
-            <textarea
-              className="text-sm md:text-base text-muted-foreground w-full mt-1 bg-transparent outline-none"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          ) : (
-            <CardDescription onClick={() => setEditing(true)}>
-              {topic.description}
-            </CardDescription>
-          )}
-        </div>
-      </CardHeader>
-
-      <CardContent className="flex-grow flex flex-col justify-end">
-        <div className="mt-auto">
-          <p className="text-sm md:text-base text-muted-foreground mb-3">
-            <span className="font-semibold text-foreground/80">{topic.vocabularyCount}</span> word(s), <span className="text-primary">{topic.learnedCount}</span> learned
-          </p>
-          <Progress
-            value={topic.vocabularyCount > 0 ? (topic.learnedCount / topic.vocabularyCount) * 100 : 0}
-            className="h-1.5 shadow-[0_0_8px_rgba(26,174,204,0.3)]"
+      <div className="pr-10">
+        {editing ? (
+          <input
+            className="w-full rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-black/20 px-2 py-1 text-2xl font-black font-headline text-white outline-none focus:border-cyan-400"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
-        </div>
-      </CardContent>
+        ) : (
+          <h3
+            className="cursor-text truncate whitespace-nowrap pr-2 font-headline text-2xl font-black leading-tight text-white"
+            onClick={() => setEditing(true)}
+            title={topic.title}
+          >
+            {topic.title}
+          </h3>
+        )}
+        {editing ? (
+          <textarea
+            className="mt-2 w-full rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-black/20 px-2 py-1 text-sm md:text-base text-muted-foreground outline-none focus:border-cyan-400"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        ) : (
+          <p
+            className="mt-2 min-h-5 cursor-text truncate whitespace-nowrap pr-2 text-sm font-medium text-muted-foreground"
+            onClick={() => setEditing(true)}
+            title={topic.description ?? ""}
+          >
+            {topic.description}
+          </p>
+        )}
+      </div>
 
-      {/* Action buttons top-right, visible on group hover */}
-      <div className="absolute top-2 right-2 z-20 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:bg-muted h-8 w-8 rounded-full"
-          onClick={() => onMoveClick?.(topic.id, topic.title)}
-        >
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 rounded-full">
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete topic?</AlertDialogTitle>
-            </AlertDialogHeader>
-            <p>
-              Are you sure you want to permanently delete the topic "
-              {topic.title}" and its vocabulary? This action cannot be undone.
-            </p>
-            <div className="mt-4 flex justify-center gap-2">
-              <AlertDialogCancel asChild>
-                <Button variant="outline" className="mt-0">Cancel</Button>
-              </AlertDialogCancel>
-              <AlertDialogAction asChild>
-                <Button
-                  variant="destructive"
-                  onClick={async () => {
-                    try {
-                      await deleteTopic(projectId, topic.id);
-                      onTopicDeleted?.();
-                    } catch (e) {
-                      /* ignore */
-                    }
-                  }}
-                >
-                  Delete
-                </Button>
-              </AlertDialogAction>
-            </div>
-          </AlertDialogContent>
-        </AlertDialog>
+      <div className="mt-auto pt-8">
+        <p className="mb-3 text-sm md:text-base font-semibold text-muted-foreground">
+          <span className="font-semibold text-foreground/80">
+            {topic.vocabularyCount}
+          </span>{" "}
+          word(s), <span className="text-primary">{topic.learnedCount}</span>{" "}
+          learned
+        </p>
+        <Progress
+          value={
+            topic.vocabularyCount > 0
+              ? (topic.learnedCount / topic.vocabularyCount) * 100
+              : 0
+          }
+          className="h-2 border-2 border-[var(--neo-line)] shadow-[var(--neo-shadow-sm)]"
+        />
+      </div>
+
+      <div className="absolute top-2 right-2 z-20 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        {!editing ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="neoGhost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-44 rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-[var(--neo-surface-raised)] text-white shadow-[var(--neo-shadow-sm)]"
+            >
+              <DropdownMenuItem
+                className="cursor-pointer font-semibold focus:bg-white/10 focus:text-white"
+                onSelect={() => onMoveClick?.(topic.id, topic.title)}
+              >
+                <ArrowRight className="h-4 w-4" />
+                Move to project
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer font-semibold text-red-300 focus:bg-red-500/10 focus:text-red-200"
+                onSelect={() => setDeleteOpen(true)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete topic
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
         {/* Legend-style icon buttons when editing */}
         {editing && (
-          <div className="ml-2 bg-white/90 dark:bg-slate-900/80 rounded-md p-1 shadow flex items-center gap-1">
+          <div className="flex items-center gap-1 rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-[var(--neo-surface-raised)] p-1 shadow-[var(--neo-shadow-sm)]">
             <button
               title="Cancel"
               aria-label="Cancel"
-              className="p-1 rounded text-muted-foreground hover:bg-muted"
+              className="rounded p-1 text-muted-foreground hover:bg-muted"
               onClick={() => {
                 setEditing(false);
                 setTitle(topic.title);
@@ -193,7 +188,7 @@ export default function TopicCardClient({
             <button
               title="Save"
               aria-label="Save"
-              className="p-1 rounded text-primary hover:bg-primary/10"
+              className="rounded p-1 text-primary hover:bg-primary/10"
               onClick={save}
               disabled={!isDirty || saving}
             >
@@ -203,6 +198,41 @@ export default function TopicCardClient({
         )}
       </div>
 
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete topic?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <p>
+            Are you sure you want to permanently delete the topic "
+            {topic.title}" and its vocabulary? This action cannot be undone.
+          </p>
+          <div className="mt-4 flex justify-center gap-2">
+            <AlertDialogCancel asChild>
+              <Button variant="neoSecondary" className="mt-0">
+                Cancel
+              </Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button
+                variant="neoDanger"
+                onClick={async () => {
+                  try {
+                    await deleteTopic(projectId, topic.id);
+                    onTopicDeleted?.();
+                    setDeleteOpen(false);
+                  } catch (e) {
+                    /* ignore */
+                  }
+                }}
+              >
+                Delete
+              </Button>
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Full-card overlay link (under delete button) - disable while editing */}
       {!editing && (
         <Link
@@ -211,6 +241,6 @@ export default function TopicCardClient({
           aria-hidden
         />
       )}
-    </Card>
+    </NeoPanel>
   );
 }

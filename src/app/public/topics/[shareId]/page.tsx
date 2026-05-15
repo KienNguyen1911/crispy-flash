@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Card } from "@/components/ui/card";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,6 +9,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import PublicTopicActions from "@/components/topics/PublicTopicActions";
 import { Metadata } from "next";
+import { NeoHeader, NeoPage, NeoPanel, NeoSectionTitle } from "@/components/ui/neo";
 
 async function getTopic(shareId: string) {
   const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3001";
@@ -61,23 +61,23 @@ export default async function PublicTopicPage(
 
   if (!topic) {
     return (
-      <div className="container mx-auto max-w-5xl p-8">
-        <Card className="p-6">
-          <h1 className="text-2xl font-bold text-red-600">
+      <NeoPage className="max-w-5xl">
+        <NeoPanel className="p-6">
+          <h1 className="text-2xl font-black text-red-300">
             Topic not found or share has expired
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="mt-2 text-muted-foreground">
             The topic you're trying to access is no longer available.
           </p>
-        </Card>
-      </div>
+        </NeoPanel>
+      </NeoPage>
     );
   }
 
   return (
-    <div className="container mx-auto max-w-5xl py-8 px-4">
-      <Card className="mb-8 p-6">
-        <div className="flex items-center justify-between mb-4">
+    <NeoPage className="max-w-6xl">
+      <NeoHeader
+        eyebrow={
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -89,41 +89,35 @@ export default async function PublicTopicPage(
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          
-          {/* Extract client-side interactive actions */}
-          <PublicTopicActions topic={topic} />
-        </div>
-
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">{topic.title}</h1>
-          {topic.project && (
-            <p className="text-gray-600">Project: {topic.project.title}</p>
-          )}
-        </div>
-      </Card>
+        }
+        title={topic.title}
+        description={topic.project ? `Project: ${topic.project.title}` : "Shared vocabulary topic"}
+        actions={<PublicTopicActions topic={topic} />}
+        className="mb-8"
+      />
 
       <div className="space-y-6">
         <div>
           {topic.vocabulary && topic.vocabulary.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {topic.vocabulary.map((vocab: any) => (
-                <Card key={vocab.id} className="p-4">
+                <NeoPanel key={vocab.id} className="p-5">
                   <div className="space-y-2">
                     {vocab.word && (
                       <div>
-                        <p className="text-sm text-gray-600">Word</p>
-                        <p className="text-lg font-semibold">{vocab.word}</p>
+                        <p className="text-sm font-black uppercase text-muted-foreground">Word</p>
+                        <p className="text-2xl font-black text-white">{vocab.word}</p>
                       </div>
                     )}
                     {vocab.pronunciation && (
                       <div>
-                        <p className="text-sm text-gray-600">Pronunciation</p>
-                        <p className="text-sm">{vocab.pronunciation}</p>
+                        <p className="text-sm font-black uppercase text-muted-foreground">Pronunciation</p>
+                        <p className="text-sm md:text-base text-muted-foreground">{vocab.pronunciation}</p>
                       </div>
                     )}
                     <div>
-                      <p className="text-sm text-gray-600">Meaning</p>
-                      <p className="text-sm">{vocab.meaning}</p>
+                      <p className="text-sm font-black uppercase text-muted-foreground">Meaning</p>
+                      <p className="text-sm md:text-base text-white">{vocab.meaning}</p>
                     </div>
                     {vocab.image && (
                       <div className="relative w-full h-32">
@@ -131,25 +125,27 @@ export default async function PublicTopicPage(
                           src={vocab.image}
                           alt={vocab.word || "Vocabulary image"}
                           fill
-                          className="object-cover rounded"
+                          className="rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] object-cover"
                           unoptimized
                         />
                       </div>
                     )}
                   </div>
-                </Card>
+                </NeoPanel>
               ))}
             </div>
           ) : (
-            <p className="text-gray-600">No vocabulary items yet.</p>
+            <NeoPanel subtle className="p-8 text-center">
+              <p className="text-muted-foreground">No vocabulary items yet.</p>
+            </NeoPanel>
           )}
         </div>
 
         {topic.contextualPracticeContent && (
           <div>
-            <h2 className="text-xl font-semibold mb-4">Story</h2>
-            <Card className="p-6 bg-blue-50">
-              <div className="prose prose-sm max-w-none">
+            <NeoSectionTitle title="Story" className="mb-4" />
+            <NeoPanel className="p-6">
+              <div className="prose prose-invert prose-sm max-w-none">
                 {typeof topic.contextualPracticeContent === "string" ? (
                   <p>{topic.contextualPracticeContent}</p>
                 ) : (
@@ -158,10 +154,10 @@ export default async function PublicTopicPage(
                   </pre>
                 )}
               </div>
-            </Card>
+            </NeoPanel>
           </div>
         )}
       </div>
-    </div>
+    </NeoPage>
   );
 }
