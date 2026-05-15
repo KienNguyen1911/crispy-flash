@@ -4,17 +4,13 @@ import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import {
-  ChevronLeft,
-  ChevronRight,
   X,
   Volume2,
   Check,
   RotateCcw,
-  XCircle,
-  CheckCircle,
   Redo2,
 } from "lucide-react";
-import { toast } from "sonner";
+import { NeoPanel } from "@/components/ui/neo";
 
 interface VocabularyItem {
   id: string;
@@ -56,7 +52,7 @@ const LearnModePublic = ({
   const renderCard = (vocab: VocabularyItem) => (
     <>
       <div
-        className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
+        className="absolute flex h-full w-full flex-col items-center justify-center rounded-[var(--neo-radius)] border-2 border-[var(--neo-line-strong)] bg-[var(--neo-surface)] p-6 shadow-[var(--neo-shadow)]"
         style={{ backfaceVisibility: "hidden" }}
       >
         {showWordFirst ? (
@@ -72,7 +68,7 @@ const LearnModePublic = ({
               </p>
             )}
             <Button
-              variant="ghost"
+              variant="neoGhost"
               size="icon"
               className="absolute top-4 right-4"
               onClick={(e) => {
@@ -98,7 +94,7 @@ const LearnModePublic = ({
       </div>
 
       <div
-        className="absolute w-full h-full bg-card border border-border rounded-lg shadow-lg flex flex-col items-center justify-center p-6"
+        className="absolute flex h-full w-full flex-col items-center justify-center rounded-[var(--neo-radius)] border-2 border-[var(--neo-line-strong)] bg-[var(--neo-surface)] p-6 shadow-[var(--neo-shadow)]"
         style={{
           backfaceVisibility: "hidden",
           transform: "rotateY(180deg)",
@@ -133,7 +129,7 @@ const LearnModePublic = ({
               </p>
             )}
             <Button
-              variant="ghost"
+              variant="neoGhost"
               size="icon"
               className="absolute top-4 right-4"
               onClick={(e) => {
@@ -281,7 +277,7 @@ const LearnModePublic = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="fixed bg-background inset-0 z-50 flex flex-col items-center justify-center text-foreground"
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background text-foreground"
         style={{
           backgroundImage:
             "radial-gradient(circle, hsl(var(--foreground) / 0.1) 1px, transparent 1px)",
@@ -297,6 +293,7 @@ const LearnModePublic = ({
           }}
           className="text-center"
         >
+          <NeoPanel className="p-8">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -335,11 +332,11 @@ const LearnModePublic = ({
               transition={{ delay: 0.45, duration: 0.3 }}
               className="mb-6 space-y-2 text-sm"
             >
-              <p className="text-green-600 font-semibold">
-                ✓ Remembered: {rememberedCount}
+              <p className="font-semibold text-emerald-300">
+                Remembered: {rememberedCount}
               </p>
-              <p className="text-red-600 font-semibold">
-                ✗ Not Remembered: {notRememberedCount}
+              <p className="font-semibold text-red-300">
+                Not Remembered: {notRememberedCount}
               </p>
             </motion.div>
           )}
@@ -350,11 +347,11 @@ const LearnModePublic = ({
             transition={{ delay: 0.5, duration: 0.3 }}
             className="flex gap-4"
           >
-            <Button onClick={handleRestart} variant="outline">
+            <Button onClick={handleRestart} variant="neoSecondary">
               <RotateCcw className="mr-2 h-4 w-4" />
               Restart
             </Button>
-            <Button onClick={onClose}>Close</Button>
+            <Button onClick={onClose} variant="neo">Close</Button>
           </motion.div>
 
           <motion.p
@@ -365,6 +362,7 @@ const LearnModePublic = ({
           >
             Note: Your progress is not saved (public mode)
           </motion.p>
+          </NeoPanel>
         </motion.div>
       </motion.div>
     );
@@ -376,7 +374,7 @@ const LearnModePublic = ({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center text-foreground"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background text-foreground"
       style={{
         backgroundImage:
           "radial-gradient(circle, hsl(var(--foreground) / 0.1) 1px, transparent 1px)",
@@ -391,7 +389,7 @@ const LearnModePublic = ({
         <Button
           onClick={onClose}
           className="absolute top-4 right-4"
-          variant="ghost"
+          variant="neoGhost"
           size="icon"
         >
           <X className="h-6 w-6" />
@@ -409,7 +407,7 @@ const LearnModePublic = ({
           <p className="text-sm md:text-base text-muted-foreground">
             {currentIndex + 1} / {vocabulary.length}
           </p>
-          <p className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+          <p className="rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-muted px-2 py-1 text-xs font-black text-muted-foreground">
             Public Mode
           </p>
         </div>
@@ -425,7 +423,7 @@ const LearnModePublic = ({
             return (
               <motion.div
                 key={cardIndex}
-                className="absolute w-full h-full bg-card border border-border rounded-lg"
+                className="absolute h-full w-full rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-[var(--neo-surface-raised)]"
                 animate={{
                   top: `${adjustedOffset * 20}px`,
                   scale: 1 - adjustedOffset * 0.06,
@@ -512,14 +510,14 @@ const LearnModePublic = ({
         >
           <Button
             onClick={toggleShowMode}
-            variant={showWordFirst ? "warning" : "outline"}
+            variant={showWordFirst ? "warning" : "neoSecondary"}
             size="sm"
           >
             {showWordFirst ? "Meaning First" : "Word First"}
           </Button>
           <Button
             onClick={togglePronunciation}
-            variant={showPronunciation ? "warning" : "outline"}
+            variant={showPronunciation ? "warning" : "neoSecondary"}
             size="sm"
           >
             {showPronunciation ? "Hide" : "Show"} Pronunciation
@@ -543,9 +541,9 @@ const LearnModePublic = ({
           <Button
             onClick={handlePrev}
             disabled={currentIndex === 0}
-            variant="outline"
+            variant="neoSecondary"
             size="icon"
-            className="w-16 h-16 rounded-full transition-transform hover:scale-110 bg-primary"
+            className="h-16 w-16 rounded-full transition-transform hover:scale-110"
           >
             <Redo2 style={{ width: "1.5rem", height: "1.5rem" }} />
           </Button>

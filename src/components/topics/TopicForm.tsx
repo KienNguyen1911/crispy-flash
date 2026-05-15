@@ -80,7 +80,11 @@ export function TopicForm({
             <FormItem>
               <FormLabel>Topic Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Basic Words" {...field} />
+                <Input
+                  placeholder="e.g., Basic Words"
+                  className="border-2 border-[var(--neo-line)] bg-black/20 focus-visible:ring-primary"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -93,14 +97,24 @@ export function TopicForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe this topic..." {...field} />
+                <Textarea
+                  placeholder="Describe this topic..."
+                  className="border-2 border-[var(--neo-line)] bg-black/20 focus-visible:ring-primary"
+                  {...field}
+                  value={field.value ?? ""}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <div className="flex justify-center gap-2">
-          <Button className="w-full" type="submit" disabled={isSubmitting}>
+          <Button
+            className="w-full"
+            type="submit"
+            disabled={isSubmitting}
+            variant="neo"
+          >
             {isSubmitting ? "Saving..." : submitButtonText}
           </Button>
         </div>

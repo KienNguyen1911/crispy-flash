@@ -33,6 +33,7 @@ export default function PublicTopicActions({ topic }: PublicTopicActionsProps) {
           <Button
             size="sm"
             onClick={() => setIsLearnModeOpen(true)}
+            variant="neo"
             className="gap-2"
           >
             <BookOpen className="h-4 w-4" />
@@ -40,7 +41,7 @@ export default function PublicTopicActions({ topic }: PublicTopicActionsProps) {
           </Button>
         )}
         <Button
-          variant="outline"
+          variant="neoSecondary"
           size="sm"
           onClick={handleCopyLink}
           className="gap-2"

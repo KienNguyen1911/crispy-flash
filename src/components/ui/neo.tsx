@@ -38,15 +38,19 @@ type NeoPanelProps = React.ComponentProps<typeof Card> & {
   subtle?: boolean;
 };
 
-export function NeoPanel({ className, subtle = false, ...props }: NeoPanelProps) {
-  return (
-    <Card
-      variant={subtle ? "neoSubtle" : "neo"}
-      className={cn("rounded-[var(--neo-radius)]", className)}
-      {...props}
-    />
-  );
-}
+export const NeoPanel = React.forwardRef<HTMLDivElement, NeoPanelProps>(
+  ({ className, subtle = false, ...props }, ref) => {
+    return (
+      <Card
+        ref={ref}
+        variant={subtle ? "neoSubtle" : "neo"}
+        className={cn("rounded-[var(--neo-radius)]", className)}
+        {...props}
+      />
+    );
+  },
+);
+NeoPanel.displayName = "NeoPanel";
 
 export function NeoHeader({
   eyebrow,

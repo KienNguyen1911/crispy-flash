@@ -34,7 +34,7 @@ export default function ProjectCreate({
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>
+      <Button onClick={() => setIsOpen(true)} variant="neo">
         <PlusCircle className="mr-2 h-4 w-4" />
         Add Project
       </Button>
@@ -64,19 +64,19 @@ export default function ProjectCreate({
               }}
               className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-2xl"
             >
-              <div className="rounded-t-2xl border border-border bg-card shadow-lg">
+              <div className="rounded-t-[var(--neo-radius)] border-2 border-[var(--neo-line-strong)] bg-[var(--neo-surface)] shadow-[var(--neo-shadow)]">
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-border p-6">
+                <div className="flex items-center justify-between border-b-2 border-[var(--neo-line)] p-6">
                   <div>
-                    <h2 className="text-xl font-semibold">
+                    <h2 className="text-xl font-black text-white">
                       Create a New Project
                     </h2>
-                    <p className="text-sm md:text-base text-muted-foreground mt-1">
+                    <p className="mt-1 text-sm md:text-base font-medium text-muted-foreground">
                       Add a new project to organize your vocabulary learning
                     </p>
                   </div>
                   <Button
-                    variant="ghost"
+                    variant="neoGhost"
                     size="icon"
                     onClick={() => setIsOpen(false)}
                     className="shrink-0"

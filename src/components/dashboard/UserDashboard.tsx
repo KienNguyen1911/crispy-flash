@@ -1,15 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,19 +11,24 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Layers, BookA } from "lucide-react";
+import { Trash2, Layers, BookA, Sparkles } from "lucide-react";
 import ProjectCreate from "@/components/projects/ProjectCreate";
 import DataLoader from "@/components/ui/DataLoader";
-import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useAuthFetcher } from "@/hooks/useAuthFetcher";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
+import {
+  NeoHeader,
+  NeoPage,
+  NeoPanel,
+  NeoSectionTitle,
+} from "@/components/ui/neo";
 
 export function UserDashboard() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated } = useAuth();
   const fetcher = useAuthFetcher();
 
   const PAGE_SIZE = 20;
@@ -44,8 +41,6 @@ export function UserDashboard() {
 
   const {
     data: projectPages,
-    error: projectsError,
-    size,
     setSize,
     isValidating,
     mutate: mutateProjectsPages,
@@ -132,25 +127,24 @@ export function UserDashboard() {
   }
 
   return (
-    <div className="container mx-auto max-w-5xl py-8 px-4">
-      <Card className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-bold font-headline">
-              Master Vocabulary!
-            </h1>
-            <p className="text-muted-foreground">
-              Flashcards only unlock maximum recall power when they are
-              organized. Start systematizing your vocabulary today!
-            </p>
-          </div>
-        </div>
-      </Card>
+    <NeoPage className="max-w-6xl">
+      <NeoHeader
+        eyebrow={
+          <span className="inline-flex items-center gap-2 text-cyan-300">
+            <Sparkles className="h-4 w-4" />
+            Learning workspace
+          </span>
+        }
+        title="Master Vocabulary!"
+        description="Flashcards only unlock maximum recall power when they are organized. Start systematizing your vocabulary today."
+        className="mb-8"
+      />
 
-      <div className="flex items-center justify-between py-6">
-        <h2 className="text-2xl font-bold font-headline text-foreground">
-          All Projects
-        </h2>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <NeoSectionTitle
+          title="All Projects"
+          description="Pick a workspace or create a new one for your next vocabulary set."
+        />
         <ProjectCreate
           onSubmit={addProject}
           onProjectCreated={() => mutateProjectsPages()}
@@ -161,42 +155,39 @@ export function UserDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project: any) => (
             <div key={project.id}>
-              <Card
-                className="
-                  group relative h-full flex flex-col
-                  bg-card/40 backdrop-blur-sm border-white/5 shadow-lg
-                  hover:shadow-glow hover:scale-[1.02] hover:border-primary/30 transition-all duration-300
-                "
+              <NeoPanel
+                className="group relative flex min-h-[168px] flex-col p-6 transition-all duration-200 hover:-translate-x-1 hover:-translate-y-1 hover:bg-[var(--neo-surface-raised)] hover:shadow-[7px_7px_0_#000]"
               >
-                <CardHeader>
-                  <div>
-                    <CardTitle className="font-headline text-xl tracking-tight">
-                      {project.name}
-                    </CardTitle>
-                  </div>
-                </CardHeader>
+                <div className="pr-8">
+                  <h3 className="font-headline text-2xl font-black tracking-tight text-white">
+                    {project.name}
+                  </h3>
+                  {project.description ? (
+                    <p className="mt-2 line-clamp-2 text-sm font-medium text-muted-foreground">
+                      {project.description}
+                    </p>
+                  ) : null}
+                </div>
 
-                <CardContent className="flex-grow flex flex-col justify-end">
-                  <div className="flex items-center gap-3 mt-4">
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                      <Layers className="w-3.5 h-3.5" />
-                      <span>{project.topicsCount ?? 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                      <BookA className="w-3.5 h-3.5" />
-                      <span>{project.wordsCount ?? 0}</span>
-                    </div>
+                <div className="mt-auto flex items-center gap-3 pt-8">
+                  <div className="flex items-center gap-1.5 rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-cyan-950/45 px-3 py-1 text-xs font-black text-cyan-300 shadow-[var(--neo-shadow-sm)]">
+                    <Layers className="w-3.5 h-3.5" />
+                    <span>{project.topicsCount ?? 0}</span>
                   </div>
-                </CardContent>
+                  <div className="flex items-center gap-1.5 rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-cyan-950/45 px-3 py-1 text-xs font-black text-cyan-300 shadow-[var(--neo-shadow-sm)]">
+                    <BookA className="w-3.5 h-3.5" />
+                    <span>{project.wordsCount ?? 0}</span>
+                  </div>
+                </div>
 
                 {/* Delete button positioned top-right, visible on group hover */}
                 <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
-                        variant="ghost"
+                        variant="neoGhost"
                         size="icon"
-                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 rounded-full"
+                        className="h-8 w-8 text-muted-foreground hover:border-red-500/70 hover:text-red-300"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -212,13 +203,13 @@ export function UserDashboard() {
                       </p>
                       <div className="mt-4 flex justify-center gap-2">
                         <AlertDialogCancel asChild>
-                          <Button variant="outline" className="mt-0">
+                          <Button variant="neoSecondary" className="mt-0">
                             Cancel
                           </Button>
                         </AlertDialogCancel>
                         <AlertDialogAction asChild>
                           <Button
-                            variant="destructive"
+                            variant="neoDanger"
                             onClick={async () => {
                               try {
                                 await deleteProject(project.id);
@@ -241,17 +232,17 @@ export function UserDashboard() {
                   className="absolute inset-0 z-10"
                   aria-hidden
                 />
-              </Card>
+              </NeoPanel>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 border-2 border-dashed rounded-lg">
-          <h2 className="text-xl font-semibold">No Projects Yet</h2>
-          <p className="text-muted-foreground mt-2">
+        <NeoPanel subtle className="py-20 text-center">
+          <h2 className="text-2xl font-black text-white">No Projects Yet</h2>
+          <p className="mt-2 text-base font-medium text-muted-foreground">
             Click &quot;New Project&quot; to get started.
           </p>
-        </div>
+        </NeoPanel>
       )}
       {/* Infinite scroll sentinel and loading indicator */}
       {hasMore && (
@@ -268,6 +259,6 @@ export function UserDashboard() {
           )}
         </div>
       )}
-    </div>
+    </NeoPage>
   );
 }

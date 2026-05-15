@@ -11,6 +11,7 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
   const [description, setDescription] = useState(topic.description ?? '');
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [optimisticTopic, setOptimisticTopic] = useState<{ title: string; description: string } | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
 
@@ -35,6 +36,12 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
       return;
     }
 
+    const optimisticData = {
+      title: nextTitle,
+      description: nextDescription
+    };
+    setOptimisticTopic(optimisticData);
+    setEditing(false);
     setSaving(true);
     try {
       const updatedTopic = await updateTopic(topic.id, {
@@ -63,12 +70,12 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
       );
       await mutate(`/api/topics/${topic.id}`);
       await mutate(`/api/projects/${projectId}/topics`);
+      setOptimisticTopic(null);
       toast.success('Topic updated successfully!');
-      setEditing(false);
     } catch (error) {
       console.error('Failed to update topic:', error);
       toast.error('Failed to update topic.');
-      // Revert changes on error
+      setOptimisticTopic(null);
       setTitle(topic.title);
       setDescription(topic.description ?? '');
     } finally {
@@ -91,29 +98,52 @@ export default function TopicHeaderEditor({ projectId, topic }: { projectId: str
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [editing, topic.title, topic.description]);
 
+  const displayTitle = optimisticTopic ? optimisticTopic.title : (editing ? title : topic.title);
+  const displayDescription = optimisticTopic
+    ? optimisticTopic.description
+    : (editing ? description : (topic.description ?? ''));
+
   return (
     <div className="relative" ref={containerRef}>
-      <div className={`group rounded-md p-2 transition-all ${editing ? 'ring-2 ring-primary/50' : 'hover:ring-1 hover:ring-primary/20'}`}>
+      <div className={`group rounded-[var(--neo-radius)] p-2 transition-all ${editing ? 'ring-2 ring-primary/50' : 'hover:ring-1 hover:ring-primary/20'}`}>
         <div>
           {editing ? (
-            <input className="text-3xl font-bold font-headline w-full bg-transparent outline-none" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <input
+              className="w-full rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-black/20 px-2 py-1 text-3xl font-black font-headline text-white outline-none focus:border-cyan-400"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           ) : (
-            <h1 onClick={() => setEditing(true)} className="text-3xl font-bold font-headline cursor-text">{topic.title}</h1>
+            <h1
+              onClick={() => setEditing(true)}
+              className="cursor-text text-3xl font-black font-headline text-white"
+            >
+              {displayTitle}
+            </h1>
           )}
           {editing ? (
-            <textarea className="text-lg text-muted-foreground w-full mt-1 bg-transparent outline-none" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <textarea
+              className="mt-2 w-full rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-black/20 px-2 py-1 text-lg text-muted-foreground outline-none focus:border-cyan-400"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           ) : (
-            <p onClick={() => setEditing(true)} className="text-lg text-muted-foreground mt-1 cursor-text">{topic.description ?? ''}</p>
+            <p
+              onClick={() => setEditing(true)}
+              className="mt-1 cursor-text text-lg font-medium text-muted-foreground"
+            >
+              {displayDescription}
+            </p>
           )}
         </div>
       </div>
 
       {editing && (
-        <div className="absolute right-6 -top-3 z-30 flex items-center gap-1 bg-white/90 dark:bg-slate-900/80 rounded-md p-1 shadow">
-          <button title="Cancel" aria-label="Cancel" className="p-1 rounded text-muted-foreground hover:bg-muted" onClick={() => { setEditing(false); setTitle(topic.title); setDescription(topic.description ?? ''); }}>
+        <div className="absolute right-4 -top-3 z-30 flex items-center gap-1 rounded-[var(--neo-radius)] border-2 border-[var(--neo-line)] bg-[var(--neo-surface-raised)] p-1 shadow-[var(--neo-shadow-sm)]">
+          <button title="Cancel" aria-label="Cancel" className="rounded p-1 text-muted-foreground hover:bg-muted" onClick={() => { setEditing(false); setTitle(topic.title); setDescription(topic.description ?? ''); }}>
             <X className="h-4 w-4" />
           </button>
-          <button title="Save" aria-label="Save" className="p-1 rounded text-primary hover:bg-primary/10" onClick={save} disabled={!isDirty || saving}>
+          <button title="Save" aria-label="Save" className="rounded p-1 text-primary hover:bg-primary/10" onClick={save} disabled={!isDirty || saving}>
             <Check className="h-4 w-4" />
           </button>
         </div>

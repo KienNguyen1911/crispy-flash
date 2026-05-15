@@ -1,67 +1,67 @@
 # UI Refactor Change Log
 
-## 1. Boi Canh
+## 1. Context
 
-He thong Lingofy truoc refactor co 2 huong UI chinh:
+Before the refactor, Lingofy had two main UI directions:
 
-- Graph view component dung phong cach neobrutalism: nen sang, border den day, shadow cung, nut bam ro rang, cam giac nhu visual workspace.
-- Cac page con lai dung dark mode/glass style: nen toi gradient, card mem, border mong, shadow nhe.
+- The graph view component used a neobrutalist style: light background, thick black borders, hard shadows, clear buttons, and a visual-workspace feel.
+- The remaining pages used a dark mode/glass style: dark gradient backgrounds, soft cards, thin borders, and light shadows.
 
-Hai phong cach nay deu co diem manh rieng, nhung khi user di chuyen giua cac page nhu `Topic Detail`, `Table`, `Import`, `Smart Review`, `Profile` va `Graph View`, trai nghiem bi roi rac. Graph view tao cam giac la mot san pham khac thay vi mot phan cua cung mot he thong.
+Both directions had their own strengths, but when users moved between pages such as `Topic Detail`, `Table`, `Import`, `Smart Review`, `Profile`, and `Graph View`, the experience felt fragmented. Graph view felt like a different product instead of one part of the same system.
 
-## 2. Nguyen Nhan Thay Doi
+## 2. Reason For The Change
 
-Ly do chinh cua thay doi:
+The main reasons for the change were:
 
-- Can tang tinh nhat quan UI giua graph view va cac page khac.
-- Can giam hard-code style rieng le trong tung component.
-- Can tao mot design system de quan ly visual language tap trung.
-- Can giu graph view vi component nay da co ban sac ro va dang hoat dong tot.
-- Can chuyen cac page con lai sang mot style gan voi graph view hon ma van giu dark mode lam nen tang.
+- Increase UI consistency between graph view and the other pages.
+- Reduce isolated hard-coded styling inside individual components.
+- Create a design system so the visual language can be managed centrally.
+- Preserve graph view because it already has a clear identity and works well.
+- Move the remaining pages closer to the graph view style while keeping dark mode as the foundation.
 
-Van de ban dau khong phai la dark mode sai hay graph view sai. Van de la thieu mot lop design language dung chung de noi hai phan nay lai.
+The original problem was not that dark mode was wrong or that graph view was wrong. The problem was the lack of a shared design-language layer connecting the two parts.
 
-## 3. Muc Dich
+## 3. Goal
 
-Muc tieu cua refactor:
+The goal of the refactor:
 
-- Thong nhat he thong theo huong `Dark Neo-Brutal UI`.
-- Giu dark mode cho cac page hoc tap va review de phu hop voi app hoc tu vung.
-- Dua cac dac diem manh cua graph view vao cac page khac:
-  - border day hon
-  - shadow dang block
-  - button chac hon
-  - card/panel co cau truc ro hon
-  - typography dam hon
-  - accent cyan ro rang hon
-- Tao reusable UI primitives de sau nay thay doi style o mot noi thay vi sua tung page.
-- Khong refactor dashboard/admin pages theo yeu cau.
+- Unify the system around a `Dark Neo-Brutal UI` direction.
+- Keep dark mode for learning and review pages because it fits long vocabulary study sessions.
+- Bring the strongest traits of graph view into the other pages:
+  - thicker borders
+  - block-style shadows
+  - sturdier buttons
+  - clearer card/panel structure
+  - bolder typography
+  - more visible cyan accents
+- Create reusable UI primitives so future visual changes can happen in one place instead of being repeated page by page.
+- Do not refactor dashboard/admin pages, per the original scope.
 
-## 4. Huong Thiet Ke
+## 4. Design Direction
 
-Huong thiet ke duoc chon la:
+The selected design direction is:
 
 ```text
 Dark Neo-Brutal Learning UI
 ```
 
-Quyet dinh nay co y nghia:
+This decision means:
 
-- App shell va cac page chinh van dung dark mode.
-- Graph view tiep tuc la canvas neobrutalism sang, tuong tu cac workspace nhu Figma/Miro.
-- Cac page dark mode duoc nang cap bang border, shadow, button va panel style de giong cung mot he sinh thai voi graph view.
+- The app shell and primary pages continue to use dark mode.
+- Graph view remains a light neobrutalist canvas, similar to workspaces such as Figma or Miro.
+- Dark-mode pages are upgraded with border, shadow, button, and panel styling so they feel like they belong to the same ecosystem as graph view.
 
-Khong chuyen toan bo app sang nen sang vi dieu do co the lam cac page review/profile/table qua nang va kem phu hop cho viec hoc lau.
+The entire app was not moved to a light background because that could make review/profile/table pages feel too heavy and less suitable for long study sessions.
 
-## 5. Action Da Thuc Hien
+## 5. Actions Completed
 
-### 5.1 Them design tokens
+### 5.1 Added Design Tokens
 
 File:
 
 - `src/app/globals.css`
 
-Da them cac CSS variables cho dark neo-brutal system:
+Added CSS variables for the dark neo-brutal system:
 
 - `--neo-bg`
 - `--neo-surface`
@@ -76,88 +76,88 @@ Da them cac CSS variables cho dark neo-brutal system:
 - `--neo-shadow-sm`
 - `--neo-radius`
 
-Muc dich la gom cac quyet dinh visual vao token de de doi sau nay.
+The purpose is to centralize visual decisions into tokens so they are easier to change later.
 
-### 5.2 Mo rong UI primitives hien co
+### 5.2 Extended Existing UI Primitives
 
 Files:
 
 - `src/components/ui/button.tsx`
 - `src/components/ui/card.tsx`
 
-Da them button variants:
+Added button variants:
 
 - `neo`
 - `neoSecondary`
 - `neoDanger`
 - `neoGhost`
 
-Da them card variants:
+Added card variants:
 
 - `neo`
 - `neoSubtle`
 
-Muc dich la tranh lap lai class Tailwind dai trong tung page.
+The purpose is to avoid repeating long Tailwind class lists inside each page.
 
-### 5.3 Them reusable Neo components
+### 5.3 Added Reusable Neo Components
 
 File:
 
 - `src/components/ui/neo.tsx`
 
-Da tao cac component dung chung:
+Created shared components:
 
-- `NeoPage`: layout container chuan cho cac page.
-- `NeoPanel`: panel/card co border va shadow neo-brutal.
-- `NeoHeader`: header page co title, description, breadcrumb/action.
-- `NeoToolbar`: toolbar dung cho filter, tabs, actions.
-- `NeoStat`: stat box dung cho review/profile metrics.
-- `NeoSectionTitle`: section title dung chung khi can.
+- `NeoPage`: standard layout container for pages.
+- `NeoPanel`: panel/card with neo-brutal border and shadow.
+- `NeoHeader`: page header with title, description, breadcrumb, and actions.
+- `NeoToolbar`: toolbar for filters, tabs, and actions.
+- `NeoStat`: stat box for review/profile metrics.
+- `NeoSectionTitle`: shared section title when needed.
 
-Day la lop design system moi de cac page khong phai hard-code style truc tiep.
+This is the new design-system layer so pages no longer need to hard-code visual styling directly.
 
-## 6. Page/Component Da Ap Dung
+## 6. Pages/Components Updated
 
-### 6.1 Topic detail page
+### 6.1 Topic Detail Page
 
 Files:
 
 - `src/app/projects/[projectId]/topics/[topicId]/page.tsx`
 - `src/components/DataTable.tsx`
 
-Thay doi:
+Changes:
 
-- Header topic dung `NeoHeader`.
-- Action buttons dung `neo` va `neoSecondary`.
-- Toolbar table/filter dung `NeoToolbar`.
-- Table container dung `NeoPanel`.
-- Segmented control `Table / Graph` duoc doi sang style neo-brutal.
-- Import/Edit buttons dung button variants moi.
+- Topic header now uses `NeoHeader`.
+- Action buttons use `neo` and `neoSecondary`.
+- Table/filter toolbar uses `NeoToolbar`.
+- Table container uses `NeoPanel`.
+- The `Table / Graph` segmented control was changed to a neo-brutal style.
+- Import/Edit buttons use the new button variants.
 
-Muc dich:
+Purpose:
 
-- Lam table page co visual gan hon voi graph view.
-- Giam style shock khi user chuyen tu table sang graph.
+- Make the table page visually closer to graph view.
+- Reduce the style shock when the user switches from table to graph.
 
-### 6.2 Import vocabulary page
+### 6.2 Import Vocabulary Page
 
 File:
 
 - `src/components/vocabulary/VocabularyImportClient.tsx`
 
-Thay doi:
+Changes:
 
-- Header dung `NeoHeader`.
-- Textarea duoc doi sang workspace-style input: border day, mono font, shadow block.
-- Preview/save buttons dung variants moi.
-- Preview table container dung `NeoPanel`.
+- Header uses `NeoHeader`.
+- Textarea was changed into a workspace-style input with a thick border, mono font, and block shadow.
+- Preview/save buttons use the new variants.
+- Preview table container uses `NeoPanel`.
 
-Muc dich:
+Purpose:
 
-- Bien import page thanh mot tool surface ro rang hon.
-- Giam cam giac page trong va tach roi so voi graph/table.
+- Turn the import page into a clearer tool surface.
+- Reduce the feeling that the page is empty or detached from graph/table.
 
-### 6.3 Smart Review pages
+### 6.3 Smart Review Pages
 
 Files:
 
@@ -165,21 +165,21 @@ Files:
 - `src/components/srs/ProjectReviewOverview.tsx`
 - `src/components/srs/ReviewSession.tsx`
 
-Thay doi:
+Changes:
 
-- Smart Review header dung `NeoHeader`.
-- Project review cards dung `NeoPanel`.
-- Review stats dung `NeoStat`.
-- Overdue/weak/due metrics co tone mau ro hon.
-- Review session card, progress bar va answer buttons duoc doi sang border/shadow style.
-- Summary/overview panels dung chung `NeoPanel`.
+- Smart Review header uses `NeoHeader`.
+- Project review cards use `NeoPanel`.
+- Review stats use `NeoStat`.
+- Overdue/weak/due metrics have clearer color tones.
+- Review session cards, progress bar, and answer buttons now use border/shadow styling.
+- Summary/overview panels use the shared `NeoPanel`.
 
-Muc dich:
+Purpose:
 
-- Lam review flow trong ro rang va co tinh he thong hon.
-- Tang do nhan dien cua cac state quan trong: due, weak, overdue, correct, incorrect.
+- Make the review flow clearer and more systematic.
+- Improve recognition of important states: due, weak, overdue, correct, and incorrect.
 
-### 6.4 Profile pages
+### 6.4 Profile Pages
 
 Files:
 
@@ -188,77 +188,127 @@ Files:
 - `src/components/profile/ProfileQrScannerCard.tsx`
 - `src/components/profile/ApiKeyManagement.tsx`
 
-Thay doi:
+Changes:
 
-- Tabs wrapper dung `NeoToolbar`.
-- Account/stat/heatmap cards dung `NeoPanel`.
-- Stats typography dam hon, dung accent color ro hon.
-- QR sign-in va API settings card dung `neo` card variant.
-- Primary actions dung button variants moi.
+- Tabs wrapper uses `NeoToolbar`.
+- Account/stat/heatmap cards use `NeoPanel`.
+- Stats typography is bolder and uses stronger accent colors.
+- QR sign-in and API settings cards use the `neo` card variant.
+- Primary actions use the new button variants.
 
-Muc dich:
+Purpose:
 
-- Dong bo profile voi review/dashboard learning style.
-- Lam cac metrics nhu review count, streak, accuracy noi bat hon.
+- Align profile with the review/dashboard learning style.
+- Make metrics such as review count, streak, and accuracy more prominent.
 
-## 7. Pham Vi Khong Thay Doi
+### 6.5 Learner Dashboard And Project Pages
 
-Khong refactor cac phan sau:
+Files:
+
+- `src/components/dashboard/UserDashboard.tsx`
+- `src/app/projects/[projectId]/page.tsx`
+- `src/components/projects/TopicCardClient.tsx`
+- `src/components/projects/ProjectCreate.tsx`
+- `src/components/projects/TopicCreate.tsx`
+- `src/components/projects/ProjectHeaderEditor.tsx`
+
+Changes:
+
+- Dashboard and project pages now use `NeoPage`, `NeoHeader`, `NeoPanel`, `NeoToolbar`, and `NeoSectionTitle`.
+- Project and topic cards now use neo-brutal borders, block shadows, stronger titles, and clearer stat pills.
+- Empty states were moved from soft glass panels to structured `NeoPanel` surfaces.
+- Create-project and create-topic drawers were aligned with the neo-brutal surface treatment.
+- Inline project/topic editing controls now use the neo action styling.
+
+Purpose:
+
+- Make the learner entry points match the already-refactored topic detail page.
+- Remove the remaining generic dark SaaS/glass look from the core learning flow.
+
+### 6.6 Project Analytics And Public Topic Pages
+
+Files:
+
+- `src/app/projects/[projectId]/analytics/page.tsx`
+- `src/app/public/topics/[shareId]/page.tsx`
+- `src/components/topics/PublicTopicActions.tsx`
+
+Changes:
+
+- Project analytics now uses `NeoHeader`, `NeoStat`, and `NeoPanel`.
+- Analytics chart container now uses a dark neo-brutal panel.
+- Public topic page now uses `NeoPage`, `NeoHeader`, and `NeoPanel`.
+- Public vocabulary cards and story panel now match the same card system.
+- Public topic actions use the neo button variants.
+
+Purpose:
+
+- Keep secondary learner-facing pages consistent with the main project/topic flow.
+- Avoid sending shared-topic users into an older visual language.
+
+## 7. Scope Not Changed
+
+The following areas were not refactored:
 
 - `/dashboard`
-- cac page con trong dashboard/admin
+- dashboard/admin sub-pages
 - core graph view visual style
-- logic hoc/review/import
+- learning/review/import logic
 - API/service layer
 - data model
 
-Graph view van duoc giu la canvas neobrutalism sang. Chi cac page xung quanh duoc dieu chinh de co cung design language.
+Graph view remains a light neobrutalist canvas. Only the surrounding pages were adjusted to share the same design language.
 
-## 8. Ket Qua Mong Doi
+## 8. Expected Result
 
-Sau thay doi, UI system nen co cac dac diem:
+After the change, the UI system should have these traits:
 
-- Nhat quan hon giua table/import/review/profile va graph view.
-- It hard-code style rieng le hon.
-- De doi visual language hon thong qua token va primitive components.
-- Cac page co cam giac nhu mot learning tool co ban sac rieng thay vi generic dark SaaS.
-- Graph view van giu vai tro visual workspace noi bat.
+- More consistency between table/import/review/profile/project pages and graph view.
+- Less isolated hard-coded styling.
+- Easier visual-language updates through tokens and primitive components.
+- Pages feel like a learning tool with a distinct identity instead of a generic dark SaaS app.
+- Graph view keeps its role as the standout visual workspace.
 
-## 9. Ghi Chu Verification
+## 9. Verification Notes
 
-Da chay:
+Ran:
 
 ```bash
 git diff --check
 ```
 
-Ket qua: pass, khong co whitespace error.
+Result: passed, no whitespace errors.
 
-Chua chay duoc:
+Ran:
+
+```bash
+npm run lint
+```
+
+Result: lint did not run to completion because `next lint` opened the interactive ESLint configuration prompt. The repo needs ESLint configuration before this command can be used non-interactively.
+
+Ran:
 
 ```bash
 npm run typecheck
-npm run dev
 ```
 
-Ly do:
+Result: typecheck failed on existing type/model issues outside this UI pass, including Prisma `Vocabulary` exports, PWA `Element.href`, `BarcodeDetector`, `TopicSwitcher` ref typing, missing `DueReviewBadge`, `ProjectContext` `name` vs `title` mismatches, and mock-data shape mismatches. The UI files updated in this pass were adjusted so they no longer add separate typecheck failures.
 
-- Moi truong hien tai khong co `npm`, `pnpm`, `corepack` trong PATH.
-- Repo hien khong co `node_modules`, nen khong the chay truc tiep TypeScript check hoac local dev server trong session nay.
-
-Can verify tiep khi moi truong Node/npm san sang:
+Still recommended:
 
 ```bash
-npm install
-npm run typecheck
 npm run dev
 ```
 
-Sau do nen kiem tra cac route:
+Then manually verify these routes:
 
-- `/review`
-- `/profile`
+- `/`
+- `/projects/[projectId]`
+- `/projects/[projectId]/analytics`
 - `/projects/[projectId]/topics/[topicId]`
 - `/projects/[projectId]/topics/[topicId]/import`
-- graph view trong topic detail
-
+- `/public/topics/[shareId]`
+- `/review`
+- `/profile`
+- graph view inside topic detail

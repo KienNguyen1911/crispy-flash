@@ -50,7 +50,7 @@ export function ProjectForm({
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: project?.name ?? "",
+      name: (project as any)?.name ?? project?.title ?? "",
       description: project?.description ?? "",
     },
   });
@@ -96,7 +96,11 @@ export function ProjectForm({
             <FormItem>
               <FormLabel>Project Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., JLPT N5 Prep" {...field} />
+                <Input
+                  placeholder="e.g., JLPT N5 Prep"
+                  className="border-2 border-[var(--neo-line)] bg-black/20 focus-visible:ring-primary"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -109,14 +113,24 @@ export function ProjectForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your project..." {...field} />
+                <Textarea
+                  placeholder="Describe your project..."
+                  className="border-2 border-[var(--neo-line)] bg-black/20 focus-visible:ring-primary"
+                  {...field}
+                  value={field.value ?? ""}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <div className="flex justify-center gap-2">
-          <Button className="w-full" type="submit" disabled={isSubmitting}>
+          <Button
+            className="w-full"
+            type="submit"
+            disabled={isSubmitting}
+            variant="neo"
+          >
             {isSubmitting ? "Saving..." : submitButtonText}
           </Button>
         </div>
